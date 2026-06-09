@@ -71,14 +71,14 @@
  *              uint32_t quux;
  *          } __attribute__ ((packed));
  *
- *       Make it look like this:
+ *       Define an evolved structure alongside it like this:
  *
- *          struct foobar {
- *              uint32_t baz;
- *              uint32_t quux;
- *              ///////// end version 1 of foobar.  sizeof(struct foobar) was 8 ////////
- *              uint32_t frozzle;
- *          } __attribute__ ((packed));
+ *           struct foobar_v2 {
+ *               uint32_t baz;
+ *               uint32_t quux;
+ *               ///////// This is where the original structure's layout ended! sizeof(struct foobar) was 8 ////////
+ *               uint32_t frozzle;
+ *           } __attribute__ ((packed));
  *
  *   If you are parsing kcdata formats, you MUST
  *
@@ -126,7 +126,7 @@
  *
  *
  * The type field describes what kind of data is passed. For example type = TASK_CRASHINFO_UUID means the following data is a uuid.
- * These types need to be defined in task_corpses.h for easy consumption by userspace inspection tools.
+ * These types need to be defined in task_corpse.h for easy consumption by userspace inspection tools.
  *
  * Some range of types is reserved for special types like ints, longs etc. A cool new functionality made possible with this
  * extensible data format is that kernel can decide to put more information as required without requiring user space tools to
@@ -223,7 +223,7 @@
  * - kcdata_compression_window_open/close(kcdata_descriptor_t data)
  *   In case the data you are trying to push to the kcdata buffer @data is difficult to predict,
  *   you can open a "compression window". Between an open and a close, no compression will be done.
- *   Once you clsoe the window, the underlying compression algorithm will compress the data into the buffer
+ *   Once you close the window, the underlying compression algorithm will compress the data into the buffer
  *   and automatically rewind the current end marker of the kcdata buffer.
  *   There is an ASCII art in kern_cdata.c to aid the reader in understanding
  *   this.
@@ -233,9 +233,6 @@
  *   This function will also add some statistics about the compression to the buffer which helps with
  *   decompressing later.
  *
- * Once you are done with the kcdata buffer, call kcdata_deinit_compress to
- * free any buffers that may have been allocated internal to the compression
- * algorithm.
  */
 
 
@@ -245,6 +242,8 @@
 #include <stdint.h>
 #include <string.h>
 #include <uuid/uuid.h>
+
+
 
 #define KCDATA_DESC_MAXLEN 32 /* including NULL byte at end */
 
@@ -488,10 +487,10 @@ struct kcdata_type_definition {
  * in STACKSHOT_KCTYPE_* types.
  */
 #define STACKSHOT_KCTYPE_IOSTATS                     0x901u /* io_stats_snapshot */
-#define STACKSHOT_KCTYPE_GLOBAL_MEM_STATS            0x902u /* struct mem_and_io_snapshot */
+#define STACKSHOT_KCTYPE_GLOBAL_MEM_STATS            0x902u /* struct mem_and_io_snapshot_v2 */
 #define STACKSHOT_KCCONTAINER_TASK                   0x903u
 #define STACKSHOT_KCCONTAINER_THREAD                 0x904u
-#define STACKSHOT_KCTYPE_TASK_SNAPSHOT               0x905u /* task_snapshot_v2 */
+#define STACKSHOT_KCTYPE_TASK_SNAPSHOT               0x905u /* task_snapshot_v2, task_snapshot_v3 */
 #define STACKSHOT_KCTYPE_THREAD_SNAPSHOT             0x906u /* thread_snapshot_v2, thread_snapshot_v3 */
 #define STACKSHOT_KCTYPE_DONATING_PIDS               0x907u /* int[] */
 #define STACKSHOT_KCTYPE_SHAREDCACHE_LOADINFO        0x908u /* dyld_shared_cache_loadinfo */
@@ -501,7 +500,7 @@ struct kcdata_type_definition {
 #define STACKSHOT_KCTYPE_USER_STACKFRAME             0x90Cu /* struct stack_snapshot_frame32 */
 #define STACKSHOT_KCTYPE_USER_STACKFRAME64           0x90Du /* struct stack_snapshot_frame64 */
 #define STACKSHOT_KCTYPE_BOOTARGS                    0x90Eu /* boot args string */
-#define STACKSHOT_KCTYPE_OSVERSION                   0x90Fu /* os version string */
+#define STACKSHOT_KCTYPE_OSVERSION                   0x90Fu /* os version string, same as running uname -a */
 #define STACKSHOT_KCTYPE_KERN_PAGE_SIZE              0x910u /* kernel page size in uint32_t */
 #define STACKSHOT_KCTYPE_JETSAM_LEVEL                0x911u /* jetsam level in uint32_t */
 #define STACKSHOT_KCTYPE_DELTA_SINCE_TIMESTAMP       0x912u /* timestamp used for the delta stackshot */
@@ -529,7 +528,7 @@ struct kcdata_type_definition {
 #define STACKSHOT_KCTYPE_THREAD_DISPATCH_QUEUE_LABEL 0x928u /* dispatch queue label */
 #define STACKSHOT_KCTYPE_THREAD_TURNSTILEINFO        0x929u /* struct stackshot_thread_turnstileinfo */
 #define STACKSHOT_KCTYPE_TASK_CPU_ARCHITECTURE       0x92au /* struct stackshot_cpu_architecture */
-#define STACKSHOT_KCTYPE_LATENCY_INFO                0x92bu /* struct stackshot_latency_collection */
+#define STACKSHOT_KCTYPE_LATENCY_INFO                0x92bu /* struct stackshot_latency_collection_v2 */
 #define STACKSHOT_KCTYPE_LATENCY_INFO_TASK           0x92cu /* struct stackshot_latency_task */
 #define STACKSHOT_KCTYPE_LATENCY_INFO_THREAD         0x92du /* struct stackshot_latency_thread */
 #define STACKSHOT_KCTYPE_LOADINFO64_TEXT_EXEC        0x92eu /* TEXT_EXEC load info -- same as KCDATA_TYPE_LIBRARY_LOADINFO64 */
@@ -545,14 +544,35 @@ struct kcdata_type_definition {
 #define STACKSHOT_KCTYPE_SUSPENSION_INFO             0x938u /* struct stackshot_suspension_info */
 #define STACKSHOT_KCTYPE_SUSPENSION_SOURCE           0x939u /* struct stackshot_suspension_source */
 
-#define STACKSHOT_KCTYPE_TASK_DELTA_SNAPSHOT         0x940u   /* task_delta_snapshot_v2 */
+#define STACKSHOT_KCTYPE_TASK_DELTA_SNAPSHOT         0x940u /* task_delta_snapshot_v2 */
 #define STACKSHOT_KCTYPE_THREAD_DELTA_SNAPSHOT       0x941u /* thread_delta_snapshot_v* */
 #define STACKSHOT_KCCONTAINER_SHAREDCACHE            0x942u /* container for shared cache info */
 #define STACKSHOT_KCTYPE_SHAREDCACHE_INFO            0x943u /* dyld_shared_cache_loadinfo_v2 */
 #define STACKSHOT_KCTYPE_SHAREDCACHE_AOTINFO         0x944u /* struct dyld_aot_cache_uuid_info */
 #define STACKSHOT_KCTYPE_SHAREDCACHE_ID              0x945u /* uint32_t in task: if we aren't attached to Primary, which one */
 #define STACKSHOT_KCTYPE_CODESIGNING_INFO            0x946u /* struct stackshot_task_codesigning_info */
-
+#define STACKSHOT_KCTYPE_OS_BUILD_VERSION            0x947u /* os build version string (ex: 20A123) */
+#define STACKSHOT_KCTYPE_KERN_EXCLAVES_THREADINFO    0x948u 
+#define STACKSHOT_KCCONTAINER_EXCLAVES               0x949u 
+#define STACKSHOT_KCCONTAINER_EXCLAVE_SCRESULT       0x94au 
+#define STACKSHOT_KCTYPE_EXCLAVE_SCRESULT_INFO       0x94bu 
+#define STACKSHOT_KCCONTAINER_EXCLAVE_IPCSTACKENTRY  0x94cu 
+#define STACKSHOT_KCTYPE_EXCLAVE_IPCSTACKENTRY_INFO  0x94du 
+#define STACKSHOT_KCTYPE_EXCLAVE_IPCSTACKENTRY_ECSTACK 0x94eu 
+#define STACKSHOT_KCCONTAINER_EXCLAVE_ADDRESSSPACE   0x94fu 
+#define STACKSHOT_KCTYPE_EXCLAVE_ADDRESSSPACE_INFO   0x950u 
+#define STACKSHOT_KCTYPE_EXCLAVE_ADDRESSSPACE_NAME   0x951u 
+#define STACKSHOT_KCCONTAINER_EXCLAVE_TEXTLAYOUT     0x952u 
+#define STACKSHOT_KCTYPE_EXCLAVE_TEXTLAYOUT_INFO     0x953u 
+#define STACKSHOT_KCTYPE_EXCLAVE_TEXTLAYOUT_SEGMENTS 0x954u 
+#define STACKSHOT_KCTYPE_KERN_EXCLAVES_CRASH_THREADINFO 0x955u 
+#define STACKSHOT_KCTYPE_LATENCY_INFO_CPU            0x956u /* struct stackshot_latency_cpu */
+#define STACKSHOT_KCTYPE_TASK_EXEC_META              0x957u /* struct task_exec_meta */
+#define STACKSHOT_KCTYPE_TASK_MEMORYSTATUS           0x958u /* struct task_memorystatus_snapshot */
+#define STACKSHOT_KCTYPE_MTEINFO_CELL                0x959u /* struct mteinfo_cell */
+#define STACKSHOT_KCTYPE_LATENCY_INFO_BUFFER         0x95au /* struct stackshot_latency_buffer */
+#define STACKSHOT_KCTYPE_VMRL_BLOCKING_RELS          0x95bu /* struct stackshot_vmrl_blocking_relationship */
+#define STACKSHOT_KCTYPE_LOCK_STATE                  0x95cu /* struct stackshot_device_lock_state */
 
 struct stack_snapshot_frame32 {
 	uint32_t lr;
@@ -654,63 +674,107 @@ struct user64_dyld_aot_info {
 
 enum task_snapshot_flags {
 	/* k{User,Kernel}64_p (values 0x1 and 0x2) are defined in generic_snapshot_flags */
-	kTaskRsrcFlagged                      = 0x4, // In the EXC_RESOURCE danger zone?
-	kTerminatedSnapshot                   = 0x8,
-	kPidSuspended                         = 0x10, // true for suspended task
-	kFrozen                               = 0x20, // true for hibernated task (along with pidsuspended)
-	kTaskDarwinBG                         = 0x40,
-	kTaskExtDarwinBG                      = 0x80,
-	kTaskVisVisible                       = 0x100,
-	kTaskVisNonvisible                    = 0x200,
-	kTaskIsForeground                     = 0x400,
-	kTaskIsBoosted                        = 0x800,
-	kTaskIsSuppressed                     = 0x1000,
-	kTaskIsTimerThrottled                 = 0x2000, /* deprecated */
-	kTaskIsImpDonor                       = 0x4000,
-	kTaskIsLiveImpDonor                   = 0x8000,
-	kTaskIsDirty                          = 0x10000,
-	kTaskWqExceededConstrainedThreadLimit = 0x20000,
-	kTaskWqExceededTotalThreadLimit       = 0x40000,
-	kTaskWqFlagsAvailable                 = 0x80000,
-	kTaskUUIDInfoFaultedIn                = 0x100000, /* successfully faulted in some UUID info */
-	kTaskUUIDInfoMissing                  = 0x200000, /* some UUID info was paged out */
-	kTaskUUIDInfoTriedFault               = 0x400000, /* tried to fault in UUID info */
-	kTaskSharedRegionInfoUnavailable      = 0x800000,  /* shared region info unavailable */
-	kTaskTALEngaged                       = 0x1000000,
+	kTaskRsrcFlagged                            = 0x4, // In the EXC_RESOURCE danger zone?
+	kTerminatedSnapshot                         = 0x8,
+	kPidSuspended                               = 0x10, // true for suspended task
+	kFrozen                                     = 0x20, // true for hibernated task (along with pidsuspended)
+	kTaskDarwinBG                               = 0x40,
+	kTaskExtDarwinBG                            = 0x80,
+	kTaskVisVisible                             = 0x100,
+	kTaskVisNonvisible                          = 0x200,
+	kTaskIsForeground                           = 0x400,
+	kTaskIsBoosted                              = 0x800,
+	kTaskIsSuppressed                           = 0x1000,
+	kTaskIsTimerThrottled                       = 0x2000, /* deprecated */
+	kTaskIsImpDonor                             = 0x4000,
+	kTaskIsLiveImpDonor                         = 0x8000,
+	kTaskIsDirty                                = 0x10000,
+	kTaskWqExceededConstrainedThreadLimit       = 0x20000,
+	kTaskWqExceededTotalThreadLimit             = 0x40000,
+	kTaskWqFlagsAvailable                       = 0x80000,
+	kTaskUUIDInfoFaultedIn                      = 0x100000, /* successfully faulted in some UUID info */
+	kTaskUUIDInfoMissing                        = 0x200000, /* some UUID info was paged out */
+	kTaskUUIDInfoTriedFault                     = 0x400000, /* tried to fault in UUID info */
+	kTaskSharedRegionInfoUnavailable            = 0x800000,  /* shared region info unavailable */
+	kTaskTALEngaged                             = 0x1000000,
 	/* 0x2000000 unused */
-	kTaskIsDirtyTracked                   = 0x4000000,
-	kTaskAllowIdleExit                    = 0x8000000,
-	kTaskIsTranslated                     = 0x10000000,
-	kTaskSharedRegionNone                 = 0x20000000,     /* task doesn't have a shared region */
-	kTaskSharedRegionSystem               = 0x40000000,     /* task attached to region with kSharedCacheSystemPrimary set */
-	kTaskSharedRegionOther                = 0x80000000,     /* task is attached to a different shared region */
-	kTaskDyldCompactInfoNone              = 0x100000000,
-	kTaskDyldCompactInfoTooBig            = 0x200000000,
-	kTaskDyldCompactInfoFaultedIn         = 0x400000000,
-	kTaskDyldCompactInfoMissing           = 0x800000000,
-	kTaskDyldCompactInfoTriedFault        = 0x1000000000,
+	kTaskIsDirtyTracked                         = 0x4000000,
+	kTaskAllowIdleExit                          = 0x8000000,
+	kTaskIsTranslated                           = 0x10000000,
+	kTaskSharedRegionNone                       = 0x20000000,     /* task doesn't have a shared region */
+	kTaskSharedRegionSystem                     = 0x40000000,     /* task attached to region with kSharedCacheSystemPrimary set */
+	kTaskSharedRegionOther                      = 0x80000000,     /* task is attached to a different shared region */
+	kTaskDyldCompactInfoNone                    = 0x100000000,
+	kTaskDyldCompactInfoTooBig                  = 0x200000000,
+	kTaskDyldCompactInfoFaultedIn               = 0x400000000,
+	kTaskDyldCompactInfoMissing                 = 0x800000000,
+	kTaskDyldCompactInfoTriedFault              = 0x1000000000,
+	kTaskWqExceededCooperativeThreadLimit       = 0x2000000000,
+	kTaskWqExceededActiveConstrainedThreadLimit = 0x4000000000,
+	kTaskRunawayMitigation                      = 0x8000000000,
+	kTaskIsActive                               = 0x10000000000,
+	kTaskIsManaged                              = 0x20000000000,
+	kTaskHasAssertion                           = 0x40000000000,
 }; // Note: Add any new flags to kcdata.py (ts_ss_flags)
 
 enum task_transition_type {
 	kTaskIsTerminated                      = 0x1,// Past LPEXIT
 };
 
+/* See kcdata_private.h for more flag definitions */
+enum task_exec_flags : uint64_t {
+	kTaskExecTranslated     = 0x01,     /* Task is running under translation (eg, Rosetta) */
+	kTaskExecHardenedHeap   = 0x02,     /* Task has the hardened heap security feature */
+	kTaskExecReserved00     = 0x04,
+	kTaskExecReserved01     = 0x08,
+	kTaskExecReserved02     = 0x10,
+	kTaskExecReserved03     = 0x20
+};
+
+/* metadata about a task that is fixed at spawn/exec time */
+struct task_exec_meta {
+	uint64_t tem_flags; /* task_exec_flags */
+} __attribute__((packed));
+
+
+/* MTE info cell state, must match mte_cell_state_t */
+__enum_closed_decl(mte_info_cell_state_t, uint8_t, {
+	MTE_INFO_STATE_DISABLED,
+	MTE_INFO_STATE_PINNED,
+	MTE_INFO_STATE_DEACTIVATING,
+	MTE_INFO_STATE_CLAIMED,
+	MTE_INFO_STATE_INACTIVE,
+	MTE_INFO_STATE_RECLAIMING,
+	MTE_INFO_STATE_ACTIVATING,
+	MTE_INFO_STATE_ACTIVE,
+});
+
+/* MTE info cell data */
+struct mte_info_cell {
+	uint8_t mic_state;
+	uint8_t mic_tagged_count;              /* Number of tagged pages in this tag storage page */
+	uint8_t mic_free_count;                /* Number of free pages in this tag storage page */
+	uint8_t mic_wired_count;               /* Number of wired pages in this tag storage page, regardless of tagging */
+	uint8_t mic_wired_tagged_count;        /* Number of tagged pages wired that aren't used by kernel memory allocators */
+	uint8_t mic_kernel_wired_tagged_count; /* Number of tagged pages wired for use by the kernel memory allocators, kmem and zalloc */
+} __attribute__((packed));
+
 enum thread_snapshot_flags {
 	/* k{User,Kernel}64_p (values 0x1 and 0x2) are defined in generic_snapshot_flags */
 	kHasDispatchSerial      = 0x4,
-	kStacksPCOnly           = 0x8,    /* Stack traces have no frame pointers. */
-	kThreadDarwinBG         = 0x10,   /* Thread is darwinbg */
-	kThreadIOPassive        = 0x20,   /* Thread uses passive IO */
-	kThreadSuspended        = 0x40,   /* Thread is suspended */
-	kThreadTruncatedBT      = 0x80,   /* Unmapped pages caused truncated backtrace */
-	kGlobalForcedIdle       = 0x100,  /* Thread performs global forced idle */
-	kThreadFaultedBT        = 0x200,  /* Some thread stack pages were faulted in as part of BT */
-	kThreadTriedFaultBT     = 0x400,  /* We tried to fault in thread stack pages as part of BT */
-	kThreadOnCore           = 0x800,  /* Thread was on-core when we entered debugger context */
-	kThreadIdleWorker       = 0x1000, /* Thread is an idle libpthread worker thread */
-	kThreadMain             = 0x2000, /* Thread is the main thread */
-	kThreadTruncKernBT      = 0x4000, /* Unmapped pages caused truncated kernel BT */
-	kThreadTruncUserBT      = 0x8000, /* Unmapped pages caused truncated user BT */
+	kStacksPCOnly           = 0x8,     /* Stack traces have no frame pointers. */
+	kThreadDarwinBG         = 0x10,    /* Thread is darwinbg */
+	kThreadIOPassive        = 0x20,    /* Thread uses passive IO */
+	kThreadSuspended        = 0x40,    /* Thread is suspended */
+	kThreadTruncatedBT      = 0x80,    /* Unmapped pages caused truncated backtrace */
+	kGlobalForcedIdle       = 0x100,   /* Thread performs global forced idle */
+	kThreadFaultedBT        = 0x200,   /* Some thread stack pages were faulted in as part of BT */
+	kThreadTriedFaultBT     = 0x400,   /* We tried to fault in thread stack pages as part of BT */
+	kThreadOnCore           = 0x800,   /* Thread was on-core when we entered debugger context */
+	kThreadIdleWorker       = 0x1000,  /* Thread is an idle libpthread worker thread */
+	kThreadMain             = 0x2000,  /* Thread is the main thread */
+	kThreadTruncKernBT      = 0x4000,  /* Unmapped pages caused truncated kernel BT */
+	kThreadTruncUserBT      = 0x8000,  /* Unmapped pages caused truncated user BT */
 	kThreadTruncUserAsyncBT = 0x10000, /* Unmapped pages caused truncated user async BT */
 }; // Note: Add any new flags to kcdata.py (ths_ss_flags)
 
@@ -731,6 +795,28 @@ struct mem_and_io_snapshot {
 	uint32_t        pages_wanted;
 	uint32_t        pages_reclaimed;
 	uint8_t         pages_wanted_reclaimed_valid; // did mach_vm_pressure_monitor succeed?
+} __attribute__((packed));
+
+struct mem_and_io_snapshot_v2 {
+	uint32_t        snapshot_magic;
+	uint32_t        free_pages;
+	uint32_t        active_pages;
+	uint32_t        inactive_pages;
+	uint32_t        purgeable_pages;
+	uint32_t        wired_pages;
+	uint32_t        speculative_pages;
+	uint32_t        throttled_pages;
+	uint32_t        filebacked_pages;
+	uint32_t        compressions;
+	uint32_t        decompressions;
+	uint32_t        compressor_size;
+	int32_t         busy_buffer_count;
+	uint32_t        pages_wanted;
+	uint32_t        pages_reclaimed;
+	uint8_t         pages_wanted_reclaimed_valid; // did mach_vm_pressure_monitor succeed?
+	uint32_t        shared_region_pages;
+	uint32_t        compressed_pages;
+	uint32_t        swapped_pages;
 } __attribute__((packed));
 
 /* SS_TH_* macros are for ths_state */
@@ -875,6 +961,15 @@ struct instrs_cycles_snapshot_v2 {
 	uint64_t ics_p_cycles;
 } __attribute__((packed));
 
+struct instrs_cycles_snapshot_v3 {
+	uint64_t ics_instructions;
+	uint64_t ics_cycles;
+	uint64_t ics_p_instructions;
+	uint64_t ics_p_cycles;
+	uint64_t ics_m_instructions;
+	uint64_t ics_m_cycles;
+} __attribute__((packed));
+
 struct thread_delta_snapshot_v2 {
 	uint64_t  tds_thread_id;
 	uint64_t  tds_voucher_identifier;
@@ -948,6 +1043,27 @@ struct task_snapshot_v2 {
 	char      ts_p_comm[32];
 } __attribute__ ((packed));
 
+struct task_snapshot_v3 {
+	uint64_t  ts_unique_pid;
+	uint64_t  ts_ss_flags;
+	uint64_t  ts_user_time_in_terminated_threads;
+	uint64_t  ts_system_time_in_terminated_threads;
+	uint64_t  ts_p_start_sec;
+	uint64_t  ts_task_size;
+	uint64_t  ts_max_resident_size;
+	uint32_t  ts_suspend_count;
+	uint32_t  ts_faults;
+	uint32_t  ts_pageins;
+	uint32_t  ts_cow_faults;
+	uint32_t  ts_was_throttled;
+	uint32_t  ts_did_throttle;
+	uint32_t  ts_latency_qos;
+	int32_t   ts_pid;
+	char      ts_p_comm[32];
+	uint32_t  ts_uid;
+	uint32_t  ts_gid;
+} __attribute__ ((packed));
+
 struct transitioning_task_snapshot {
 	uint64_t  tts_unique_pid;
 	uint64_t  tts_ss_flags;
@@ -970,6 +1086,13 @@ struct task_delta_snapshot_v2 {
 	uint32_t  tds_was_throttled;
 	uint32_t  tds_did_throttle;
 	uint32_t  tds_latency_qos;
+} __attribute__ ((packed));
+
+struct task_memorystatus_snapshot {
+	int32_t  tms_current_memlimit;
+	int32_t  tms_effectivepriority;
+	int32_t  tms_requestedpriority;
+	int32_t  tms_assertionpriority;
 } __attribute__ ((packed));
 
 #define KCDATA_INVALID_CS_TRUST_LEVEL 0xffffffff
@@ -1022,8 +1145,26 @@ typedef struct stackshot_thread_waitinfo_v2 {
 	int16_t portlabel_id;   /* matches to a stackshot_portlabel, or NONE or MISSING */
 	uint32_t wait_flags;    /* info about the wait */
 #define STACKSHOT_WAITINFO_FLAGS_SPECIALREPLY 0x1  /* We're waiting on a special reply port */
+#define STACKSHOT_WAITINFO_FLAGS_BOOTSTRAP 0x2  /* We're waiting on a bootstrap port */
 } __attribute__((packed)) thread_waitinfo_v2_t;
 
+
+typedef struct stackshot_vmrl_blocking_relationship {
+	uint64_t waiter_tid;
+	uint64_t blocker_tid;
+	uint64_t entry_hash;
+	uint32_t flags;
+} __attribute__((packed)) vmrl_blocking_relationship_t;
+
+#define STACKSHOT_WAITER_VMRL_SHARED                    0x01
+#define STACKSHOT_BLOCKER_VMRL_SHARED                   0x02
+#define STACKSHOT_WAITER_VMRL_EXCLUSIVE                 0x04
+#define STACKSHOT_BLOCKER_VMRL_EXCLUSIVE                0x08
+
+#define STACKSHOT_WAITER_VMRL_STREAMING                 0x10
+#define STACKSHOT_BLOCKER_VMRL_STREAMING                0x20
+#define STACKSHOT_WAITER_VMRL_ATOMIC                    0x40
+#define STACKSHOT_BLOCKER_VMRL_ATOMIC                   0x80
 
 typedef struct stackshot_thread_turnstileinfo {
 	uint64_t waiter;        /* The thread that's waiting on the object */
@@ -1091,6 +1232,47 @@ struct stackshot_latency_collection {
 } __attribute__((packed));
 
 /* only collected if STACKSHOT_COLLECTS_LATENCY_INFO is set to !0 */
+struct stackshot_latency_collection_v2 {
+	uint64_t latency_version;
+	uint64_t setup_latency_mt;
+	uint64_t total_task_iteration_latency_mt;
+	uint64_t total_terminated_task_iteration_latency_mt;
+	uint64_t task_queue_building_latency_mt;
+	uint64_t terminated_task_queue_building_latency_mt;
+	uint64_t cpu_wait_latency_mt;
+	int32_t  main_cpu_number;
+	int32_t  calling_cpu_number;
+	uint64_t buffer_size;
+	uint64_t buffer_used;
+	uint64_t buffer_overhead;
+	uint64_t buffer_count;
+} __attribute__((packed));
+
+/* only collected if STACKSHOT_COLLECTS_LATENCY_INFO is set to !0 */
+struct stackshot_latency_cpu {
+	int32_t  cpu_number;
+	int32_t  cluster_type;
+	uint64_t init_latency_mt;
+	uint64_t workqueue_latency_mt;
+	uint64_t total_latency_mt;
+	uint64_t total_cycles;
+	uint64_t total_instrs;
+	uint64_t tasks_processed;
+	uint64_t threads_processed;
+	uint64_t faulting_time_mt;
+	uint64_t total_buf;
+	uint64_t intercluster_buf_used;
+} __attribute__((packed));
+
+/* only collected if STACKSHOT_COLLECTS_LATENCY_INFO is set to !0 */
+struct stackshot_latency_buffer {
+	int32_t  cluster_type;
+	uint64_t size;
+	uint64_t used;
+	uint64_t overhead;
+} __attribute__ ((packed));
+
+/* only collected if STACKSHOT_COLLECTS_LATENCY_INFO is set to !0 */
 struct stackshot_latency_task {
 	uint64_t task_uniqueid;
 	uint64_t setup_latency;
@@ -1132,6 +1314,95 @@ struct stackshot_suspension_source {
 	char tss_procname[65]; /* name of suspending task */
 } __attribute__((packed));
 
+struct stackshot_device_lock_state {
+	uint8_t flags;           /* interpret as a stackshot_device_lock_flags_t */
+	uint8_t passcode_status; /* interpret as a passcode_status_t */
+	uint8_t lock_state;      /* interpret as a device_lock_state_t */
+} __attribute__((packed));
+
+
+
+enum thread_exclaves_flags : uint32_t {
+	kExclaveRPCActive = 0x1,          /* Thread is handling RPC call in secure world */
+	kExclaveUpcallActive = 0x2,       /* Thread has upcalled back into xnu while handling RPC */
+	kExclaveSchedulerRequest = 0x4,   /* Thread is handling scheduler request */
+};
+
+struct thread_exclaves_info {
+	uint64_t tei_scid;              
+	uint32_t tei_thread_offset;     
+	uint32_t tei_flags;             
+} __attribute__((packed));
+
+struct thread_crash_exclaves_info {
+	uint64_t tcei_scid;              
+	uint64_t tcei_thread_id;         /* Corresponding xnu thread id */
+	uint32_t tcei_flags;             
+} __attribute__((packed));
+
+enum exclave_scresult_flags : uint64_t {
+	kExclaveScresultHaveIPCStack = 0x1,
+};
+
+struct exclave_scresult_info {
+	uint64_t esc_id;
+	uint64_t esc_flags;             
+} __attribute__((packed));
+
+enum exclave_ipcstackentry_flags : uint64_t {
+	kExclaveIpcStackEntryHaveInvocationID = 0x1,
+	kExclaveIpcStackEntryHaveStack = 0x2,
+};
+
+struct exclave_ipcstackentry_info {
+	uint64_t eise_asid;                     /* ASID */
+	uint64_t eise_tnid;                     /* Thread numeric ID, may be UINT64_MAX if ommitted */
+	uint64_t eise_invocationid;             /* Invocation ID, may be UINT64_MAX if ommitted */
+	uint64_t eise_flags;                    
+} __attribute__((packed));
+
+typedef uint64_t exclave_ecstackentry_addr_t;
+
+enum exclave_addressspace_flags : uint64_t {
+	kExclaveAddressSpaceHaveSlide = 0x1,    /* slide info provided */
+};
+
+struct exclave_addressspace_info {
+	uint64_t eas_id;                        /* ASID */
+	uint64_t eas_flags;                     
+	uint64_t eas_layoutid;                  /* textLayout for this address space */
+	uint64_t eas_slide;                     /* slide to apply to textlayout, or UINT64_MAX if omitted */
+	uint64_t eas_asroot;                    /* ASRoot/TTBR0 value used as an identifier for the address space by cL4 */
+} __attribute__((packed));
+
+enum exclave_textlayout_flags : uint64_t {
+	kExclaveTextLayoutLoadAddressesSynthetic = 0x1, /* Load Addresses are synthetic */
+	kExclaveTextLayoutLoadAddressesUnslid = 0x2, /* Load Addresses are accurate and unslid */
+	kExclaveTextLayoutHasSharedCache = 0x4, 
+};
+
+struct exclave_textlayout_info_v1 {
+	uint64_t layout_id;
+	uint64_t etl_flags;                     
+} __attribute__((packed));
+
+struct exclave_textlayout_info {
+	uint64_t layout_id;
+	uint64_t etl_flags;                     
+	uint32_t sharedcache_index;             /* index in SEGMENTs, or UINT32_MAX */
+} __attribute__((packed));
+
+struct exclave_textlayout_segment {
+	uuid_t layoutSegment_uuid;
+	uint64_t layoutSegment_loadAddress;     /* Synthetic Load Address */
+} __attribute__((packed));
+
+struct exclave_textlayout_segment_v2 {
+	uuid_t layoutSegment_uuid;
+	uint64_t layoutSegment_loadAddress;     /* Synthetic Load Address */
+	uint64_t layoutSegment_rawLoadAddress;  /* Raw Load Address when unslided */
+} __attribute__((packed));
+
 /**************** definitions for crashinfo *********************/
 
 /*
@@ -1160,8 +1431,29 @@ struct kernel_triage_info_v1 {
 	char triage_string5[MAX_TRIAGE_STRING_LEN];
 } __attribute__((packed));
 
+struct crashinfo_jit_address_range {
+	uint64_t start_address;
+	uint64_t end_address;
+} __attribute__((packed));
+
+struct crashinfo_mb {
+	uint64_t start_address;
+	uint64_t data[64];
+} __attribute__((packed));
+
+struct crashinfo_task_security_config {
+	uint32_t task_security_config; /* struct task_security_config */
+} __attribute__((packed));
+
+struct crashinfo_voucher {
+	uint64_t thread_id;
+	uint32_t originator_pid;
+	uint32_t proximate_pid;
+} __attribute__((packed));
+
 #define MAX_CRASHINFO_SIGNING_ID_LEN 64
 #define MAX_CRASHINFO_TEAM_ID_LEN 32
+#define MAX_CRASHINFO_SANDBOX_PROFILE_LEN 32
 
 #define TASK_CRASHINFO_BEGIN                KCDATA_BUFFER_BEGIN_CRASHINFO
 #define TASK_CRASHINFO_STRING_DESC          KCDATA_TYPE_STRING_DESC
@@ -1235,6 +1527,14 @@ struct kernel_triage_info_v1 {
 #define TASK_CRASHINFO_CS_VALIDATION_CATEGORY                   0x83D /* uint32_t */
 #define TASK_CRASHINFO_CS_TRUST_LEVEL                           0x83E /* uint32_t */
 #define TASK_CRASHINFO_PROC_CPUTYPE                             0x83F /* cpu_type_t */
+#define TASK_CRASHINFO_JIT_ADDRESS_RANGE                        0x840 /* struct crashinfo_jit_address_range */
+#define TASK_CRASHINFO_MB                                       0x841 /* struct crashinfo_mb */
+#define TASK_CRASHINFO_CS_AUXILIARY_INFO                        0x842 /* uint64_t */
+#define TASK_CRASHINFO_RLIM_CORE                                0x843 /* rlim_t */
+#define TASK_CRASHINFO_CORE_ALLOWED                             0x844 /* uint8_t */
+#define TASK_CRASHINFO_TASK_SECURITY_CONFIG                     0x845 /* struct task_security_config */
+#define TASK_CRASHINFO_VOUCHER_INFO                             0x846 /* struct crashinfo_voucher */
+#define TASK_CRASHINFO_SANDBOX_PROFILE                          0x847 /* string of len MAX_CRASHINFO_SANDBOX_PROFILE_LEN */
 
 #define TASK_CRASHINFO_END                  KCDATA_TYPE_BUFFER_END
 

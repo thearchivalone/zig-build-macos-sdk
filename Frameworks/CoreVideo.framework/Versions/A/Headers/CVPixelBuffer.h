@@ -62,6 +62,7 @@ enum
   kCVPixelFormatType_32AlphaGray    = 'b32a',     /* 32 bit AlphaGray, 16-bit big-endian samples, black is zero */
   kCVPixelFormatType_16Gray         = 'b16g',     /* 16 bit Grayscale, 16-bit big-endian samples, black is zero */
   kCVPixelFormatType_30RGB          = 'R10k',     /* 30 bit RGB, 10-bit big-endian samples, 2 unused padding bits (at least significant end). */
+  kCVPixelFormatType_30RGB_r210     = 'r210',     /* 30 bit RGB, 10-bit big-endian samples, 2 unused padding bits (at most significant end), video-range (64-940). */
   kCVPixelFormatType_422YpCbCr8     = '2vuy',     /* Component Y'CbCr 8-bit 4:2:2, ordered Cb Y'0 Cr Y'1 */
   kCVPixelFormatType_4444YpCbCrA8   = 'v408',     /* Component Y'CbCrA 8-bit 4:4:4:4, ordered Cb Y' Cr A */
   kCVPixelFormatType_4444YpCbCrA8R  = 'r408',     /* Component Y'CbCrA 8-bit 4:4:4:4, rendering format. full range alpha, zero biased YUV, ordered A Y' Cb Cr */
@@ -115,10 +116,13 @@ enum
   kCVPixelFormatType_444YpCbCr10BiPlanarFullRange  = 'xf44', /* 2 plane YCbCr10 4:4:4, each 10 bits in the MSBs of 16bits, full-range (Y range 0-1023) */
   kCVPixelFormatType_420YpCbCr8VideoRange_8A_TriPlanar   = 'v0a8', /* first and second planes as per 420YpCbCr8BiPlanarVideoRange (420v), alpha 8 bits in third plane full-range.  No CVPlanarPixelBufferInfo struct. */
   kCVPixelFormatType_16VersatileBayer    = 'bp16',   /* Single plane Bayer 16-bit little-endian sensor element ("sensel") samples from full-size decoding of ProRes RAW images; Bayer pattern (sensel ordering) and other raw conversion information is described via buffer attachments */
+  kCVPixelFormatType_96VersatileBayerPacked12      = 'btp2',   /* Bayer 12-bit Little-Endian, packed 12-bits per component in 96-bits; Bayer pattern (sensel ordering) and other raw conversion information is described via buffer attachments */
   kCVPixelFormatType_64RGBA_DownscaledProResRAW    = 'bp64',   /* Single plane 64-bit RGBA (16-bit little-endian samples) from downscaled decoding of ProRes RAW images; components--which may not be co-sited with one another--are sensel values and require raw conversion, information for which is described via buffer attachments */
   kCVPixelFormatType_422YpCbCr16BiPlanarVideoRange       = 'sv22', /* 2 plane YCbCr16 4:2:2, video-range (luma=[4096,60160] chroma=[4096,61440]) */
   kCVPixelFormatType_444YpCbCr16BiPlanarVideoRange       = 'sv44', /* 2 plane YCbCr16 4:4:4, video-range (luma=[4096,60160] chroma=[4096,61440]) */
   kCVPixelFormatType_444YpCbCr16VideoRange_16A_TriPlanar = 's4as', /* 3 plane video-range YCbCr16 4:4:4 with 16-bit full-range alpha (luma=[4096,60160] chroma=[4096,61440] alpha=[0,65535]).  No CVPlanarPixelBufferInfo struct. */
+  kCVPixelFormatType_30RGBLE_8A_BiPlanar                 = 'b3a8', /* little-endian RGB XX-10-10-10 2 MSB zero in first plane (wide-gamut), alpha 8 bits in second plane (full-range) */
+
 };
 
 	
@@ -145,12 +149,16 @@ enum
 #endif
 {
 	kCVPixelFormatType_Lossless_32BGRA                               = '&BGA', /* Lossless-compressed form of kCVPixelFormatType_32BGRA. */
-	
+	kCVPixelFormatType_Lossless_64RGBAHalf                           = '&RhA', /* Lossless-compressed form of kCVPixelFormatType_64RGBAHalf.  No CVPlanarPixelBufferInfo struct. */
+
 	// Lossless-compressed Bi-planar YCbCr pixel format types
 	kCVPixelFormatType_Lossless_420YpCbCr8BiPlanarVideoRange         = '&8v0', /* Lossless-compressed form of kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange.  No CVPlanarPixelBufferInfo struct. */
 	kCVPixelFormatType_Lossless_420YpCbCr8BiPlanarFullRange          = '&8f0', /* Lossless-compressed form of kCVPixelFormatType_420YpCbCr8BiPlanarFullRange.  No CVPlanarPixelBufferInfo struct. */
 	kCVPixelFormatType_Lossless_420YpCbCr10PackedBiPlanarVideoRange  = '&xv0', /* Lossless-compressed-packed form of kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange.  No CVPlanarPixelBufferInfo struct. Format is compressed-packed with no padding bits between pixels. */
 	kCVPixelFormatType_Lossless_422YpCbCr10PackedBiPlanarVideoRange  = '&xv2', /* Lossless-compressed form of kCVPixelFormatType_422YpCbCr10BiPlanarVideoRange.  No CVPlanarPixelBufferInfo struct. Format is compressed-packed with no padding bits between pixels. */
+	kCVPixelFormatType_Lossless_420YpCbCr10PackedBiPlanarFullRange   = '&xf0', /* Lossless-compressed form of kCVPixelFormatType_420YpCbCr10BiPlanarFullRange.  No CVPlanarPixelBufferInfo struct. Format is compressed-packed with no padding bits between pixels. */
+	kCVPixelFormatType_Lossless_30RGBLE_8A_BiPlanar                  = '&b38', /* Lossless-compressed form of kCVPixelFormatType_30RGBLE_8A_BiPlanar.  No CVPlanarPixelBufferInfo struct.*/
+	kCVPixelFormatType_Lossless_30RGBLEPackedWideGamut               = '&w3r', /* Lossless-compressed form of kCVPixelFormatType_30RGBLEPackedWideGamut.  No CVPlanarPixelBufferInfo struct. */
 };
 
 /*
@@ -324,6 +332,16 @@ CV_EXPORT const CFStringRef CV_NONNULL kCVPixelBufferProResRAWKey_RecommendedCro
 */
 CV_EXPORT const CFStringRef CV_NONNULL kCVPixelBufferProResRAWKey_MetadataExtension API_AVAILABLE(ios(15.0), macosx(12.0)) __TVOS_PROHIBITED __WATCHOS_PROHIBITED;
 
+#if COREVIDEO_SUPPORTS_IOSURFACE
+/*!
+	@const      kCVPixelBufferIOSurfacePurgeableKey
+	@abstract   Key sets the IOSurface backed memory allocation for CVPixelBuffer as purgable and volatile.
+	@discussion A purgeable IOSurface is capable of being switched between non-volatile, volatile and empty states using IOSurfaceSetPurgeable.  When in the volatile state, the OS is permitted to instantly change its state to empty and remove all its memory pages.  Clients should set the IOSurfaces to the non-volatile state while they are in use and the volatile state when their need and contents is optional/speculative and OK to discard in response to system memory demand.  See IOSurfaceSetPurgeable for more details.  This key is only effective for CVPixelBuffers that are backed by IOSurface.
+*/
+CV_EXPORT const CFStringRef CV_NONNULL kCVPixelBufferIOSurfacePurgeableKey API_AVAILABLE(macos(12.0), ios(15.0), tvos(15.0), watchos(8.0), visionos(26.0)) ;
+
+#endif // COREVIDEO_SUPPORTS_IOSURFACE
+
 /*!
     @typedef	CVPixelBufferRef
     @abstract   Based on the image buffer type. The pixel buffer implements the memory storage for an image buffer.
@@ -337,7 +355,7 @@ CV_EXPORT CFTypeID CVPixelBufferGetTypeID(void) __OSX_AVAILABLE_STARTING(__MAC_1
     @function   CVPixelBufferRetain
     @abstract   Retains a CVPixelBuffer object
     @discussion Equivalent to CFRetain, but NULL safe
-    @param      buffer A CVPixelBuffer object that you want to retain.
+    @param      texture A CVPixelBuffer object that you want to retain.
     @result     A CVPixelBuffer object that is the same as the passed in buffer.
 */
 CV_EXPORT CVPixelBufferRef CV_NULLABLE CVPixelBufferRetain( CVPixelBufferRef CV_NULLABLE texture ) __OSX_AVAILABLE_STARTING(__MAC_10_4,__IPHONE_4_0);
@@ -346,7 +364,7 @@ CV_EXPORT CVPixelBufferRef CV_NULLABLE CVPixelBufferRetain( CVPixelBufferRef CV_
     @function   CVPixelBufferRelease
     @abstract   Releases a CVPixelBuffer object
     @discussion Equivalent to CFRelease, but NULL safe
-    @param      buffer A CVPixelBuffer object that you want to release.
+    @param      texture A CVPixelBuffer object that you want to release.
 */
 CV_EXPORT void CVPixelBufferRelease( CV_RELEASES_ARGUMENT CVPixelBufferRef CV_NULLABLE texture ) __OSX_AVAILABLE_STARTING(__MAC_10_4,__IPHONE_4_0);
 
@@ -618,6 +636,15 @@ CV_EXPORT CVReturn CVPixelBufferFillExtendedPixels( CVPixelBufferRef CV_NONNULL 
     @param      pixelBuffer Target PixelBuffer.
 */
 CV_EXPORT CFDictionaryRef CV_NONNULL CVPixelBufferCopyCreationAttributes( CVPixelBufferRef CV_NONNULL pixelBuffer ) CV_RETURNS_RETAINED API_AVAILABLE(macosx(12.0), ios(15.0), tvos(15.0), watchos(8.0));
+
+/*!
+    @function   CVPixelBufferIsCompatibleWithAttributes
+    @abstract   Returns true if given pixel buffer is compatible with pixelBufferAttributes dictionary.
+    @param      pixelBuffer PixelBuffer to check for compatibility.
+    @param      attributes Creation attributes which pixel buffer should have.
+*/
+CV_EXPORT Boolean CVPixelBufferIsCompatibleWithAttributes( CVPixelBufferRef CV_NONNULL pixelBuffer, CFDictionaryRef CV_NULLABLE attributes )
+    API_AVAILABLE(macosx(10.4), ios(4.0), tvos(4.0), watchos(1.0), visionos(1.0));
 
 #if defined(__cplusplus)
 }

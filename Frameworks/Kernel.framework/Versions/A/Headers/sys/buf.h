@@ -328,6 +328,8 @@ errno_t buf_map(buf_t bp, caddr_t *io_addr);
  *  @abstract Get virtual mappings for buffer data.
  *  @discussion Similar to buf_map but the focus is on a range
  *  of the UPL. The b_uploffset and b_count control what part of the UPL will be mapped.
+ *  This function is paired with buf_unmap_range which must be called from the same
+ *  thread.
  *  @param bp Buffer whose mapping to find or create.
  *  @param io_addr Destination for mapping address.
  *  @return 0 for success, ENOMEM if unable to map the buffer.
@@ -339,6 +341,8 @@ errno_t buf_map_range(buf_t bp, caddr_t *io_addr);
  *  @abstract Get virtual mappings for buffer data.
  *  @discussion Similar to buf_map_range but also takes protection so that part of the UPL
  *  will be mapped with the requested protection.
+ *  This function is paired with buf_unmap_range which must be called from the same
+ *  thread.
  *  @param bp Buffer whose mapping to find or create.
  *  @param io_addr Destination for mapping address.
  *  @return 0 for success, ENOMEM if unable to map the buffer.
@@ -365,6 +369,8 @@ errno_t buf_unmap(buf_t bp);
  *  @abstract Release mappings for buffer data.
  *  @discussion Similar to buf_unmap but the focus is on a range
  *  of the UPL. The b_uploffset and b_count control what part of the UPL will be unmapped.
+ *  This function must be called from the same thread that called the corresponding
+ *  buf_map_range/buf_map_range_with_prot.
  *  @param bp Buffer whose mapping to find or create.
  *  @return 0 for success, EINVAL if unable to unmap buffer.
  */
@@ -1071,6 +1077,33 @@ void buf_markstatic(buf_t bp);
  *  @return Nonzero if buffer has static data, 0 otherwise.
  */
 int     buf_static(buf_t bp);
+
+__options_decl(vnode_verify_kind_t, uint32_t, {
+	VK_HASH_NONE = 0x00,
+	VK_HASH_SHA3_256 = 0x01,
+	VK_HASH_SHA3_384 = 0x02,
+	VK_HASH_SHA3_512 = 0x03,
+});
+
+#define NUM_VERIFY_KIND 4
+
+/*!
+ *  @function buf_verify_enable
+ *  @abstract Set up buf to retrieve hashes alongwith data.
+ *  @param bp buf pointer.
+ *  @param verify_kind specific algorithm to be used for the hash calculation.
+ *  @return 0 if successful, error otherwise.
+ */
+errno_t buf_verify_enable(buf_t bp, vnode_verify_kind_t verify_kind);
+
+/*!
+ *  @function buf_verifyptr
+ *  @abstract Gets pointer to the buffer to store the hash calculated for the data.
+ *  @param bp buf pointer.
+ *  @param len pointer to uint32_t variable to store the length.
+ *  @return Pointer to a buffer (of length passed in second argument), NULL if there is no hash needed.
+ */
+uint8_t * buf_verifyptr(buf_t bp, uint32_t *len);
 
 /*!
  *  @function bufattr_markiosched

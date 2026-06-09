@@ -1,9 +1,11 @@
 /* CoreAnimation - CAMetalLayer.h
 
-   Copyright (c) 2013-2022, Apple Inc.
+   Copyright (c) 2013-2025, Apple Inc.
    All rights reserved. */
 
 #ifdef __OBJC__
+
+#if __has_include(<Metal/MTLDrawable.h>)
 
 #import <QuartzCore/CALayer.h>
 #import <QuartzCore/CAEDRMetadata.h>
@@ -13,10 +15,11 @@
 @protocol MTLDevice;
 @protocol MTLTexture;
 @protocol MTLDrawable;
+@protocol MTLResidencySet;
 
 @class CAMetalLayer, NSDictionary;
 
-NS_ASSUME_NONNULL_BEGIN
+NS_HEADER_AUDIT_BEGIN(nullability, sendability)
 
 /* CAMetalDrawable represents a displayable buffer that vends an object
  * that conforms to the MTLTexture protocol that may be used to create
@@ -43,7 +46,11 @@ NS_ASSUME_NONNULL_BEGIN
 /* Note: The default value of the `opaque' property for CAMetalLayer
  * instances is true. */
 
-API_AVAILABLE(macos(10.11), ios(8.0), watchos(2.0), tvos(9.0))
+#if TARGET_OS_SIMULATOR
+API_AVAILABLE(macos(10.11), ios(13.0), tvos(13.0)) API_UNAVAILABLE(watchos)
+#else
+API_AVAILABLE(macos(10.11), ios(8.0), tvos(9.0)) API_UNAVAILABLE(watchos)
+#endif
 @interface CAMetalLayer : CALayer
 {
 @private
@@ -61,7 +68,7 @@ API_AVAILABLE(macos(10.11), ios(8.0), watchos(2.0), tvos(9.0))
 /* This property returns the preferred MTLDevice for this CAMetalLayer. */
 
 @property(nullable, readonly) id<MTLDevice> preferredDevice
-  API_AVAILABLE(macos(10.15), ios(13.0), watchos(6.0), tvos(13.0));
+  API_AVAILABLE(macos(10.15), ios(13.0), tvos(13.0)) API_UNAVAILABLE(watchos);
 
 /* This property controls the pixel format of the MTLTexture objects.
  * The two supported values are MTLPixelFormatBGRA8Unorm and
@@ -119,7 +126,7 @@ API_AVAILABLE(macos(10.11), ios(8.0), watchos(2.0), tvos(9.0))
  * rather than 1.0. The default is NO.  */
 
 @property BOOL wantsExtendedDynamicRangeContent
-API_AVAILABLE(macos(10.11), ios(16.0), macCatalyst(16.0)) API_UNAVAILABLE(tvos, watchos);
+  API_AVAILABLE(macos(10.11), ios(16.0)) API_UNAVAILABLE(tvos, watchos);
 
 /* Metadata describing extended dynamic range content in the layer's drawable.
  * Must be set before calling nextDrawable. If non-nil, content may be
@@ -127,12 +134,15 @@ API_AVAILABLE(macos(10.11), ios(16.0), macCatalyst(16.0)) API_UNAVAILABLE(tvos, 
  * will be rendered without tone mapping and values above the maximum EDR value
  * -[NSScreen maximumExtendedDynamicRangeColorComponentValue] may be clamped.
  * Defaults to nil. */
-@property (strong, nullable) CAEDRMetadata *EDRMetadata API_AVAILABLE(macos(10.15), ios(16.0));
+@property (strong, nullable) CAEDRMetadata *EDRMetadata
+  API_AVAILABLE(macos(10.15), ios(16.0)) API_UNAVAILABLE(tvos, watchos);
 
 /* This property controls if this layer and its drawables will be synchronized
  * to the display's Vsync. The default value is YES. */
 
-@property BOOL displaySyncEnabled API_AVAILABLE(macos(10.13));
+@property BOOL displaySyncEnabled
+  API_AVAILABLE(macos(10.13), macCatalyst(13.1))
+  API_UNAVAILABLE(ios, tvos, watchos, visionos);
 
 /* Controls if `-nextDrawable' is allowed to timeout after 1 second and return
  * nil if * the system does not have a free drawable available. The default
@@ -140,15 +150,31 @@ API_AVAILABLE(macos(10.11), ios(16.0), macCatalyst(16.0)) API_UNAVAILABLE(tvos, 
  * free drawable is available. */
 
 @property BOOL allowsNextDrawableTimeout
-  API_AVAILABLE(macos(10.13), ios(11.0), watchos(4.0), tvos(11.0));
+  API_AVAILABLE(macos(10.13), ios(11.0), tvos(11.0)) API_UNAVAILABLE(watchos);
 
 /* When non-nil, controls the options of developer HUD. Defaults to nil. */
 
 @property(nullable, copy) NSDictionary *developerHUDProperties
   API_AVAILABLE(macos(13.0), ios(16.0), tvos(16.0)) API_UNAVAILABLE(watchos);
 
+/* Metal residency set containing resources for presenting layer's drawables
+ *
+ * Applications should use this residency set to ensure all Metal resources
+ * needed to render into or present drawables are resident before use. The
+ * residency set will be updated automatically to always track the latest
+ * resources. When the `device` property is changed, the previous residency
+ * set will be invalidated and the application must request a new instance.
+ * Applications must not make any modifications to this residency set. The
+ * residency set will not be available if the device propery is nil, or if 
+ * it does not support residency sets. */
+
+@property (readonly) id<MTLResidencySet> residencySet
+  API_AVAILABLE(macos(26.0), ios(26.0), tvos(26.0), visionos(26.0))
+  API_UNAVAILABLE(watchos);
+
 @end
 
-NS_ASSUME_NONNULL_END
+NS_HEADER_AUDIT_END(nullability, sendability)
 
-#endif
+#endif /* __has_include(<Metal/MTLDrawable.h>) */
+#endif /* __OBJC__ */

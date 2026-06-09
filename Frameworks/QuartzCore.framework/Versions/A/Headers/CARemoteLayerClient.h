@@ -1,6 +1,6 @@
 /* CoreAnimation - CARemoteLayerClient.h
 
-   Copyright (c) 2010-2022, Apple Inc.
+   Copyright (c) 2010-2025, Apple Inc.
    All rights reserved. */
 
 #ifdef __OBJC__
@@ -11,9 +11,10 @@
 
 @class CALayer;
 
-NS_ASSUME_NONNULL_BEGIN
+NS_HEADER_AUDIT_BEGIN(nullability, sendability)
 
-API_AVAILABLE(macos(10.7))
+API_AVAILABLE(macos(10.7), macCatalyst(13.1))
+API_UNAVAILABLE(ios, tvos, watchos, visionos)
 @interface CARemoteLayerClient : NSObject
 {
 @private
@@ -42,6 +43,6 @@ API_AVAILABLE(macos(10.7))
 
 @end
 
-NS_ASSUME_NONNULL_END
+NS_HEADER_AUDIT_END(nullability, sendability)
 
 #endif

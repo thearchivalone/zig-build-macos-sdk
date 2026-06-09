@@ -1,7 +1,7 @@
 /*
  NSSliderTouchBarItem.h
  Application Kit
- Copyright (c) 2016-2023, Apple Inc.
+ Copyright (c) 2016-2024, Apple Inc.
  All rights reserved.
  */
 
@@ -49,7 +49,9 @@ API_AVAILABLE(macos(10.12.2), ios(13.0))
 /// The action of the item, called when the slider or accessories receive user interaction.
 @property (nullable) SEL action;
 
-/// The localized string labelling this item during user customization. The default value is empty string.
+/// The localized string labeling this item during user customization.
+///
+/// The default value is empty string.
 @property (readwrite, copy, null_resettable) NSString *customizationLabel;
 
 @end

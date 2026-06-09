@@ -1,12 +1,12 @@
 #if (defined(USE_APPKIT_PUBLIC_HEADERS) && USE_APPKIT_PUBLIC_HEADERS) || !__has_include(<UIFoundation/NSTextLayoutManager.h>)
-#include <TargetConditionals.h>
+#import <TargetConditionals.h>
 
 #if !TARGET_OS_IPHONE
 //
 //  NSTextLayoutManager.h
 //  Text Kit
 //
-//  Copyright (c) 2017-2023, Apple Inc. All rights reserved.
+//  Copyright (c) 2017-2025, Apple Inc. All rights reserved.
 //
 
 
@@ -31,7 +31,7 @@ typedef NS_ENUM(NSInteger, NSTextLayoutManagerSegmentType) {
     NSTextLayoutManagerSegmentTypeStandard = 0, // The standard segment matching the typographic bounds of range.
     NSTextLayoutManagerSegmentTypeSelection = 1, // The segment behavior suitable for the selection rendering. Extends the last segment in a line fragment to the trailing edge if continuing to the next line.
     NSTextLayoutManagerSegmentTypeHighlight = 2, // The segment behavior suitable for highlighting.
-} API_AVAILABLE(macos(12.0), ios(15.0), tvos(15.0)) API_UNAVAILABLE(watchos);
+} API_AVAILABLE(macos(12.0), ios(15.0), tvos(15.0), visionos(1.0)) API_UNAVAILABLE(watchos);
 
 typedef NS_OPTIONS(NSUInteger, NSTextLayoutManagerSegmentOptions) {
     NSTextLayoutManagerSegmentOptionsNone = 0,
@@ -40,10 +40,10 @@ typedef NS_OPTIONS(NSUInteger, NSTextLayoutManagerSegmentOptions) {
     NSTextLayoutManagerSegmentOptionsHeadSegmentExtended = (1 << 2), // When specified, the segment is extended to the head edge
     NSTextLayoutManagerSegmentOptionsTailSegmentExtended = (1 << 3), // When specified, the segment is extended to the tail edge.
     NSTextLayoutManagerSegmentOptionsUpstreamAffinity = (1 << 4), // When specified, the segment is placed based on the upstream affinity for an empty range.
-} API_AVAILABLE(macos(12.0), ios(15.0), tvos(15.0)) API_UNAVAILABLE(watchos);
+} API_AVAILABLE(macos(12.0), ios(15.0), tvos(15.0), visionos(1.0)) API_UNAVAILABLE(watchos);
 
 // NSTextLayoutManager is the center piece of the TextKit object network maintaining the layout geometry via an array of NSTextContainer and layout results with NSTextLayoutFragment associated with NSTextElement vended from the owner NSTextContentManager.
-API_AVAILABLE(macos(12.0), ios(15.0), tvos(15.0)) API_UNAVAILABLE(watchos)
+API_AVAILABLE(macos(12.0), ios(15.0), tvos(15.0), visionos(1.0)) API_UNAVAILABLE(watchos)
 @interface NSTextLayoutManager : NSObject <NSSecureCoding, NSTextSelectionDataSource>
 #pragma mark Initialization
 - (instancetype)init NS_DESIGNATED_INITIALIZER;
@@ -60,6 +60,12 @@ API_AVAILABLE(macos(12.0), ios(15.0), tvos(15.0)) API_UNAVAILABLE(watchos)
 
 // When YES, NSTextLayoutManager will attempt to hyphenate when wrapping lines. May be overridden on a per-paragraph basis by the NSParagraphStyle's usesDefaultHyphenation. The receiver makes the best effort to decide the exact logic including the hyphenation factor based on the context. The default value is NO. Can be overridden by the preference key @"NSUsesDefaultHyphenation".
 @property BOOL usesHyphenation;
+
+/// Specifies the behavior for resolving ``NSTextAlignment.natural`` to the visual alignment.
+///
+/// When set to ``true``, the resolved visual alignment is determined by the resolved base writing direction; otherwise, it is using the user’s preferred language.
+/// The default value is ``true``.
+@property BOOL resolvesNaturalAlignmentWithBaseWritingDirection API_AVAILABLE(macos(26.0), ios(26.0), tvos(26.0), visionos(26.0)) API_UNAVAILABLE(watchos);
 
 #pragma mark NSTextContentManager interface
 // Pointing to the NSTextContentManager object strongly referencing the text layout manager.
@@ -145,7 +151,7 @@ API_AVAILABLE(macos(12.0), ios(15.0), tvos(15.0)) API_UNAVAILABLE(watchos)
 @end
 
 #pragma mark NSTextLayoutManagerDelegate
-API_AVAILABLE(macos(12.0), ios(15.0), tvos(15.0)) API_UNAVAILABLE(watchos)
+API_AVAILABLE(macos(12.0), ios(15.0), tvos(15.0), visionos(1.0)) API_UNAVAILABLE(watchos)
 @protocol NSTextLayoutManagerDelegate <NSObject>
 @optional
 // NSTextLayoutFragment management

@@ -29,6 +29,10 @@
 #ifndef _KERN_BLOCK_HINT_H_
 #define _KERN_BLOCK_HINT_H_
 
+#include <sys/cdefs.h>
+
+__BEGIN_DECLS
+
 typedef enum thread_snapshot_wait_flags {
 	kThreadWaitNone                 = 0x00,
 	kThreadWaitKernelMutex          = 0x01,
@@ -51,10 +55,26 @@ typedef enum thread_snapshot_wait_flags {
 	kThreadWaitSleepWithInheritor   = 0x12,
 	kThreadWaitEventlink            = 0x13,
 	kThreadWaitCompressor           = 0x14,
+	kThreadWaitParkedBoundWorkQueue = 0x15,
+	kThreadWaitPageBusy             = 0x16,
+	kThreadWaitPLReqInProgress      = 0x17,
+	kThreadWaitPagerReady           = 0x18,
+	kThreadWaitPagingActivity       = 0x19,
+	kThreadWaitMappingInProgress    = 0x1a,
+	kThreadWaitMemoryBlocked        = 0x1b,
+	kThreadWaitPagingInProgress     = 0x1c,
+	kThreadWaitPageInThrottle       = 0x1d,
+	kThreadWaitExclaveCore          = 0x1e,
+	kThreadWaitExclaveKit           = 0x1f,
+	kThreadWaitVMEntryExclEvent     = 0x20,
+	kThreadWaitVMEntrySharedEvent   = 0x21,
+	kThreadWaitVMEntryKUnwireEvent  = 0x22,
 } __attribute__((packed)) block_hint_t;
 
 _Static_assert(sizeof(block_hint_t) <= sizeof(short),
     "block_hint_t must fit within a short");
 
+
+__END_DECLS
 
 #endif /* !_KERN_BLOCK_HINT_H_ */

@@ -17,6 +17,27 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+/*!
+ @enum MTLAccelerationStructureRefitOptions
+ @abstract Controls the acceleration structure refit operation
+ */
+typedef NS_OPTIONS(NSUInteger, MTLAccelerationStructureRefitOptions) {
+    /**
+     * @brief Refitting shall result in updated vertex data from the provided geometry descriptor.
+     * If not set, vertex buffers shall be ignored on the geometry descriptor and vertex data previously
+     * encoded shall be copied.
+     */
+    MTLAccelerationStructureRefitOptionVertexData = (1 << 0),
+
+    /**
+     * @brief Refitting shall result in updated per primitive data from the provided geometry descriptor.
+     * If not set, per primitive data buffers shall be ignored on the geometry descriptor and per primitive
+     * data previously encoded shall be copied.
+     */
+    MTLAccelerationStructureRefitOptionPerPrimitiveData = (1 << 1),
+} API_AVAILABLE(macos(13.0), ios(16.0));
+
+
 @protocol MTLBuffer;
 @protocol MTLAccelerationStructure;
 
@@ -42,8 +63,19 @@ typedef NS_OPTIONS(NSUInteger, MTLAccelerationStructureUsage) {
      * @brief Enable extended limits for this acceleration structure, possibly at the cost of
      * reduced ray tracing performance.
      */
-    MTLAccelerationStructureUsageExtendedLimits API_AVAILABLE(macos(12.0), ios(15.0)) = (1 << 2),
-} API_AVAILABLE(macos(11.0), ios(14.0));
+    MTLAccelerationStructureUsageExtendedLimits API_AVAILABLE(macos(12.0), ios(15.0), tvos(16.0)) = (1 << 2),
+
+    /**
+     * @brief Prioritize intersection performance over acceleration structure build time
+     */
+    MTLAccelerationStructureUsagePreferFastIntersection API_AVAILABLE(macos(26.0), ios(26.0)) = (1 << 4),
+
+    /**
+     * @brief Minimize the size of the acceleration structure in memory, potentially at
+     * the cost of increased build time or reduced intersection performance.
+     */
+    MTLAccelerationStructureUsageMinimizeMemory API_AVAILABLE(macos(26.0), ios(26.0)) = (1 << 5),
+} API_AVAILABLE(macos(11.0), ios(14.0), tvos(16.0));
 
 typedef NS_OPTIONS(uint32_t, MTLAccelerationStructureInstanceOptions) {
     /**
@@ -72,13 +104,25 @@ typedef NS_OPTIONS(uint32_t, MTLAccelerationStructureInstanceOptions) {
      * @brief Geometry is non-opaque
      */
     MTLAccelerationStructureInstanceOptionNonOpaque = (1 << 3),
-} API_AVAILABLE(macos(11.0), ios(14.0));
+} API_AVAILABLE(macos(11.0), ios(14.0), tvos(16.0));
+
+typedef NS_ENUM(NSInteger, MTLMatrixLayout) {
+    /**
+     * @brief Column-major order
+     */
+    MTLMatrixLayoutColumnMajor = 0,
+    
+    /**
+     * @brief Row-major order
+     */
+    MTLMatrixLayoutRowMajor = 1,
+} API_AVAILABLE(macos(15.0), ios(18.0), tvos(18.1), visionos(2.1));
 
 /**
  * @brief Base class for acceleration structure descriptors. Do not use this class directly. Use
  * one of the derived classes instead.
  */
-MTL_EXPORT API_AVAILABLE(macos(11.0), ios(14.0))
+MTL_EXPORT API_AVAILABLE(macos(11.0), ios(14.0), tvos(16.0))
 @interface MTLAccelerationStructureDescriptor : NSObject <NSCopying>
 
 @property (nonatomic) MTLAccelerationStructureUsage usage;
@@ -89,7 +133,7 @@ MTL_EXPORT API_AVAILABLE(macos(11.0), ios(14.0))
  * @brief Base class for all geometry descriptors. Do not use this class directly. Use one of the derived
  * classes instead.
  */
-MTL_EXPORT API_AVAILABLE(macos(11.0), ios(14.0))
+MTL_EXPORT API_AVAILABLE(macos(11.0), ios(14.0), tvos(16.0))
 @interface MTLAccelerationStructureGeometryDescriptor : NSObject <NSCopying>
 
 @property (nonatomic) NSUInteger intersectionFunctionTableOffset;
@@ -108,7 +152,7 @@ MTL_EXPORT API_AVAILABLE(macos(11.0), ios(14.0))
 /**
  * @brief Label
  */
-@property (nonatomic, copy, nullable) NSString* label API_AVAILABLE(macos(12.0), ios(15.0));
+@property (nonatomic, copy, nullable) NSString* label API_AVAILABLE(macos(12.0), ios(15.0), tvos(16.0));
 
 /**
  * @brief Data buffer containing per-primitive data. May be nil.
@@ -148,12 +192,12 @@ typedef NS_ENUM(uint32_t, MTLMotionBorderMode){
      * @brief Object disappears
      */
     MTLMotionBorderModeVanish = 1
-} API_AVAILABLE(macos(12.0), ios(15.0));
+} API_AVAILABLE(macos(12.0), ios(15.0), tvos(16.0));
 
 /**
  * @brief Descriptor for a primitive acceleration structure
  */
-MTL_EXPORT API_AVAILABLE(macos(11.0), ios(14.0))
+MTL_EXPORT API_AVAILABLE(macos(11.0), ios(14.0), tvos(16.0))
 @interface MTLPrimitiveAccelerationStructureDescriptor : MTLAccelerationStructureDescriptor
 
 /**
@@ -166,28 +210,28 @@ MTL_EXPORT API_AVAILABLE(macos(11.0), ios(14.0))
  * @brief Motion border mode describing what happens if acceleration structure is sampled before
  * motionStartTime. If not set defaults to MTLMotionBorderModeClamp.
  */
-@property (nonatomic) MTLMotionBorderMode motionStartBorderMode API_AVAILABLE(macos(12.0), ios(15.0));
+@property (nonatomic) MTLMotionBorderMode motionStartBorderMode API_AVAILABLE(macos(12.0), ios(15.0), tvos(16.0));
 
 /**
  * @brief Motion border mode describing what happens if acceleration structure is sampled after
  * motionEndTime. If not set defaults to MTLMotionBorderModeClamp.
  */
-@property (nonatomic) MTLMotionBorderMode motionEndBorderMode API_AVAILABLE(macos(12.0), ios(15.0));
+@property (nonatomic) MTLMotionBorderMode motionEndBorderMode API_AVAILABLE(macos(12.0), ios(15.0), tvos(16.0));
 
 /**
  * @brief Motion start time of this geometry. If not set defaults to 0.0f.
  */
-@property (nonatomic) float motionStartTime API_AVAILABLE(macos(12.0), ios(15.0));
+@property (nonatomic) float motionStartTime API_AVAILABLE(macos(12.0), ios(15.0), tvos(16.0));
 
 /**
  * @brief Motion end time of this geometry. If not set defaults to 1.0f.
  */
-@property (nonatomic) float motionEndTime API_AVAILABLE(macos(12.0), ios(15.0));
+@property (nonatomic) float motionEndTime API_AVAILABLE(macos(12.0), ios(15.0), tvos(16.0));
 
 /**
  * @brief Motion keyframe count. Is 1 by default which means no motion.
  */
-@property (nonatomic) NSUInteger motionKeyframeCount API_AVAILABLE(macos(12.0), ios(15.0));
+@property (nonatomic) NSUInteger motionKeyframeCount API_AVAILABLE(macos(12.0), ios(15.0), tvos(16.0));
 
 + (instancetype)descriptor;
 
@@ -196,7 +240,7 @@ MTL_EXPORT API_AVAILABLE(macos(11.0), ios(14.0))
 /**
  * @brief Descriptor for triangle geometry
  */
-MTL_EXPORT API_AVAILABLE(macos(11.0), ios(14.0))
+MTL_EXPORT API_AVAILABLE(macos(11.0), ios(14.0), tvos(16.0))
 @interface MTLAccelerationStructureTriangleGeometryDescriptor : MTLAccelerationStructureGeometryDescriptor
 
 /**
@@ -255,6 +299,11 @@ MTL_EXPORT API_AVAILABLE(macos(11.0), ios(14.0))
  */
 @property (nonatomic) NSUInteger transformationMatrixBufferOffset API_AVAILABLE(macos(13.0), ios(16.0));
 
+/**
+ * @brief Matrix layout for the transformation matrix in the transformation
+ * matrix buffer. Defaults to MTLMatrixLayoutColumnMajor.
+ */
+@property (nonatomic) MTLMatrixLayout transformationMatrixLayout API_AVAILABLE(macos(15.0), ios(18.0), tvos(18.1), visionos(2.1));
 + (instancetype)descriptor;
 
 @end
@@ -262,7 +311,7 @@ MTL_EXPORT API_AVAILABLE(macos(11.0), ios(14.0))
 /**
  * @brief Descriptor for bounding box geometry
  */
-MTL_EXPORT API_AVAILABLE(macos(11.0), ios(14.0))
+MTL_EXPORT API_AVAILABLE(macos(11.0), ios(14.0), tvos(16.0))
 @interface MTLAccelerationStructureBoundingBoxGeometryDescriptor : MTLAccelerationStructureGeometryDescriptor
 
 /**
@@ -294,7 +343,7 @@ MTL_EXPORT API_AVAILABLE(macos(11.0), ios(14.0))
 /**
  * @brief MTLbuffer and description how the data is stored in it.
  */
-MTL_EXPORT API_AVAILABLE(macos(12.0), ios(15.0))
+MTL_EXPORT API_AVAILABLE(macos(12.0), ios(15.0), tvos(16.0))
 @interface MTLMotionKeyframeData : NSObject
 
 /**
@@ -315,7 +364,7 @@ MTL_EXPORT API_AVAILABLE(macos(12.0), ios(15.0))
 /**
  * @brief Descriptor for motion triangle geometry
  */
-MTL_EXPORT API_AVAILABLE(macos(12.0), ios(15.0))
+MTL_EXPORT API_AVAILABLE(macos(12.0), ios(15.0), tvos(16.0))
 @interface MTLAccelerationStructureMotionTriangleGeometryDescriptor : MTLAccelerationStructureGeometryDescriptor
 
 /**
@@ -368,6 +417,11 @@ MTL_EXPORT API_AVAILABLE(macos(12.0), ios(15.0))
  */
 @property (nonatomic) NSUInteger transformationMatrixBufferOffset API_AVAILABLE(macos(13.0), ios(16.0));
 
+/**
+ * @brief Matrix layout for the transformation matrix in the transformation
+ * matrix buffer. Defaults to MTLMatrixLayoutColumnMajor.
+ */
+@property (nonatomic) MTLMatrixLayout transformationMatrixLayout API_AVAILABLE(macos(15.0), ios(18.0), tvos(18.1), visionos(2.1));
 + (instancetype)descriptor;
 
 @end
@@ -375,7 +429,7 @@ MTL_EXPORT API_AVAILABLE(macos(12.0), ios(15.0))
 /**
  * @brief Descriptor for motion bounding box geometry
  */
-MTL_EXPORT API_AVAILABLE(macos(12.0), ios(15.0))
+MTL_EXPORT API_AVAILABLE(macos(12.0), ios(15.0), tvos(16.0))
 @interface MTLAccelerationStructureMotionBoundingBoxGeometryDescriptor : MTLAccelerationStructureGeometryDescriptor
 
 /**
@@ -763,7 +817,7 @@ typedef struct {
      * application-defined way
      */
     uint32_t userID;
-} MTLAccelerationStructureUserIDInstanceDescriptor API_AVAILABLE(macos(12.0), ios(15.0));
+} MTLAccelerationStructureUserIDInstanceDescriptor API_AVAILABLE(macos(12.0), ios(15.0), tvos(16.0));
 
 typedef NS_ENUM(NSUInteger, MTLAccelerationStructureInstanceDescriptorType) {
     /**
@@ -790,7 +844,7 @@ typedef NS_ENUM(NSUInteger, MTLAccelerationStructureInstanceDescriptorType) {
      * @brief Motion instance descriptor with a resource handle for the instanced acceleration structure.
      */
     MTLAccelerationStructureInstanceDescriptorTypeIndirectMotion API_AVAILABLE(macos(14.0), ios(17.0)) = 4,
-} API_AVAILABLE(macos(12.0), ios(15.0));
+} API_AVAILABLE(macos(12.0), ios(15.0), tvos(16.0));
 
 typedef struct {
     /**
@@ -852,7 +906,7 @@ typedef struct {
      * @brief Motion end time of this instance
      */
     float motionEndTime;
-} MTLAccelerationStructureMotionInstanceDescriptor API_AVAILABLE(macos(12.0), ios(15.0));
+} MTLAccelerationStructureMotionInstanceDescriptor API_AVAILABLE(macos(12.0), ios(15.0), tvos(16.0));
 
 
 typedef struct {
@@ -950,10 +1004,25 @@ typedef struct {
     float motionEndTime;
 } MTLIndirectAccelerationStructureMotionInstanceDescriptor API_AVAILABLE(macos(14.0), ios(17.0));
 
+typedef NS_ENUM(NSInteger, MTLTransformType) {
+    /**
+     * @brief A tightly packed matrix with 4 columns and 3 rows. The full transform is assumed
+     * to be a 4x4 matrix with the last row being (0, 0, 0, 1).
+     */
+    MTLTransformTypePackedFloat4x3 = 0,
+    
+    /**
+     * @brief A transformation represented by individual components such as translation and
+     * rotation. The rotation is represented by a quaternion, allowing for correct motion
+     * interpolation.
+     */
+    MTLTransformTypeComponent = 1,
+} API_AVAILABLE(macos(15.0), ios(18.0), tvos(18.1), visionos(2.1));
+
 /**
  * @brief Descriptor for an instance acceleration structure
  */
-MTL_EXPORT API_AVAILABLE(macos(11.0), ios(14.0))
+MTL_EXPORT API_AVAILABLE(macos(11.0), ios(14.0), tvos(16.0))
 @interface MTLInstanceAccelerationStructureDescriptor : MTLAccelerationStructureDescriptor
 
 /**
@@ -988,23 +1057,40 @@ MTL_EXPORT API_AVAILABLE(macos(11.0), ios(14.0))
  * @brief Type of instance descriptor in the instance descriptor buffer. Defaults to
  * MTLAccelerationStructureInstanceDescriptorTypeDefault.
  */
-@property (nonatomic) MTLAccelerationStructureInstanceDescriptorType instanceDescriptorType API_AVAILABLE(macos(12.0), ios(15.0));
+@property (nonatomic) MTLAccelerationStructureInstanceDescriptorType instanceDescriptorType API_AVAILABLE(macos(12.0), ios(15.0), tvos(16.0));
 
 /**
  * @brief Buffer containing transformation information for motion
  */
-@property (nonatomic, retain, nullable) id <MTLBuffer> motionTransformBuffer API_AVAILABLE(macos(12.0), ios(15.0));
+@property (nonatomic, retain, nullable) id <MTLBuffer> motionTransformBuffer API_AVAILABLE(macos(12.0), ios(15.0), tvos(16.0));
 
 /**
  * @brief Offset into the instance motion descriptor buffer. Must be a multiple of 64 bytes and
  * must be aligned to the platform's buffer offset alignment.
  */
-@property (nonatomic) NSUInteger motionTransformBufferOffset API_AVAILABLE(macos(12.0), ios(15.0));
+@property (nonatomic) NSUInteger motionTransformBufferOffset API_AVAILABLE(macos(12.0), ios(15.0), tvos(16.0));
 
 /**
  * @brief Number of motion transforms
  */
-@property (nonatomic) NSUInteger motionTransformCount API_AVAILABLE(macos(12.0), ios(15.0));
+@property (nonatomic) NSUInteger motionTransformCount API_AVAILABLE(macos(12.0), ios(15.0), tvos(16.0));
+
+/**
+ * Matrix layout of the transformation matrices in the instance descriptors
+ * in the instance descriptor buffer and the transformation matrices in the
+ * transformation matrix buffer. Defaults to MTLMatrixLayoutColumnMajor.
+ */
+@property (nonatomic) MTLMatrixLayout instanceTransformationMatrixLayout API_AVAILABLE(macos(15.0), ios(18.0), tvos(18.1), visionos(2.1));
+
+/**
+ * @brief Type of motion transforms. Defaults to MTLTransformTypePackedFloat4x3.
+ */
+@property (nonatomic) MTLTransformType motionTransformType API_AVAILABLE(macos(15.0), ios(18.0), tvos(18.1), visionos(2.1));
+/**
+ * @brief Motion transform stride. Defaults to 0, indicating that transforms are tightly packed according to the
+ * motion transform type.
+ */
+@property (nonatomic) NSUInteger motionTransformStride API_AVAILABLE(macos(15.0), ios(18.0), tvos(18.1), visionos(2.1));
 
 + (instancetype)descriptor;
 
@@ -1087,11 +1173,29 @@ MTL_EXPORT API_AVAILABLE(macos(14.0), ios(17.0))
  */
 @property (nonatomic) NSUInteger motionTransformCountBufferOffset;
 
+/**
+ * Matrix layout of the transformation matrices in the instance descriptors
+ * in the instance descriptor buffer and the transformation matrices in the
+ * transformation matrix buffer. Defaults to MTLMatrixLayoutColumnMajor.
+ */
+@property (nonatomic) MTLMatrixLayout instanceTransformationMatrixLayout API_AVAILABLE(macos(15.0), ios(18.0), tvos(18.1), visionos(2.1));
+
+/**
+ * @brief Type of motion transforms. Defaults to MTLTransformTypePackedFloat4x3.
+ */
+@property (nonatomic) MTLTransformType motionTransformType API_AVAILABLE(macos(15.0), ios(18.0), tvos(18.1), visionos(2.1));
+
+/**
+ * @brief Motion transform stride. Defaults to 0, indicating that transforms are tightly packed according to the
+ * motion transform type.
+ */
+@property (nonatomic) NSUInteger motionTransformStride API_AVAILABLE(macos(15.0), ios(18.0), tvos(18.1), visionos(2.1));
+
 + (instancetype)descriptor;
 
 @end
 
-API_AVAILABLE(macos(11.0), ios(14.0))
+API_AVAILABLE(macos(11.0), ios(14.0), tvos(16.0))
 @protocol MTLAccelerationStructure <MTLResource>
 
 @property (nonatomic, readonly) NSUInteger size;

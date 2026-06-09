@@ -69,6 +69,7 @@ int PE_stub_poll_input(unsigned int options, char *c);
 boolean_t PE_panic_debugging_enabled(void);
 
 void PE_mark_hwaccess(uint64_t thread);
+void PE_mark_hwaccess_data(uint8_t type, uint8_t size, uint64_t paddr);
 
 #endif /* defined(__arm__) || defined(__arm64__) */
 
@@ -282,6 +283,10 @@ extern boolean_t PE_parse_boot_argn(
 
 extern boolean_t PE_boot_arg_uint64_eq(const char *arg_string, uint64_t value);
 
+extern boolean_t PE_parse_boot_arg_str(
+	const char *arg_string,
+	char *      arg_ptr,
+	int         size);
 
 extern boolean_t PE_get_default(
 	const char      *property_name,
@@ -303,6 +308,7 @@ enum {
 
 extern boolean_t PE_get_hotkey(
 	unsigned char   key);
+
 
 extern kern_return_t PE_cpu_start(
 	cpu_id_t target,
@@ -358,7 +364,6 @@ typedef void (*perfmon_interrupt_handler_func)(cpu_id_t source);
 extern kern_return_t PE_cpu_perfmon_interrupt_install_handler(perfmon_interrupt_handler_func handler);
 extern void PE_cpu_perfmon_interrupt_enable(cpu_id_t target, boolean_t enable);
 
-#if DEVELOPMENT || DEBUG
 /* panic_trace boot-arg modes */
 __options_decl(panic_trace_t, uint32_t, {
 	panic_trace_disabled                 = 0x00000000,
@@ -366,9 +371,11 @@ __options_decl(panic_trace_t, uint32_t, {
 	panic_trace_enabled                  = 0x00000002,
 	panic_trace_alt_enabled              = 0x00000010,
 	panic_trace_partial_policy           = 0x00000020,
+	panic_trace_apt_present              = 0x00000100,
 });
 extern panic_trace_t panic_trace;
 
+#if DEVELOPMENT || DEBUG
 extern void PE_arm_debug_enable_trace(bool should_kprintf);
 extern void (*PE_arm_debug_panic_hook)(const char *str);
 #else
@@ -414,8 +421,39 @@ void * PE_get_kc_vp(kc_kind_t type);
 void PE_reset_all_kc_vp(void);
 
 
+/*!
+ * @function PE_init_socd_client
+ *
+ * @brief
+ * Initialize the SOCD client mechanism, used for Xnu to contribute data to the SOCD buffers
+ * managed by the SMC in it's SRAM.
+ */
 extern vm_size_t PE_init_socd_client(void);
-extern void PE_write_socd_client_buffer(vm_offset_t offset, const void *buff, vm_size_t size);
+
+
+/*!
+ * @function PE_read_socd_client_buffer
+ *
+ * @brief
+ * read data from the SOCD client buffer in SMC SRAM.
+ */
+extern void PE_read_socd_client_buffer(vm_offset_t offset, void *out_buff, vm_size_t size);
+
+/*!
+ * @function PE_write_socd_client_buffer
+ *
+ * @brief
+ * Write data to the SOCD client buffer in SMC SRAM
+ */
+extern void PE_write_socd_client_buffer(vm_offset_t offset, const void *in_buff, vm_size_t size);
+
+/*!
+ * @function PE_device_is_simulated
+ *
+ * @brief
+ * Returns true if the device is a simulator, else false
+ */
+extern boolean_t PE_device_is_simulated(void);
 
 __END_DECLS
 

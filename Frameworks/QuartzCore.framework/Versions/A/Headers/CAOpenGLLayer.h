@@ -1,21 +1,25 @@
 /* CoreAnimation - CAOpenGLLayer.h
 
-   Copyright (c) 2006-2022, Apple Inc.
+   Copyright (c) 2006-2025, Apple Inc.
    All rights reserved. */
 
 #ifdef __OBJC__
+
+#if __has_include(<OpenGL/OpenGL.h>)
 
 #import <QuartzCore/CALayer.h>
 #import <CoreVideo/CVBase.h>
 #import <OpenGL/OpenGL.h>
 
-NS_ASSUME_NONNULL_BEGIN
+NS_HEADER_AUDIT_BEGIN(nullability, sendability)
 
 #ifndef GL_SILENCE_DEPRECATION
-API_DEPRECATED("OpenGL is deprecated", macos(10.5, 10.14))
+API_DEPRECATED("OpenGL is deprecated. (Define GL_SILENCE_DEPRECATION to silence these warnings)",
+    macos(10.5, 10.14), macCatalyst(13.1, 13.1))
 #else
-API_AVAILABLE(macos(10.5))
+API_AVAILABLE(macos(10.5), macCatalyst(13.1))
 #endif
+API_UNAVAILABLE(ios, tvos, watchos, visionos)
 @interface CAOpenGLLayer : CALayer
 {
 @private
@@ -85,10 +89,13 @@ API_AVAILABLE(macos(10.5))
  * clamped to its NSScreen’s maximumExtendedDynamicRangeColorComponentValue
  * rather than 1.0. The default is NO.  */
 
-@property BOOL wantsExtendedDynamicRangeContent;
+@property BOOL wantsExtendedDynamicRangeContent
+  API_AVAILABLE(macos(10.11));
 
 @end
 
-NS_ASSUME_NONNULL_END
+NS_HEADER_AUDIT_END(nullability, sendability)
 
-#endif
+#endif /* __has_include(<OpenGL/OpenGL.h>) */
+
+#endif /* __OBJC__ */

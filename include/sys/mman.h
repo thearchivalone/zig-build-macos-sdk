@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2020 Apple Computer, Inc. All rights reserved.
+ * Copyright (c) 2000-2025 Apple Computer, Inc. All rights reserved.
  *
  * @APPLE_OSREFERENCE_LICENSE_HEADER_START@
  *
@@ -153,7 +153,6 @@
 #define MAP_32BIT       0x8000          /* Return virtual addresses <4G only */
 #endif /* defined(__MAC_OS_X_VERSION_MIN_REQUIRED) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 101500 */
 
-
 /*
  * Flags used to support translated processes.
  */
@@ -178,6 +177,10 @@
 
 /*
  * msync() flags
+ *
+ * When making a new MS_*, update tests vm_parameter_validation_[user|kern]
+ * and their expected results; they deliberately call VM functions with invalid
+ * msync values and you may be turning one of those invalid msyncs valid.
  */
 #define MS_ASYNC        0x0001  /* [MF|SIO] return immediately */
 #define MS_INVALIDATE   0x0002  /* [MF|SIO] invalidate all cached data */
@@ -192,6 +195,10 @@
 
 /*
  * Advice to madvise
+ *
+ * When making a new MADV_*, update tests vm_parameter_validation_[user|kern]
+ * and their expected results; they deliberately call VM functions with invalid
+ * madvise values and you may be turning one of those invalid madvises valid.
  */
 #define POSIX_MADV_NORMAL       0       /* [MC1] no further special treatment */
 #define POSIX_MADV_RANDOM       1       /* [MC1] expect random page refs */
@@ -211,6 +218,7 @@
 #define MADV_FREE_REUSE         8       /* caller wants to reuse those pages */
 #define MADV_CAN_REUSE          9
 #define MADV_PAGEOUT            10      /* page out now (internal only) */
+#define MADV_ZERO               11      /* zero pages without faulting in additional pages */
 
 /*
  * Return bits from mincore
@@ -224,7 +232,6 @@
 #define MINCORE_COPIED          0x40     /* Page has been copied */
 #define MINCORE_ANONYMOUS       0x80     /* Page belongs to an anonymous object */
 #endif  /* (!_POSIX_C_SOURCE || _DARWIN_C_SOURCE) */
-
 
 
 
@@ -259,7 +266,8 @@ int     mincore(const void *, size_t, char *);
 int     minherit(void *, size_t, int);
 #endif
 
-
 __END_DECLS
+
+
 
 #endif /* !_SYS_MMAN_H_ */

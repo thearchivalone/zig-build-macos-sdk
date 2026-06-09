@@ -1,11 +1,9 @@
 --- !tapi-tbd
 tbd-version:     4
-targets:         [ x86_64-macos, x86_64-maccatalyst, arm64-macos, arm64-maccatalyst, 
-                   arm64e-macos, arm64e-maccatalyst ]
+targets:         [ x86_64-macos, x86_64-maccatalyst, arm64e-macos, arm64e-maccatalyst ]
 install-name:    '/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ATS.framework/Versions/A/Resources/libFontRegistry.dylib'
 exports:
-  - targets:         [ x86_64-macos, x86_64-maccatalyst, arm64-macos, arm64-maccatalyst, 
-                       arm64e-macos, arm64e-maccatalyst ]
+  - targets:         [ x86_64-macos, x86_64-maccatalyst, arm64e-macos, arm64e-maccatalyst ]
     symbols:         [ _XTCopyAutoActivatedFontURLs, _XTCopyAutoActivationSearchDirectories, 
                        _XTCopyAvailableFamilyNames, _XTCopyAvailableFamilyNames2, 
                        _XTCopyAvailableFontNames, _XTCopyAvailableFontNames2, _XTCopyAvailableFontURLs, 
@@ -43,14 +41,13 @@ exports:
                        _XTSetFrameworkFontChangedCallback, _XTSetPropertiesForFonts, 
                        _XTUnregisterDataFont, _XTUnregisterFont, _XTUnregisterFont2, 
                        _XTUnregisterFontDirectory, _XTUnregisterFonts, _XTUnregisterFonts2, 
-                       ___crashreporter_info__, _kXTConfigurationDomainGlobalKey, 
-                       _kXTConfigurationDomainLocalKey, _kXTConfigurationModeKey, 
-                       _kXTConfigurationRegistrationAllowedKey, _kXTFontAssetType, 
-                       _kXTFontPropertyBookmark, _kXTFontPropertyCharacterSet, _kXTFontPropertyCopyrightName, 
-                       _kXTFontPropertyDesignLanguages, _kXTFontPropertyDesignerName, 
-                       _kXTFontPropertyDirectory, _kXTFontPropertyDomain, _kXTFontPropertyDownloadableStub, 
-                       _kXTFontPropertyDuplicateRanking, _kXTFontPropertyEnabled, 
-                       _kXTFontPropertyFamilyName, _kXTFontPropertyFamilyNameAliases, 
+                       _kXTConfigurationDomainGlobalKey, _kXTConfigurationDomainLocalKey, 
+                       _kXTConfigurationModeKey, _kXTConfigurationRegistrationAllowedKey, 
+                       _kXTFontAssetType, _kXTFontPropertyBookmark, _kXTFontPropertyCharacterSet, 
+                       _kXTFontPropertyCopyrightName, _kXTFontPropertyDesignLanguages, 
+                       _kXTFontPropertyDesignerName, _kXTFontPropertyDirectory, _kXTFontPropertyDomain, 
+                       _kXTFontPropertyDownloadableStub, _kXTFontPropertyDuplicateRanking, 
+                       _kXTFontPropertyEnabled, _kXTFontPropertyFamilyName, _kXTFontPropertyFamilyNameAliases, 
                        _kXTFontPropertyFlags, _kXTFontPropertyFontRef, _kXTFontPropertyForFontsLanguageMap, 
                        _kXTFontPropertyFormat, _kXTFontPropertyFullName, _kXTFontPropertyGlyphCount, 
                        _kXTFontPropertyIgnoreScriptAnalysis, _kXTFontPropertyInstallationKind, 
@@ -70,6 +67,6 @@ exports:
                        _kXTReportKeyStandardFontsNotRestored, _kXTVariationAxisDefaultValue, 
                        _kXTVariationAxisFlagsKey, _kXTVariationAxisHiddenKey, _kXTVariationAxisIdentifier, 
                        _kXTVariationAxisMaxValue, _kXTVariationAxisMinValue, _kXTVariationAxisName ]
-  - targets:         [ x86_64-macos, arm64-macos, arm64e-macos ]
+  - targets:         [ x86_64-macos, arm64e-macos ]
     symbols:         [ _XTAuthenticateAsAdminFromExternalAuthorization, _XTMoveFontFilesToDisabledFolder ]
 ...

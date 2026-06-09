@@ -151,6 +151,11 @@ extern void             task_suspension_token_deallocate(
 
 extern boolean_t task_self_region_footprint(void);
 extern void task_self_region_footprint_set(boolean_t newval);
+
+/* VM_REGION_INFO_FLAGS defined in vm_region.h */
+extern int task_self_region_info_flags(void);
+extern kern_return_t task_self_region_info_flags_set(int newval);
+
 extern void task_ledgers_footprint(ledger_t ledger,
     ledger_amount_t *ledger_resident,
     ledger_amount_t *ledger_compressed);
@@ -175,6 +180,13 @@ extern bool task_is_translated(task_t task);
 #if CONFIG_X86_64_COMPAT
 extern bool task_is_x86_64_compat(task_t task);
 #endif
+
+
+/* Must be callable from IOKit as it sometimes has need to asynchronously
+ * terminate tasks. Takes the task lock.
+ */
+void task_set_ast_synthesize_async_fault_mach_exception(task_t task);
+
 
 
 __END_DECLS

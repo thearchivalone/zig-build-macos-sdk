@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000-2020 Apple Inc. All rights reserved.
+ * Copyright (c) 2000-2020, 2024 Apple Inc. All rights reserved.
  *
  * @APPLE_OSREFERENCE_LICENSE_HEADER_START@
  *
@@ -179,6 +179,7 @@ enum so_tracker_attribute {
 #define SO_TRACKER_ATTRIBUTE_FLAGS_APP_APPROVED     0x00000001
 #define SO_TRACKER_ATTRIBUTE_FLAGS_TRACKER          0x00000002
 #define SO_TRACKER_ATTRIBUTE_FLAGS_DOMAIN_SHORT     0x00000004
+#define SO_TRACKER_ATTRIBUTE_FLAGS_EXTENDED_TIMEOUT 0x00000008
 
 
 #endif /* !_SYS_SOCKETVAR_H_ */

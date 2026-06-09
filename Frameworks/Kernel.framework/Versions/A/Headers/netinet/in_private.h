@@ -119,6 +119,16 @@ struct sockaddr_inifscope {
 #define IP_NO_IFT_PDP           IP_NO_IFT_CELLULAR /* deprecated */
 #define IP_OUT_IF               9696 /* for internal use only */
 
+#define IP_RECV_LINK_ADDR_TYPE  9697 /* bool: receive the type of the link level address */
+
+/*
+ * Values for IP_RECV_LINK_ADDR_TYPE in ancillary message
+ */
+#define IP_RECV_LINK_ADDR_UNICAST   0
+#define IP_RECV_LINK_ADDR_BROADCAST 1
+#define IP_RECV_LINK_ADDR_MULTICAST 2
+
+
 
 #endif  /* (!_POSIX_C_SOURCE || _DARWIN_C_SOURCE) */
 
@@ -133,9 +143,7 @@ struct sockaddr_inifscope {
  */
 
 union sockaddr_in_4_6 {
-#if !__has_ptrcheck
 	struct sockaddr             sa;
-#endif
 	struct __sockaddr_header    sah;
 	struct sockaddr_in          sin;
 	struct sockaddr_in6         sin6;

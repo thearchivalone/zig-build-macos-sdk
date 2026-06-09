@@ -366,7 +366,17 @@ enum {
 	 * When set, driver is informing PM that it is holding the network
 	 * interface up to do TCPKeepAlive
 	 */
-	kIOPMDriverAssertionNetworkKeepAliveActiveBit   = 0x200
+	kIOPMDriverAssertionNetworkKeepAliveActiveBit   = 0x200,
+
+	/*! kIOPMDriverAssertionForceWakeupBit
+	 * When set, the system will immediately wake up the CPU after going to sleep.
+	 */
+	kIOPMDriverAssertionForceWakeupBit              = 0x400,
+
+	/*! kIOPMDriverAssertionForceFullWakeupBit
+	 * When set, the system will immediately do a full wakeup after going to sleep.
+	 */
+	kIOPMDriverAssertionForceFullWakeupBit          = 0x800,
 };
 
 /* kIOPMAssertionsDriverKey
@@ -670,6 +680,7 @@ enum {
 	kIOPSFamilyCodeExternal6     = iokit_family_err(sub_iokit_pmu, 6),
 	kIOPSFamilyCodeExternal7     = iokit_family_err(sub_iokit_pmu, 7),
 	kIOPSFamilyCodeExternal8     = iokit_family_err(sub_iokit_pmu, 8),
+	kIOPSFamilyCodeUnsupportedRegion = iokit_family_err(sub_iokit_pmu, 9),
 };
 
 // values for kIOPMPSAdapterDetailsErrorFlagsKey
@@ -779,6 +790,7 @@ enum {
 // PM settings work. Those keys are defined in IOPMLibPrivate.h.
 #define kIOPMSettingWakeOnRingKey                   "Wake On Modem Ring"
 #define kIOPMSettingRestartOnPowerLossKey           "Automatic Restart On Power Loss"
+#define kIOPMSettingRestartOnPowerConnectKey        "Automatic Restart On Power Connect"
 #define kIOPMSettingWakeOnACChangeKey               "Wake On AC Change"
 #define kIOPMSettingSleepOnPowerButtonKey           "Sleep On Power Button"
 #define kIOPMSettingWakeOnClamshellKey              "Wake On Clamshell Open"
@@ -960,7 +972,9 @@ enum {
 	kIOPMSystemCapabilityCPU        = 0x01,
 	kIOPMSystemCapabilityGraphics   = 0x02,
 	kIOPMSystemCapabilityAudio      = 0x04,
-	kIOPMSystemCapabilityNetwork    = 0x08
+	kIOPMSystemCapabilityNetwork    = 0x08,
+	kIOPMSystemCapabilityAOT        = 0x10,
 };
+
 
 #endif /* ! _IOKIT_IOPM_H */

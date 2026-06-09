@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2016 Apple Inc. All rights reserved.
+ * Copyright (c) 2008-2024 Apple Inc. All rights reserved.
  *
  * @APPLE_OSREFERENCE_LICENSE_HEADER_START@
  *
@@ -63,10 +63,10 @@
 #ifndef _NETINET_UDP_VAR_H_
 #define _NETINET_UDP_VAR_H_
 
-#include <sys/appleapiopts.h>
-#include <sys/sysctl.h>
 #include <netinet/ip_var.h>
 #include <netinet/udp.h>
+#include <sys/appleapiopts.h>
+#include <sys/sysctl.h>
 
 /*
  * UDP kernel structures and variables.
@@ -113,6 +113,9 @@ struct  udpstat {
 	u_int32_t udps_snd_swcsum_bytes;  /* udp swcksum (outbound), bytes */
 	u_int32_t udps_snd6_swcsum;       /* udp6 swcksum (outbound), packets */
 	u_int32_t udps_snd6_swcsum_bytes; /* udp6 swcksum (outbound), bytes */
+	/* Port unreachable duplicate suppression */
+	u_int64_t udps_port_unreach_dup_suppressed;
+	u_int64_t udps_port_unreach_not_suppressed;
 };
 
 /*

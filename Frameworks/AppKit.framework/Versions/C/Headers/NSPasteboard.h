@@ -1,7 +1,7 @@
 /*
 	NSPasteboard.h
 	Application Kit
-	Copyright (c) 1994-2023, Apple Inc.
+	Copyright (c) 1994-2024, Apple Inc.
 	All rights reserved.
 */
 
@@ -48,6 +48,88 @@ APPKIT_EXTERN NSPasteboardName NSPasteboardNameRuler API_AVAILABLE(macos(10.13))
 APPKIT_EXTERN NSPasteboardName NSPasteboardNameFind API_AVAILABLE(macos(10.13));
 APPKIT_EXTERN NSPasteboardName NSPasteboardNameDrag API_AVAILABLE(macos(10.13));
 
+
+/* Behavior in case of programmatic pasteboard access */
+
+/// A value indicating pasteboard access behavior.
+typedef NS_ENUM(NSInteger, NSPasteboardAccessBehavior) {
+    
+    /// The default behavior for the General pasteboard is to ask upon programmatic access. All other pasteboards default to always allow access.
+    /// If an app has never triggered a pasteboard access alert, its General pasteboard will report `.default` behavior. Such an app is not shown in the corresponding System Settings pane.
+    /// Once programmatic pasteboard access triggers the first pasteboard access alert, the state automatically changes to `.ask`. At this point the app starts being shown in System Settings, where the user can toggle the behavior between `.ask`, `.alwaysAllow`, and `.alwaysDeny`.
+    NSPasteboardAccessBehaviorDefault = 0,
+    
+    /// The system will notify the user and ask for permission before granting pasteboard access. However, access that is both user originated and paste related will always be allowed, and will not result in a notification. The app is listed in the corresponding System Settings pane.
+    NSPasteboardAccessBehaviorAsk = 1,
+    
+    /// The system will automatically allow all pasteboard access, without notifying the user.  The app is listed in the corresponding System Settings pane.
+    NSPasteboardAccessBehaviorAlwaysAllow = 2,
+    
+    /// The system will automatically deny all pasteboard access, without notifying the user. However, access that is both user originated and paste related will always be allowed, and will not result in a notification. The app is listed in the corresponding System Settings pane.
+    NSPasteboardAccessBehaviorAlwaysDeny = 3
+} NS_SWIFT_NAME(NSPasteboard.AccessBehavior) API_AVAILABLE(macos(15.4));
+
+
+/* Detection */
+
+/// A pattern to detect on the pasteboard, such as a URL, text, or a number.
+typedef NSString * NSPasteboardDetectionPattern NS_REFINED_FOR_SWIFT NS_TYPED_ENUM API_AVAILABLE(macos(15.4));
+
+/// A pattern that indicates the pasteboard detects a string that consists of a web URL.
+/// @returns NSString value, suitable for implementing "Paste and Go"
+APPKIT_EXTERN NSPasteboardDetectionPattern const NSPasteboardDetectionPatternProbableWebURL NS_REFINED_FOR_SWIFT API_AVAILABLE(macos(15.4));
+
+/// A pattern that indicates the pasteboard detects a string suitable for use as a web search term.
+/// @returns NSString value, suitable for implementing "Paste and Search"
+APPKIT_EXTERN NSPasteboardDetectionPattern const NSPasteboardDetectionPatternProbableWebSearch NS_REFINED_FOR_SWIFT API_AVAILABLE(macos(15.4));
+
+/// A pattern that indicates the pasteboard detects a string that consists of a numeric value.
+/// @returns NSNumber value
+APPKIT_EXTERN NSPasteboardDetectionPattern const NSPasteboardDetectionPatternNumber NS_REFINED_FOR_SWIFT API_AVAILABLE(macos(15.4));
+
+/// A pattern that indicates the pasteboard detects a string that contains a URL.
+/// @returns array of DDMatchLink values
+APPKIT_EXTERN NSPasteboardDetectionPattern const NSPasteboardDetectionPatternLink NS_REFINED_FOR_SWIFT API_AVAILABLE(macos(15.4));
+
+/// A pattern that indicates the pasteboard detects a string that contains a phone number.
+/// @returns array of DDMatchPhoneNumber values
+APPKIT_EXTERN NSPasteboardDetectionPattern const NSPasteboardDetectionPatternPhoneNumber NS_REFINED_FOR_SWIFT API_AVAILABLE(macos(15.4));
+
+/// A pattern that indicates the pasteboard detects a string that contains an email address.
+/// @returns array of DDMatchEmailAddress values
+APPKIT_EXTERN NSPasteboardDetectionPattern const NSPasteboardDetectionPatternEmailAddress NS_REFINED_FOR_SWIFT API_AVAILABLE(macos(15.4));
+
+/// A pattern that indicates the pasteboard detects a string that contains a postal address.
+/// @returns array of DDMatchPostalAddress values
+APPKIT_EXTERN NSPasteboardDetectionPattern const NSPasteboardDetectionPatternPostalAddress NS_REFINED_FOR_SWIFT API_AVAILABLE(macos(15.4));
+
+/// A pattern that indicates the pasteboard detects a string that contains a calendar event.
+/// @returns array of DDMatchCalendarEvent values
+APPKIT_EXTERN NSPasteboardDetectionPattern const NSPasteboardDetectionPatternCalendarEvent NS_REFINED_FOR_SWIFT API_AVAILABLE(macos(15.4));
+
+/// A pattern that indicates the pasteboard detects a string that contains a parcel tracking number and carrier.
+/// @returns array of DDMatchShipmentTrackingNumber values
+APPKIT_EXTERN NSPasteboardDetectionPattern const NSPasteboardDetectionPatternShipmentTrackingNumber NS_REFINED_FOR_SWIFT API_AVAILABLE(macos(15.4));
+
+/// A pattern that indicates the pasteboard detects a string that contains a flight number.
+/// @returns array of DDMatchFlightNumber values
+APPKIT_EXTERN NSPasteboardDetectionPattern const NSPasteboardDetectionPatternFlightNumber NS_REFINED_FOR_SWIFT API_AVAILABLE(macos(15.4));
+
+/// A pattern that indicates the pasteboard detects a string that contains an amount of money.
+/// @returns array of DDMatchMoneyAmount values
+APPKIT_EXTERN NSPasteboardDetectionPattern const NSPasteboardDetectionPatternMoneyAmount NS_REFINED_FOR_SWIFT API_AVAILABLE(macos(15.4));
+
+
+/* Metadata */
+
+/// A metadata type to detect on the pasteboard.
+typedef NSString * NSPasteboardMetadataType NS_REFINED_FOR_SWIFT NS_TYPED_ENUM API_AVAILABLE(macos(15.4));
+
+/// A metadata type that returns the content type if the pasteboard detects a reference to a file.
+/// @returns UTType value for the detected content type of the file URL, if a file URL type is present.
+APPKIT_EXTERN NSPasteboardMetadataType const NSPasteboardMetadataTypeContentType NS_REFINED_FOR_SWIFT API_AVAILABLE(macos(15.4));
+
+
 /* Options for prepareForNewContentsWithOptions: */
 
 typedef NS_OPTIONS(NSUInteger, NSPasteboardContentsOptions) {
@@ -83,6 +165,9 @@ APPKIT_EXTERN NSPasteboardReadingOptionKey const NSPasteboardURLReadingContentsC
 @property (readonly) NSInteger changeCount;
 
 - (oneway void)releaseGlobally;
+
+/// The current pasteboard access behavior. The user can customize this behavior per-app in System Settings for any app that has triggered a pasteboard access alert in the past.
+@property (readonly, assign) NSPasteboardAccessBehavior accessBehavior API_AVAILABLE(macos(15.4));
 
 /* Prepares the pasteboard for new contents, clearing the existing contents of the pasteboard. This is the first step in providing data on the pasteboard. Any options specified will persist until prepareForNewContentsWithOptions: or clearContents is called. Returns the change count of the pasteboard.
  */
@@ -153,6 +238,114 @@ Example: there are five items on the pasteboard, two contain TIFF data, two cont
 - (nullable id)propertyListForType:(NSPasteboardType)dataType;
 - (nullable NSString *)stringForType:(NSPasteboardType)dataType;
 
+
+/* Detection / Metadata */
+
+/// Determines whether the first pasteboard item matches the specified patterns, without notifying the person using the app.
+///
+/// This method only gives an indication of whether the first pasteboard item matches a particular pattern, and doesn’t allow the app to access the item's contents. As a result, the system doesn’t notify the person using the app about reading the contents of the pasteboard.
+///
+/// The following example shows how to use this method to find email and postal addresses in the first pasteboard item:
+///
+/// ```obj-c
+/// [NSPasteboard.generalPasteboard
+///  detectPatternsForPatterns:[NSSet setWithArray:@[NSPasteboardDetectionPatternEmailAddress,
+///                                                  NSPasteboardDetectionPatternPostalAddress]]
+///  completionHandler:^(NSSet<NSPasteboardDetectionPattern> *matchedPatterns, NSError *error) {
+///     if (error) {
+///         NSLog(@"Error: %@", error);
+///         return;
+///     }
+///     BOOL matchedEmail = [matchedPatterns containsObject:NSPasteboardDetectionPatternEmailAddress];
+///     BOOL matchedPostal = [matchedPatterns containsObject: NSPasteboardDetectionPatternPostalAddress];
+///     if (matchedEmail) {
+///         NSLog(@"Email address(es) detected");
+///     }
+///     if (matchedPostal) {
+///         NSLog(@"Postal address(es) detected");
+///     }
+///     if (!matchedEmail && !matchedPostal) {
+///         NSLog(@"Matched neither email nor postal addresses.");
+///     }
+/// }];
+/// ```
+///
+/// - Parameters:
+///   - patterns: The patterns to detect on the pasteboard.
+///   - completionHandler: A block the system invokes after detecting patterns on the pasteboard. The block receives either a set with the patterns the system finds on the pasteboard or an error if detection fails.
+- (void)detectPatternsForPatterns:(NSSet<NSPasteboardDetectionPattern> *)patterns
+                completionHandler:(void(^)(NSSet<NSPasteboardDetectionPattern> * _Nullable detectedPatterns,
+                                           NSError * _Nullable error))completionHandler NS_REFINED_FOR_SWIFT API_AVAILABLE(macos(15.4));
+
+/// Determines whether the first pasteboard item matches the specified patterns, reading the contents if it finds a match.
+///
+/// For details about the types returned for each pattern, see ``NSPasteboardDetectionPattern``.
+///
+/// The following example shows how to use this method to find web URLs and web search terms in the first pasteboard item:
+///
+/// ```obj-c
+/// [NSPasteboard.generalPasteboard
+///  detectValuesForPatterns:[NSSet setWithArray:@[NSPasteboardDetectionPatternProbableWebSearch,
+///                                                NSPasteboardDetectionPatternProbableWebURL]]
+///  completionHandler:^(NSDictionary<NSPasteboardDetectionPattern, id> *patternValues, NSError *error) {
+///     if (error) {
+///         NSLog(@"Error: %@", error);
+///         return;
+///     }
+///     NSString *searchString = (NSString*)patternValues[NSPasteboardDetectionPatternProbableWebSearch];
+///     NSString *urlString = (NSString*)patternValues[NSPasteboardDetectionPatternProbableWebURL] ;
+///     if (searchString != nil) {
+///         NSLog(@"Web search retrieved: %@", searchString);
+///     }
+///     if (urlString != nil) {
+///         NSLog(@"Web URL retrieved: %@", urlString);
+///     }
+///     if (searchString == nil && urlString == nil) {
+///         NSLog(@"No web patterns retrieved.");
+///     }
+/// }];
+/// ```
+///
+///  > Important: If the system finds a match when calling this method, the system informs the person using the app that the app is trying to read the contents of the pasteboard. If the person denies access to the pasteboard, the completion handler receives an error.
+///
+/// - Parameters:
+///   - patterns: The patterns to detect on the pasteboard.
+///   - completionHandler: A block the system invokes after detecting patterns on the pasteboard. The block returns either a dictionary with the patterns the system finds on the pasteboard or an error if detection fails. The dictionary keys specify the matched patterns and the values specify the corresponding content of the pasteboard.
+- (void)detectValuesForPatterns:(NSSet<NSPasteboardDetectionPattern> *)patterns
+              completionHandler:(void(^)(NSDictionary<NSPasteboardDetectionPattern, id> * _Nullable detectedValues,
+                                         NSError * _Nullable error))completionHandler NS_REFINED_FOR_SWIFT API_AVAILABLE(macos(15.4));
+
+/// Determines available metadata from the specified metadata types for the first pasteboard item, without notifying the person using the app.
+///
+/// This method only gives access to limited types of metadata and doesn’t allow the app to access the contents. As a result, the system doesn’t notify the person using the app about reading the contents of the pasteboard.
+///
+/// For details about the metadata returned for each type, see ``NSPasteboardMetadataType``.
+///
+/// The following example shows how to use this method to find the content type of a file reference in the first item on the pasteboard:
+///
+/// ```obj-c
+/// [NSPasteboard.generalPasteboard
+///  detectMetadataForTypes:[NSSet setWithArray:@[NSPasteboardMetadataTypeContentType]]
+///  completionHandler:^(NSDictionary<NSPasteboardMetadataType, id> *metadata, NSError *error) {
+///     if (error) {
+///         NSLog(@"Error: %@", error);
+///         return;
+///     }
+///     UTType *contentType = (UTType*)metadata[NSPasteboardMetadataTypeContentType];
+///     if (contentType) {
+///         NSLog(@"Content type is: %@", contentType.identifier);
+///     } else {
+///         NSLog(@"Couldn't get content type");
+///     }
+/// }];
+/// ```
+///
+/// - Parameters:
+///   - types: The metadata types to detect on the pasteboard.
+///   - completionHandler: A block the system invokes after detecting metadata on the pasteboard. The block receives either a dictionary with the metadata types the system finds on the pasteboard or an error if detection fails. The dictionary keys specify the matched metadata types and the values specify the corresponding metadata.
+- (void)detectMetadataForTypes:(NSSet<NSPasteboardMetadataType> *)types
+             completionHandler:(void(^)(NSDictionary<NSPasteboardMetadataType, id> * _Nullable detectedMetadata,
+                                        NSError * _Nullable error))completionHandler NS_REFINED_FOR_SWIFT API_AVAILABLE(macos(15.4));
 
 @end
 

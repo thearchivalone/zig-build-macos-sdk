@@ -9,6 +9,7 @@
 #import <Metal/MTLDefines.h>
 #import <Metal/MTLResource.h>
 #import <Metal/MTLArgument.h>
+#import <Metal/MTLTypes.h>
 
 
 #import <Metal/MTLFunctionDescriptor.h>
@@ -21,6 +22,29 @@ NS_ASSUME_NONNULL_BEGIN
 @class MTLFunctionConstantValues;
 @class MTLIntersectionFunctionDescriptor;
 @protocol MTLDynamicLibrary;
+
+@class MTLRenderPipelineReflection;
+@class MTLComputePipelineReflection;
+
+@protocol MTLLibrary;
+@protocol MTLRenderPipelineState;
+@protocol MTLComputePipelineState;
+
+/* Convenience typedefs that make it easy to declare storage for certain return types. */
+typedef __autoreleasing MTLRenderPipelineReflection * __nullable MTLAutoreleasedRenderPipelineReflection;
+typedef __autoreleasing MTLComputePipelineReflection * __nullable MTLAutoreleasedComputePipelineReflection;
+
+typedef void (^MTLNewLibraryCompletionHandler)(id <MTLLibrary> __nullable library, NSError * __nullable error);
+
+typedef void (^MTLNewRenderPipelineStateCompletionHandler)(id <MTLRenderPipelineState> __nullable renderPipelineState, NSError * __nullable error);
+
+typedef void (^MTLNewRenderPipelineStateWithReflectionCompletionHandler)(id <MTLRenderPipelineState> __nullable renderPipelineState, MTLRenderPipelineReflection * _Nullable_result reflection, NSError * __nullable error);
+
+typedef void (^MTLNewComputePipelineStateCompletionHandler)(id <MTLComputePipelineState> __nullable computePipelineState, NSError * __nullable error);
+
+typedef void (^MTLNewComputePipelineStateWithReflectionCompletionHandler)(id <MTLComputePipelineState> __nullable computePipelineState, MTLComputePipelineReflection * _Nullable_result reflection, NSError * __nullable error);
+
+typedef void (^MTLNewDynamicLibraryCompletionHandler)(id<MTLDynamicLibrary> __nullable library, NSError* __nullable error);
 
 
 @protocol MTLArgumentEncoder;
@@ -76,7 +100,7 @@ typedef NS_ENUM(NSUInteger, MTLFunctionType) {
     MTLFunctionTypeFragment = 2,
     MTLFunctionTypeKernel = 3,
     MTLFunctionTypeVisible API_AVAILABLE(macos(11.0), ios(14.0)) = 5,
-    MTLFunctionTypeIntersection API_AVAILABLE(macos(11.0), ios(14.0)) = 6,
+    MTLFunctionTypeIntersection API_AVAILABLE(macos(11.0), ios(14.0), tvos(16.0)) = 6,
     MTLFunctionTypeMesh API_AVAILABLE(macos(13.0), ios(16.0)) = 7,
     MTLFunctionTypeObject API_AVAILABLE(macos(13.0), ios(16.0)) = 8,
 } API_AVAILABLE(macos(10.11), ios(8.0));
@@ -101,7 +125,7 @@ MTL_EXPORT API_AVAILABLE(macos(10.12), ios(10.0))
  @abstract A handle to intermediate code used as inputs for either a MTLComputePipelineState or a MTLRenderPipelineState.
  @discussion MTLFunction is a single vertex shader, fragment shader, or compute function.  A Function can only be used with the device that it was created against.
 */
-API_AVAILABLE(macos(10.11), ios(8.0))
+API_AVAILABLE(macos(10.11), ios(8.0)) NS_SWIFT_SENDABLE
 @protocol MTLFunction <NSObject>
 
 /*!
@@ -175,7 +199,7 @@ API_AVAILABLE(macos(10.11), ios(8.0))
  @property options
  @abstract The options this function was created with.
  */
-@property (readonly) MTLFunctionOptions options API_AVAILABLE(macos(11.0), ios(14.0));
+@property (readonly) MTLFunctionOptions options API_AVAILABLE(macos(11.0), ios(14.0), tvos(16.0));
 
 
 @end
@@ -193,6 +217,10 @@ typedef NS_ENUM(NSUInteger, MTLLanguageVersion) {
     (3 << 16) + 0,
     MTLLanguageVersion3_1 API_AVAILABLE(macos(14.0), ios(17.0)) = 
     (3 << 16) + 1,
+    MTLLanguageVersion3_2 API_AVAILABLE(macos(15.0), ios(18.0)) =
+    (3 << 16) + 2,
+    MTLLanguageVersion4_0 API_AVAILABLE(macos(26.0), ios(26.0)) =
+    (4 << 16) + 0,
 } API_AVAILABLE(macos(10.11), ios(9.0));
 
 typedef NS_ENUM(NSInteger, MTLLibraryType) {
@@ -223,6 +251,42 @@ typedef NS_ENUM(NSInteger, MTLCompileSymbolVisibility)
     MTLCompileSymbolVisibilityHidden = 1,
 } API_AVAILABLE(macos(13.3), ios(16.4));
 
+/*!
+ @enum MTLMathMode
+ @abstract An enum to indicate if the compiler can perform optimizations for floating-point arithmetic that may violate the IEEE 754 standard
+ 
+ @constant MTLMathModeSafe 
+ Disables unsafe floating-point optimizations
+
+ @constant MTLMathModeRelaxed
+ Allows aggressive, unsafe floating-point optimizations but preserves infs and nans
+
+ @constant MTLMathModeFast
+ Allows aggressive, unsafe floating-point optimizations
+ */
+typedef NS_ENUM(NSInteger, MTLMathMode)
+{
+    MTLMathModeSafe = 0,
+    MTLMathModeRelaxed = 1,
+    MTLMathModeFast = 2,
+};
+
+/*!
+ @enum MTLMathFloatingPointFunctions
+ @abstract An enum to indicate the default math functions for single precision floating-point
+ 
+ @constant MTLMathFloatingPointFunctionsFast
+ Sets the default math functions for single precision floating-point to the corresponding functions in `metal::fast` namespace
+
+ @constant MTLMathFloatingPointFunctionsPrecise
+ Sets the default math functions for single precision floating-point to the corresponding functions in 'metal::precise' namespace
+ */
+typedef NS_ENUM(NSInteger, MTLMathFloatingPointFunctions)
+{
+    MTLMathFloatingPointFunctionsFast = 0,
+    MTLMathFloatingPointFunctionsPrecise = 1,
+};
+
 MTL_EXPORT API_AVAILABLE(macos(10.11), ios(8.0))
 @interface MTLCompileOptions : NSObject <NSCopying>
 
@@ -241,7 +305,19 @@ MTL_EXPORT API_AVAILABLE(macos(10.11), ios(8.0))
  @property fastMathEnabled
  @abstract If YES, enables the compiler to perform optimizations for floating-point arithmetic that may violate the IEEE 754 standard. It also enables the high precision variant of math functions for single precision floating-point scalar and vector types. fastMathEnabled defaults to YES.
  */
-@property (readwrite, nonatomic) BOOL fastMathEnabled;
+@property (readwrite, nonatomic) BOOL fastMathEnabled API_DEPRECATED("Use mathMode instead", macos(10.11, 15.0), ios(8.0, 18.0));
+
+ /*!
+ @property mathMode
+ @abstract Sets the floating-point arithmetic optimizations. Default depends on the language standard version.
+ */
+@property (readwrite, nonatomic) MTLMathMode mathMode API_AVAILABLE(macos(15.0), ios(18.0));
+
+ /*!
+ @property mathFloatingPointFunctions
+ @abstract Sets the default math functions for single precision floating-point. Default is `MTLMathFloatingPointFunctionsFast`.
+ */
+@property (nonatomic) MTLMathFloatingPointFunctions mathFloatingPointFunctions API_AVAILABLE(macos(15.0), ios(18.0));
 
 /*!
  @property languageVersion
@@ -315,6 +391,31 @@ MTL_EXPORT API_AVAILABLE(macos(10.11), ios(8.0))
 */
 @property (readwrite, nonatomic) NSUInteger maxTotalThreadsPerThreadgroup API_AVAILABLE(macos(13.3), ios(16.4));
 
+/*!
+ @property requiredThreadsPerThreadgroup
+ @abstract Sets the required threads-per-threadgroup during dispatches. The `threadsPerThreadgroup` argument of any dispatch must match this value if it is set.
+           Setting this to a size of 0 in every dimension disables this property
+*/
+@property(readwrite, nonatomic) MTLSize requiredThreadsPerThreadgroup API_AVAILABLE(macos(26.0), ios(26.0));
+
+/*!
+ @property enableLogging
+ @abstract If YES,  set the compiler to enable any logging in the shader. The default is false.
+ */
+@property (readwrite, nonatomic) BOOL enableLogging API_AVAILABLE(macos(15.0), ios(18.0));
+@end
+
+/// Represents a reflection object containing information about a function in a Metal library.
+MTL_EXPORT
+API_AVAILABLE(macos(26.0), ios(26.0)) NS_SWIFT_SENDABLE
+@interface MTLFunctionReflection : NSObject
+
+/// Provides a list of inputs and outputs of the function.
+@property (nonnull, readonly) NSArray<id<MTLBinding>> *bindings;
+
+/// The string passed to the user annotation attribute for this function. Null if no user annotation is present for this function.
+@property (nullable, readonly) NSString *userAnnotation API_AVAILABLE(macos(26.0), ios(26.0));
+
 @end
 
 /*!
@@ -337,7 +438,7 @@ typedef NS_ENUM(NSUInteger, MTLLibraryError) {
     MTLLibraryErrorFileNotFound API_AVAILABLE(macos(10.12), ios(10.0)) = 6,
 } API_AVAILABLE(macos(10.11), ios(8.0));
 
-API_AVAILABLE(macos(10.11), ios(8.0))
+API_AVAILABLE(macos(10.11), ios(8.0)) NS_SWIFT_SENDABLE
 @protocol MTLLibrary <NSObject>
 
 /*!
@@ -377,6 +478,30 @@ API_AVAILABLE(macos(10.11), ios(8.0))
 			completionHandler:(void (^)(id<MTLFunction> __nullable function, NSError* __nullable error))completionHandler API_AVAILABLE(macos(10.12), ios(10.0));
 
 
+/// Retrieves reflection information for a function in the library.
+///
+/// - Parameters:
+///   - functionName: The name of a GPU function in the library.
+///   The name needs to match one of the elements in the string array of library's ``functionNames`` property.
+///
+/// - Returns: An `MTLFunctionReflection` instance when the method succeeds; otherwise `nil`.
+///
+/// The reflection instance contains metadata information about a specific GPU function,
+/// which can include:
+/// * Function parameters
+/// * Return types
+/// * Bindings
+/// * Annotations from a developer, if available
+///
+/// - Note: The Metal compiler generates the function's reflection information
+/// when you or Xcode build the library.
+///
+/// The method only returns reflection information if all of the following conditions apply:
+/// * The library has a function with a name that matches `functionName`.
+/// * The deployment target is macOS 13.0 or later, or iOS 16.0 or later, or visionOS 2.0 or later.
+- (nullable MTLFunctionReflection *)reflectionForFunctionWithName:(NSString *)functionName API_AVAILABLE(macos(26.0), ios(26.0));
+
+
 /*!
  @method newFunctionWithDescriptor:completionHandler:
  @abstract Create a new MTLFunction object asynchronously.
@@ -399,7 +524,7 @@ API_AVAILABLE(macos(10.11), ios(8.0))
  */
 - (void)newIntersectionFunctionWithDescriptor:(nonnull MTLIntersectionFunctionDescriptor *)descriptor
                             completionHandler:(void (^)(id<MTLFunction> __nullable function, NSError* __nullable error))completionHandler
-    API_AVAILABLE(macos(11.0), ios(14.0));
+    API_AVAILABLE(macos(11.0), ios(14.0), tvos(16.0));
 
 /*!
  @method newIntersectionFunctionWithDescriptor:error:
@@ -407,7 +532,7 @@ API_AVAILABLE(macos(10.11), ios(8.0))
  */
 - (nullable id <MTLFunction>)newIntersectionFunctionWithDescriptor:(nonnull MTLIntersectionFunctionDescriptor *)descriptor
                                                              error:(__autoreleasing NSError **)error
-    API_AVAILABLE(macos(11.0), ios(14.0));
+    API_AVAILABLE(macos(11.0), ios(14.0), tvos(16.0));
 
 
 
@@ -434,5 +559,7 @@ API_AVAILABLE(macos(10.11), ios(8.0))
  */
 @property (readonly, nullable) NSString* installName API_AVAILABLE(macos(11.0), ios(14.0));
 
+
 @end
+
 NS_ASSUME_NONNULL_END

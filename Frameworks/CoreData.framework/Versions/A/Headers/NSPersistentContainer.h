@@ -1,7 +1,7 @@
 /*
     NSPersistentContainer.h
     Core Data
-    Copyright (c) 2016-2023, Apple Inc.
+    Copyright (c) 2016-2026, Apple Inc.
     All rights reserved.
 */
 
@@ -42,7 +42,7 @@ API_AVAILABLE(macosx(10.12),ios(10.0),tvos(10.0),watchos(3.0)) NS_SWIFT_SENDABLE
 - (void)loadPersistentStoresWithCompletionHandler:(void (^)(NSPersistentStoreDescription *, NSError * _Nullable))block NS_SWIFT_DISABLE_ASYNC;
 
 - (NSManagedObjectContext *)newBackgroundContext NS_RETURNS_RETAINED;
-- (void)performBackgroundTask:(void (^)(NSManagedObjectContext *))block;
+- (void)performBackgroundTask:(void (^NS_SWIFT_SENDABLE)(NSManagedObjectContext *))block;
 
 @end
 

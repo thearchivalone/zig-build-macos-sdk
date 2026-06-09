@@ -34,6 +34,7 @@
 #include <IOKit/hid/IOHIDInterface.h>
 #include <IOKit/hid/IOHIDElement.h>
 #include <IOKit/hid/IOHIDKeys.h>
+#include <IOKit/hid/IOHIDPrivateKeys.h>
 #if KERNEL_PRIVATE
 #include <IOKit/hid/IOHIDEvent.h>
 #endif
@@ -130,9 +131,9 @@ private:
     IORecursiveLock *       _nubLock;
     
     void *                  _reserved0;
-    
+
     bool                    _readyForInputReports;
-    
+
     struct ExpansionData {
         IOService *             provider;
         IOWorkLoop *            workLoop;
@@ -210,6 +211,32 @@ private:
     static DebugKeyAction debugKeyActionTable[];
     
     ExpansionData *         _reserved;
+
+    /*! @function   calculatePowerButtonNmiSupport
+     *  @abstract   Calculates whether the driver will support NMI via the power button.
+     *  @discussion Called during `start`. Initializes the `powerButtonNmi` instance variable.
+     */
+    void calculatePowerButtonNmiSupport();
+
+#if TARGET_OS_OSX
+    /*! @function   calculateLegacyShimSupport
+     *  @abstract   Calculates whether the driver will support legacy shims (macOS only).
+     *  @discussion Called during `start`. Initializes the `pointingShim` and `keyboardShim`
+     *              instance variables.
+     */
+    void calculateLegacyShimSupport();
+#endif
+
+    /*! @function    publishProperties
+     *  @abstract    Copy a set of properties from the provider and apply them to this service.
+     *  @discussion  Called during `start` before service registration.
+     */
+    void publishProperties();
+
+    /*! @function   getBootProtocol
+     *  @abstract   Get the numeric value of the boot protocol property.
+     */
+    UInt32 getBootProtocol();
 
 #ifdef POINTING_SHIM_SUPPORT
     IOHIDPointing *         newPointingShim (
@@ -1005,9 +1032,69 @@ protected:
                                                                 IOFixed                         buttonR4,
                                                                 IOFixed                         buttonL5,
                                                                 IOFixed                         buttonR5,
-                                                                IOOptionBits                    options         = 0 );
+                                                                IOOptionBits                    options         = 0 ) __attribute__((deprecated("L5, R5 buttons are unsupported", "dispatchExtendedGameControllerEventWithOptionalButtons(timeStamp, dpadUp, dpadDown, dpadLeft, dpadRight, faceX, faceY, faceA, faceB, shoulderL1, shoulderR1, shoulderL2, shoulderR2, joystickX, joystickY, joystickZ, joystickRz, thumbstickButtonLeft, thumbstickButtonRight, buttonL4, buttonR4, buttonM1, buttonM2, buttonM3, buttonM4, options)")));
     
-    OSMetaClassDeclareReservedUnused(IOHIDEventService, 28);
+    /*!
+     @function dispatchExtendedGameControllerEventWithOptionalBottomButtons
+     @abstract Dispatch extended game controller event
+     @discussion This is meant to dispatch a conforming extended game controller event that includes the
+     following: Direction Pad, Face Buttons, Left and Right Joysticks and 3 left and right shoulder buttons and 4 bottom buttons.
+     @param timeStamp   AbsoluteTime representing origination of event
+     @param dpadUp      Direction pad up with a fixed value between 0.0 and 1.0
+     @param dpadDown    Direction pad down with a fixed value between 0.0 and 1.0
+     @param dpadLeft    Direction pad left with a fixed value between 0.0 and 1.0
+     @param dpadRight   Direction pad right with a fixed value between 0.0 and 1.0
+     @param faceX       Face button X with a fixed value between 0.0 and 1.0
+     @param faceY       Face button Y with a fixed value between 0.0 and 1.0
+     @param faceA       Face button A with a fixed value between 0.0 and 1.0
+     @param faceB       Face button B with a fixed value between 0.0 and 1.0
+     @param shoulderL1  Top left shoulder button with a fixed value between 0.0 and 1.0
+     @param shoulderR1  Top right shoulder button with a fixed value between 0.0 and 1.0
+     @param shoulderL2  Bottom left shoulder button with a fixed value between 0.0 and 1.0
+     @param shoulderR2  Bottom right shoulder button with a fixed value between 0.0 and 1.0
+     @param joystickX   Joystick X axis with a fixed value between -1.0 and 1.0
+     @param joystickY   Joystick Y axis with a fixed value between -1.0 and 1.0
+     @param joystickZ   Joystick Z axis with a fixed value between -1.0 and 1.0
+     @param joystickRz  Joystick Rz axis with a fixed value between -1.0 and 1.0
+     @param thumbstickButtonLeft   Joystick left  thumbstick button with boolean value true/false for button down/up
+     @param thumbstickButtonRight  Joystick right thumbstick button with boolean value true/false for button down/up
+     @param buttonL4  Extra button L4 with a fixed value between -1.0 and 1.0
+     @param buttonR4  Extra button R4 with a fixed value between -1.0 and 1.0
+     @param buttonM1  Extra button M1 with a fixed value between -1.0 and 1.0
+     @param buttonM2  Extra button M2 with a fixed value between -1.0 and 1.0
+     @param buttonM3  Extra button M3 with a fixed value between -1.0 and 1.0
+     @param buttonM4  Extra button M4 with a fixed value between -1.0 and 1.0
+     @param options     Additional options to be defined.
+     */
+    OSMetaClassDeclareReservedUsed(IOHIDEventService, 28);
+    virtual void            dispatchExtendedGameControllerEventWithOptionalBottomButtons(
+                                                                AbsoluteTime                    timeStamp,
+                                                                IOFixed                         dpadUp,
+                                                                IOFixed                         dpadDown,
+                                                                IOFixed                         dpadLeft,
+                                                                IOFixed                         dpadRight,
+                                                                IOFixed                         faceX,
+                                                                IOFixed                         faceY,
+                                                                IOFixed                         faceA,
+                                                                IOFixed                         faceB,
+                                                                IOFixed                         shoulderL1,
+                                                                IOFixed                         shoulderR1,
+                                                                IOFixed                         shoulderL2,
+                                                                IOFixed                         shoulderR2,
+                                                                IOFixed                         joystickX,
+                                                                IOFixed                         joystickY,
+                                                                IOFixed                         joystickZ,
+                                                                IOFixed                         joystickRz,
+                                                                boolean_t                       thumbstickButtonLeft,
+                                                                boolean_t                       thumbstickButtonRight,
+                                                                IOFixed                         buttonL4,
+                                                                IOFixed                         buttonR4,
+                                                                IOFixed                         buttonM1,
+                                                                IOFixed                         buttonM2,
+                                                                IOFixed                         buttonM3,
+                                                                IOFixed                         buttonM4,
+                                                                IOOptionBits                    options         = 0 );
+
     OSMetaClassDeclareReservedUnused(IOHIDEventService, 29);
     OSMetaClassDeclareReservedUnused(IOHIDEventService, 30);
     OSMetaClassDeclareReservedUnused(IOHIDEventService, 31);

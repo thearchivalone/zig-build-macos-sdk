@@ -136,6 +136,7 @@ extern struct vnodeop_desc vnop_offtoblk_desc;
 extern struct vnodeop_desc vnop_blockmap_desc;
 extern struct vnodeop_desc vnop_strategy_desc;
 extern struct vnodeop_desc vnop_bwrite_desc;
+extern struct vnodeop_desc vnop_monitor_desc;
 
 #ifdef __APPLE_API_UNSTABLE
 
@@ -150,14 +151,6 @@ extern struct vnodeop_desc vnop_removenamedstream_desc;
 
 __BEGIN_DECLS
 
-struct vnop_lookup_args {
-	struct vnodeop_desc *a_desc;
-	vnode_t a_dvp;
-	vnode_t *a_vpp;
-	struct componentname *a_cnp;
-	vfs_context_t a_context;
-};
-
 /*!
  *  @function VNOP_LOOKUP
  *  @abstract Call down to a filesystem to look for a directory entry by name.
@@ -170,15 +163,14 @@ struct vnop_lookup_args {
  *  @param ctx Context against which to authenticate lookup request.
  *  @return 0 for success or a filesystem-specific error.
  */
-
-struct vnop_create_args {
+struct vnop_lookup_args {
 	struct vnodeop_desc *a_desc;
 	vnode_t a_dvp;
 	vnode_t *a_vpp;
 	struct componentname *a_cnp;
-	struct vnode_attr *a_vap;
 	vfs_context_t a_context;
 };
+
 
 /*!
  *  @function VNOP_CREATE
@@ -193,14 +185,15 @@ struct vnop_create_args {
  *  @param ctx Context against which to authenticate file creation.
  *  @return 0 for success or a filesystem-specific error.
  */
-
-struct vnop_whiteout_args {
+struct vnop_create_args {
 	struct vnodeop_desc *a_desc;
 	vnode_t a_dvp;
+	vnode_t *a_vpp;
 	struct componentname *a_cnp;
-	int a_flags;
+	struct vnode_attr *a_vap;
 	vfs_context_t a_context;
 };
+
 
 /*!
  *  @function VNOP_WHITEOUT
@@ -217,15 +210,14 @@ struct vnop_whiteout_args {
  *  @param ctx Context against which to authenticate whiteout creation.
  *  @return 0 for success or a filesystem-specific error.  Returning 0 for LOOKUP indicates that a directory does support whiteouts.
  */
-
-struct vnop_mknod_args {
+struct vnop_whiteout_args {
 	struct vnodeop_desc *a_desc;
 	vnode_t a_dvp;
-	vnode_t *a_vpp;
 	struct componentname *a_cnp;
-	struct vnode_attr *a_vap;
+	int a_flags;
 	vfs_context_t a_context;
 };
+
 
 /*!
  *  @function VNOP_MKNOD
@@ -240,11 +232,12 @@ struct vnop_mknod_args {
  *  @param ctx Context against which to authenticate node creation.
  *  @return 0 for success or a filesystem-specific error.
  */
-
-struct vnop_open_args {
+struct vnop_mknod_args {
 	struct vnodeop_desc *a_desc;
-	vnode_t a_vp;
-	int a_mode;
+	vnode_t a_dvp;
+	vnode_t *a_vpp;
+	struct componentname *a_cnp;
+	struct vnode_attr *a_vap;
 	vfs_context_t a_context;
 };
 
@@ -260,14 +253,15 @@ struct vnop_open_args {
  *  @param ctx Context against which to authenticate open.
  *  @return 0 for success or a filesystem-specific error.
  */
-
-
-struct vnop_close_args {
+struct vnop_open_args {
 	struct vnodeop_desc *a_desc;
 	vnode_t a_vp;
-	int a_fflag;
+	int a_mode;
 	vfs_context_t a_context;
 };
+
+
+
 
 /*!
  *  @function VNOP_CLOSE
@@ -280,13 +274,13 @@ struct vnop_close_args {
  *  @param ctx Context against which to authenticate close.
  *  @return 0 for success or a filesystem-specific error.
  */
-
-struct vnop_access_args {
+struct vnop_close_args {
 	struct vnodeop_desc *a_desc;
 	vnode_t a_vp;
-	int a_action;
+	int a_fflag;
 	vfs_context_t a_context;
 };
+
 
 /*!
  *  @function VNOP_ACCESS
@@ -299,13 +293,13 @@ struct vnop_access_args {
  *  @param ctx Context against which to authenticate action.
  *  @return 0 for success or a filesystem-specific error.
  */
-
-struct vnop_getattr_args {
+struct vnop_access_args {
 	struct vnodeop_desc *a_desc;
 	vnode_t a_vp;
-	struct vnode_attr *a_vap;
+	int a_action;
 	vfs_context_t a_context;
 };
+
 
 /*!
  *  @function VNOP_GETATTR
@@ -321,13 +315,13 @@ struct vnop_getattr_args {
  *  all requested attributes were returned; returning an error-value should indicate that something went wrong, rather than that
  *  some attribute is not supported.
  */
-
-struct vnop_setattr_args {
+struct vnop_getattr_args {
 	struct vnodeop_desc *a_desc;
 	vnode_t a_vp;
 	struct vnode_attr *a_vap;
 	vfs_context_t a_context;
 };
+
 
 /*!
  *  @function VNOP_SETATTR
@@ -344,14 +338,13 @@ struct vnop_setattr_args {
  *  all requested attributes were set; returning an error-value should indicate that something went wrong, rather than that
  *  some attribute is not supported.
  */
-
-struct vnop_read_args {
+struct vnop_setattr_args {
 	struct vnodeop_desc *a_desc;
 	vnode_t a_vp;
-	struct uio *a_uio;
-	int a_ioflag;
+	struct vnode_attr *a_vap;
 	vfs_context_t a_context;
 };
+
 
 /*!
  *  @function VNOP_READ
@@ -368,15 +361,15 @@ struct vnop_read_args {
  *  @return 0 for success or a filesystem-specific error.  VNOP_READ() can return success even if less data was
  *  read than originally requested; returning an error value should indicate that something actually went wrong.
  */
-extern errno_t VNOP_READ(vnode_t vp, struct uio *uio, int ioflag, vfs_context_t ctx);
-
-struct vnop_write_args {
+struct vnop_read_args {
 	struct vnodeop_desc *a_desc;
 	vnode_t a_vp;
 	struct uio *a_uio;
 	int a_ioflag;
 	vfs_context_t a_context;
 };
+
+extern errno_t VNOP_READ(vnode_t vp, struct uio *uio, int ioflag, vfs_context_t ctx);
 
 /*!
  *  @function VNOP_WRITE
@@ -393,16 +386,15 @@ struct vnop_write_args {
  *  @return 0 for success or a filesystem-specific error.  VNOP_WRITE() can return success even if less data was
  *  written than originally requested; returning an error value should indicate that something actually went wrong.
  */
-extern errno_t VNOP_WRITE(vnode_t vp, struct uio *uio, int ioflag, vfs_context_t ctx);
-
-struct vnop_ioctl_args {
+struct vnop_write_args {
 	struct vnodeop_desc *a_desc;
 	vnode_t a_vp;
-	u_long a_command;
-	caddr_t a_data;
-	int a_fflag;
+	struct uio *a_uio;
+	int a_ioflag;
 	vfs_context_t a_context;
 };
+
+extern errno_t VNOP_WRITE(vnode_t vp, struct uio *uio, int ioflag, vfs_context_t ctx);
 
 /*!
  *  @function VNOP_IOCTL
@@ -421,16 +413,16 @@ struct vnop_ioctl_args {
  *  @param ctx Context against which to authenticate ioctl request.
  *  @return 0 for success or a filesystem-specific error.
  */
-extern errno_t VNOP_IOCTL(vnode_t vp, u_long command, caddr_t data, int fflag, vfs_context_t ctx);
-
-struct vnop_select_args {
+struct vnop_ioctl_args {
 	struct vnodeop_desc *a_desc;
 	vnode_t a_vp;
-	int a_which;
-	int a_fflags;
-	void *a_wql;
+	u_long a_command;
+	caddr_t a_data;
+	int a_fflag;
 	vfs_context_t a_context;
 };
+
+extern errno_t VNOP_IOCTL(vnode_t vp, u_long command, caddr_t data, int fflag, vfs_context_t ctx);
 
 /*!
  *  @function VNOP_SELECT
@@ -449,14 +441,15 @@ struct vnop_select_args {
  *  and the driver (or filesystem) is going to track the request and provide subsequent wakeups.
  *  the device (or filesystem) will provide a wakeup.
  */
-
-struct vnop_exchange_args {
+struct vnop_select_args {
 	struct vnodeop_desc *a_desc;
-	vnode_t a_fvp;
-	vnode_t a_tvp;
-	int a_options;
+	vnode_t a_vp;
+	int a_which;
+	int a_fflags;
+	void *a_wql;
 	vfs_context_t a_context;
 };
+
 
 /*!
  *  @function VNOP_EXCHANGE
@@ -469,13 +462,14 @@ struct vnop_exchange_args {
  *  @param ctx Context to authenticate for exchangedata request.
  *  @return 0 for success, else an error code.
  */
-
-struct vnop_revoke_args {
+struct vnop_exchange_args {
 	struct vnodeop_desc *a_desc;
-	vnode_t a_vp;
-	int a_flags;
+	vnode_t a_fvp;
+	vnode_t a_tvp;
+	int a_options;
 	vfs_context_t a_context;
 };
+
 
 /*!
  *  @function VNOP_REVOKE
@@ -488,13 +482,13 @@ struct vnop_revoke_args {
  *  @param ctx Context to authenticate for revoke request.
  *  @return 0 for success, else an error code.
  */
-
-struct vnop_mmap_check_args {
+struct vnop_revoke_args {
 	struct vnodeop_desc *a_desc;
 	vnode_t a_vp;
 	int a_flags;
 	vfs_context_t a_context;
 };
+
 
 /*!
  *  @function VNOP_MMAP_CHECK
@@ -508,14 +502,13 @@ struct vnop_mmap_check_args {
  *  errors (except ENOTSUP) may be returned at the discretion of the file
  *  system.  ENOTSUP will never be returned by VNOP_MMAP_CHECK().
  */
-
-
-struct vnop_mmap_args {
+struct vnop_mmap_check_args {
 	struct vnodeop_desc *a_desc;
 	vnode_t a_vp;
-	int a_fflags;
+	int a_flags;
 	vfs_context_t a_context;
 };
+
 
 /*!
  *  @function VNOP_MMAP
@@ -526,12 +519,13 @@ struct vnop_mmap_args {
  *  @param ctx Context to authenticate for mmap request.
  *  @return 0 for success; all errors except EPERM are ignored.
  */
-
-struct vnop_mnomap_args {
+struct vnop_mmap_args {
 	struct vnodeop_desc *a_desc;
 	vnode_t a_vp;
+	int a_fflags;
 	vfs_context_t a_context;
 };
+
 
 /*!
  *  @function VNOP_MNOMAP
@@ -541,13 +535,12 @@ struct vnop_mnomap_args {
  *  @param ctx Context to authenticate for mnomap request.
  *  @return Return value is ignored.
  */
-
-struct vnop_fsync_args {
+struct vnop_mnomap_args {
 	struct vnodeop_desc *a_desc;
 	vnode_t a_vp;
-	int a_waitfor;
 	vfs_context_t a_context;
 };
+
 
 /*!
  *  @function VNOP_FSYNC
@@ -558,16 +551,14 @@ struct vnop_fsync_args {
  *  @param ctx Context to authenticate for fsync request.
  *  @return 0 for success, else an error code.
  */
-extern errno_t VNOP_FSYNC(vnode_t vp, int waitfor, vfs_context_t ctx);
-
-struct vnop_remove_args {
+struct vnop_fsync_args {
 	struct vnodeop_desc *a_desc;
-	vnode_t a_dvp;
 	vnode_t a_vp;
-	struct componentname *a_cnp;
-	int a_flags;
+	int a_waitfor;
 	vfs_context_t a_context;
 };
+
+extern errno_t VNOP_FSYNC(vnode_t vp, int waitfor, vfs_context_t ctx);
 
 /*!
  *  @function VNOP_REMOVE
@@ -580,15 +571,16 @@ struct vnop_remove_args {
  *  @param ctx Context to authenticate for fsync request.
  *  @return 0 for success, else an error code.
  */
-
-
-struct vnop_link_args {
+struct vnop_remove_args {
 	struct vnodeop_desc *a_desc;
+	vnode_t a_dvp;
 	vnode_t a_vp;
-	vnode_t a_tdvp;
 	struct componentname *a_cnp;
+	int a_flags;
 	vfs_context_t a_context;
 };
+
+
 
 /*!
  *  @function VNOP_LINK
@@ -600,17 +592,14 @@ struct vnop_link_args {
  *  @param ctx Context to authenticate for link request.
  *  @return 0 for success, else an error code.
  */
-
-struct vnop_rename_args {
+struct vnop_link_args {
 	struct vnodeop_desc *a_desc;
-	vnode_t a_fdvp;
-	vnode_t a_fvp;
-	struct componentname *a_fcnp;
+	vnode_t a_vp;
 	vnode_t a_tdvp;
-	vnode_t a_tvp;
-	struct componentname *a_tcnp;
+	struct componentname *a_cnp;
 	vfs_context_t a_context;
 };
+
 
 /*!
  *  @function VNOP_RENAME
@@ -625,6 +614,17 @@ struct vnop_rename_args {
  *  @param ctx Context to authenticate for rename request.
  *  @return 0 for success, else an error code.
  */
+struct vnop_rename_args {
+	struct vnodeop_desc *a_desc;
+	vnode_t a_fdvp;
+	vnode_t a_fvp;
+	struct componentname *a_fcnp;
+	vnode_t a_tdvp;
+	vnode_t a_tvp;
+	struct componentname *a_tcnp;
+	vfs_context_t a_context;
+};
+
 
 typedef unsigned int vfs_rename_flags_t;
 
@@ -641,22 +641,11 @@ enum {
 	VFS_RENAME_DATALESS             = 0x00000008,
 	/* used by sys/stdio for RENAME_NOFOLLOW_ANY */
 	VFS_RENAME_RESERVED1            = 0x00000010,
+	/* used by sys/stdio for RENAME_RESOLVE_BENEATH */
+	VFS_RENAME_RESERVED2            = 0x00000020,
 
 	VFS_RENAME_FLAGS_MASK   = (VFS_RENAME_SECLUDE | VFS_RENAME_SWAP
 	    | VFS_RENAME_EXCL),
-};
-
-struct vnop_renamex_args {
-	struct vnodeop_desc *a_desc;
-	vnode_t a_fdvp;
-	vnode_t a_fvp;
-	struct componentname *a_fcnp;
-	vnode_t a_tdvp;
-	vnode_t a_tvp;
-	struct componentname *a_tcnp;
-	struct vnode_attr *a_vap;               // Reserved for future use
-	vfs_rename_flags_t a_flags;
-	vfs_context_t a_context;
 };
 
 /*!
@@ -673,17 +662,21 @@ struct vnop_renamex_args {
  *  @param ctx Context to authenticate for rename request.
  *  @return 0 for success, else an error code.
  */
-
-
-
-struct vnop_mkdir_args {
+struct vnop_renamex_args {
 	struct vnodeop_desc *a_desc;
-	vnode_t a_dvp;
-	vnode_t *a_vpp;
-	struct componentname *a_cnp;
-	struct vnode_attr *a_vap;
+	vnode_t a_fdvp;
+	vnode_t a_fvp;
+	struct componentname *a_fcnp;
+	vnode_t a_tdvp;
+	vnode_t a_tvp;
+	struct componentname *a_tcnp;
+	struct vnode_attr *a_vap;               // Reserved for future use
+	vfs_rename_flags_t a_flags;
 	vfs_context_t a_context;
 };
+
+
+
 
 /*!
  *  @function VNOP_MKDIR
@@ -696,17 +689,18 @@ struct vnop_mkdir_args {
  *  @param ctx Context to authenticate for mkdir request.
  *  @return 0 for success, else an error code.
  */
-
-
-
-
-struct vnop_rmdir_args {
+struct vnop_mkdir_args {
 	struct vnodeop_desc *a_desc;
 	vnode_t a_dvp;
-	vnode_t a_vp;
+	vnode_t *a_vpp;
 	struct componentname *a_cnp;
+	struct vnode_attr *a_vap;
 	vfs_context_t a_context;
 };
+
+
+
+
 
 /*!
  *  @function VNOP_RMDIR
@@ -717,19 +711,17 @@ struct vnop_rmdir_args {
  *  @param ctx Context to authenticate for rmdir request.
  *  @return 0 for success, else an error code.
  */
-
-
-
-
-struct vnop_symlink_args {
+struct vnop_rmdir_args {
 	struct vnodeop_desc *a_desc;
 	vnode_t a_dvp;
-	vnode_t *a_vpp;
+	vnode_t a_vp;
 	struct componentname *a_cnp;
-	struct vnode_attr *a_vap;
-	char *a_target;
 	vfs_context_t a_context;
 };
+
+
+
+
 
 /*!
  *  @function VNOP_SYMLINK
@@ -745,6 +737,16 @@ struct vnop_symlink_args {
  *  @param ctx Context to authenticate for symlink request.
  *  @return 0 for success, else an error code.
  */
+struct vnop_symlink_args {
+	struct vnodeop_desc *a_desc;
+	vnode_t a_dvp;
+	vnode_t *a_vpp;
+	struct componentname *a_cnp;
+	struct vnode_attr *a_vap;
+	char *a_target;
+	vfs_context_t a_context;
+};
+
 
 /*
  *
@@ -765,16 +767,6 @@ struct vnop_symlink_args {
  *
  */
 
-struct vnop_readdir_args {
-	struct vnodeop_desc *a_desc;
-	vnode_t a_vp;
-	struct uio *a_uio;
-	int a_flags;
-	int *a_eofflag;
-	int *a_numdirent;
-	vfs_context_t a_context;
-};
-
 /*!
  *  @function VNOP_READDIR
  *  @abstract Call down to a filesystem to enumerate directory entries.
@@ -788,6 +780,16 @@ struct vnop_readdir_args {
  *  @param ctx Context to authenticate for readdir request.
  *  @return 0 for success, else an error code.
  */
+struct vnop_readdir_args {
+	struct vnodeop_desc *a_desc;
+	vnode_t a_vp;
+	struct uio *a_uio;
+	int a_flags;
+	int *a_eofflag;
+	int *a_numdirent;
+	vfs_context_t a_context;
+};
+
 
 struct vnop_readdirattr_args {
 	struct vnodeop_desc *a_desc;
@@ -849,13 +851,6 @@ struct vnop_getattrlistbulk_args {
  *  @return 0 for success, else an error code.
  */
 
-struct vnop_readlink_args {
-	struct vnodeop_desc *a_desc;
-	vnode_t a_vp;
-	struct uio *a_uio;
-	vfs_context_t a_context;
-};
-
 /*!
  *  @function VNOP_READLINK
  *  @abstract Call down to a filesystem to get the pathname represented by a symbolic link.
@@ -865,12 +860,13 @@ struct vnop_readlink_args {
  *  @param ctx Context to authenticate for readlink request.
  *  @return 0 for success, else an error code.
  */
-
-struct vnop_inactive_args {
+struct vnop_readlink_args {
 	struct vnodeop_desc *a_desc;
 	vnode_t a_vp;
+	struct uio *a_uio;
 	vfs_context_t a_context;
 };
+
 
 /*!
  *  @function VNOP_INACTIVE
@@ -884,12 +880,12 @@ struct vnop_inactive_args {
  *  @param ctx Context to authenticate for inactive message.
  *  @return 0 for success, else an error code, but return value is currently ignored.
  */
-
-struct vnop_reclaim_args {
+struct vnop_inactive_args {
 	struct vnodeop_desc *a_desc;
 	vnode_t a_vp;
 	vfs_context_t a_context;
 };
+
 
 /*!
  *  @function VNOP_RECLAIM
@@ -905,14 +901,12 @@ struct vnop_reclaim_args {
  *  @param ctx Context to authenticate for reclaim.
  *  @return 0 for success, or an error code.  A nonzero return value results in a panic.
  */
-
-struct vnop_pathconf_args {
+struct vnop_reclaim_args {
 	struct vnodeop_desc *a_desc;
 	vnode_t a_vp;
-	int a_name;
-	int32_t *a_retval;
 	vfs_context_t a_context;
 };
+
 
 /*!
  *  @function VNOP_PATHCONF
@@ -924,17 +918,14 @@ struct vnop_pathconf_args {
  *  @param ctx Context to authenticate for pathconf request.
  *  @return 0 for success, or an error code.
  */
-
-struct vnop_advlock_args {
+struct vnop_pathconf_args {
 	struct vnodeop_desc *a_desc;
 	vnode_t a_vp;
-	caddr_t a_id;
-	int a_op;
-	struct flock *a_fl;
-	int a_flags;
+	int a_name;
+	int32_t *a_retval;
 	vfs_context_t a_context;
-	struct timespec *a_timeout;
 };
+
 
 /*!
  *  @function VNOP_ADVLOCK
@@ -955,16 +946,17 @@ struct vnop_advlock_args {
  *  @param timeout Timespec for timeout in case of F_SETLKWTIMEOUT.
  *  @return 0 for success, or an error code.
  */
-
-struct vnop_allocate_args {
+struct vnop_advlock_args {
 	struct vnodeop_desc *a_desc;
 	vnode_t a_vp;
-	off_t a_length;
-	u_int32_t a_flags;
-	off_t *a_bytesallocated;
-	off_t a_offset;
+	caddr_t a_id;
+	int a_op;
+	struct flock *a_fl;
+	int a_flags;
 	vfs_context_t a_context;
+	struct timespec *a_timeout;
 };
+
 
 /*!
  *  @function VNOP_ALLOCATE
@@ -989,17 +981,16 @@ struct vnop_allocate_args {
  *  @param ctx Context to authenticate for allocation request.
  *  @return 0 for success, or an error code.
  */
-
-struct vnop_pagein_args {
+struct vnop_allocate_args {
 	struct vnodeop_desc *a_desc;
 	vnode_t a_vp;
-	upl_t a_pl;
-	upl_offset_t a_pl_offset;
-	off_t a_f_offset;
-	size_t a_size;
-	int a_flags;
+	off_t a_length;
+	u_int32_t a_flags;
+	off_t *a_bytesallocated;
+	off_t a_offset;
 	vfs_context_t a_context;
 };
+
 
 /*!
  *  @function VNOP_PAGEIN
@@ -1018,8 +1009,7 @@ struct vnop_pagein_args {
  *  @param ctx Context to authenticate for pagein request.
  *  @return 0 for success, or an error code.
  */
-
-struct vnop_pageout_args {
+struct vnop_pagein_args {
 	struct vnodeop_desc *a_desc;
 	vnode_t a_vp;
 	upl_t a_pl;
@@ -1029,6 +1019,7 @@ struct vnop_pageout_args {
 	int a_flags;
 	vfs_context_t a_context;
 };
+
 
 /*!
  *  @function VNOP_PAGEOUT
@@ -1055,25 +1046,19 @@ struct vnop_pageout_args {
  *  @param ctx Context to authenticate for pageout request.
  *  @return 0 for success, or an error code.
  */
-
-struct vnop_searchfs_args {
+struct vnop_pageout_args {
 	struct vnodeop_desc *a_desc;
 	vnode_t a_vp;
-	void *a_searchparams1;
-	void *a_searchparams2;
-	struct attrlist *a_searchattrs;
-	uint32_t a_maxmatches;
-	struct timeval *a_timelimit;
-	struct attrlist *a_returnattrs;
-	uint32_t *a_nummatches;
-	uint32_t a_scriptcode;
-	uint32_t a_options;
-	struct uio *a_uio;
-	struct searchstate *a_searchstate;
+	upl_t a_pl;
+	upl_offset_t a_pl_offset;
+	off_t a_f_offset;
+	size_t a_size;
+	int a_flags;
 	vfs_context_t a_context;
 };
 
-/*
+
+/*!
  *  @function VNOP_SEARCHFS
  *  @abstract Search a filesystem quickly for files or directories that match the passed-in search criteria.
  *  @discussion VNOP_SEARCHFS is a getattrlist-based system call which is implemented almost entirely inside
@@ -1102,8 +1087,39 @@ struct vnop_searchfs_args {
  *  @param a_context The context in which to perform the filesystem search.
  *  @return 0 on success, EAGAIN for searches which could not be completed in 1 call, and other ERRNOS as needed.
  */
+struct vnop_searchfs_args {
+	struct vnodeop_desc *a_desc;
+	vnode_t a_vp;
+	void *a_searchparams1;
+	void *a_searchparams2;
+	struct attrlist *a_searchattrs;
+	uint32_t a_maxmatches;
+	struct timeval *a_timelimit;
+	struct attrlist *a_returnattrs;
+	uint32_t *a_nummatches;
+	uint32_t a_scriptcode;
+	uint32_t a_options;
+	struct uio *a_uio;
+	struct searchstate *a_searchstate;
+	vfs_context_t a_context;
+};
 
 
+/*!
+ *  @function VNOP_COPYFILE
+ *  @abstract Copy a file from one location to another.
+ *  @discussion VNOP_COPYFILE() copies a file, including its data and metadata, from one location to another.
+ *  This operation is used to implement efficient file copying that can take advantage of filesystem-specific
+ *  optimizations such as copy-on-write or server-side copying.
+ *  @param a_fvp The source file vnode to copy from.
+ *  @param a_tdvp The destination directory vnode where the copy will be created.
+ *  @param a_tvp The destination file vnode (may be NULL if creating a new file).
+ *  @param a_tcnp Component name information for the destination file.
+ *  @param a_mode File creation mode for the destination file.
+ *  @param a_flags Copy operation flags.
+ *  @param a_context Context to authenticate for copy operation.
+ *  @return 0 for success, or an error code.
+ */
 struct vnop_copyfile_args {
 	struct vnodeop_desc *a_desc;
 	vnode_t a_fvp;
@@ -1122,6 +1138,20 @@ typedef enum dir_clone_authorizer_op {
 	OP_VATTR_CLEANUP = 2        /* request to cleanup any state or free any memory allocated in OP_AUTHORIZE */
 } dir_clone_authorizer_op_t;
 
+/*!
+ *  @function VNOP_CLONEFILE
+ *  @abstract Call down to a filesystem to clone a filesystem object (regular file, directory or symbolic link.)
+ *  @discussion If file creation succeeds, "vpp" should be returned with an iocount to be dropped by the caller.
+ *  @param dvp Directory in which to clone object.
+ *  @param vpp Destination for vnode for newly cloned object.
+ *  @param cnp Description of name of object to clone.
+ *  @param vap File creation properties, as seen in vnode_getattr().  Manipulated with VATTR_ISACTIVE, VATTR_RETURN,
+ *  VATTR_SET_SUPPORTED, and so forth. All attributes not set here should either be copied
+ *  from the source object
+ *  or set to values which are used for creating new filesystem objects
+ *  @param ctx Context against which to authenticate file creation.
+ *  @return 0 for success or a filesystem-specific error.
+ */
 struct vnop_clonefile_args {
 	struct vnodeop_desc *a_desc;
 	vnode_t a_fvp;
@@ -1143,21 +1173,6 @@ struct vnop_clonefile_args {
 		void *reserved);                        /* Always NULL */
 	void *a_reserved;               /* Currently unused */
 };
-
-/*!
- *  @function VNOP_CLONEFILE
- *  @abstract Call down to a filesystem to clone a filesystem object (regular file, directory or symbolic link.)
- *  @discussion If file creation succeeds, "vpp" should be returned with an iocount to be dropped by the caller.
- *  @param dvp Directory in which to clone object.
- *  @param vpp Destination for vnode for newly cloned object.
- *  @param cnp Description of name of object to clone.
- *  @param vap File creation properties, as seen in vnode_getattr().  Manipulated with VATTR_ISACTIVE, VATTR_RETURN,
- *  VATTR_SET_SUPPORTED, and so forth. All attributes not set here should either be copied
- *  from the source object
- *  or set to values which are used for creating new filesystem objects
- *  @param ctx Context against which to authenticate file creation.
- *  @return 0 for success or a filesystem-specific error.
- */
 
 struct vnop_getxattr_args {
 	struct vnodeop_desc *a_desc;
@@ -1248,13 +1263,6 @@ extern struct vnodeop_desc vnop_listxattr_desc;
  *  @param ctx Context to authenticate for attribute name request.
  */
 
-struct vnop_blktooff_args {
-	struct vnodeop_desc *a_desc;
-	vnode_t a_vp;
-	daddr64_t a_lblkno;
-	off_t *a_offset;
-};
-
 /*!
  *  @function VNOP_BLKTOOFF
  *  @abstract Call down to a filesystem to convert a logical block number to a file offset.
@@ -1265,13 +1273,13 @@ struct vnop_blktooff_args {
  *  @param offset Destination for file offset.
  *  @return 0 for success, else an error code.
  */
-
-struct vnop_offtoblk_args {
+struct vnop_blktooff_args {
 	struct vnodeop_desc *a_desc;
 	vnode_t a_vp;
-	off_t a_offset;
-	daddr64_t *a_lblkno;
+	daddr64_t a_lblkno;
+	off_t *a_offset;
 };
+
 
 /*!
  *  @function VNOP_OFFTOBLK
@@ -1281,6 +1289,13 @@ struct vnop_offtoblk_args {
  *  @param lblkno Destination for corresponding logical block number.
  *  @return 0 for success, else an error code.
  */
+struct vnop_offtoblk_args {
+	struct vnodeop_desc *a_desc;
+	vnode_t a_vp;
+	off_t a_offset;
+	daddr64_t *a_lblkno;
+};
+
 
 struct vnop_blockmap_args {
 	struct vnodeop_desc *a_desc;
@@ -1311,11 +1326,6 @@ struct vnop_blockmap_args {
  *  @return 0 for success, else an error code.
  */
 
-struct vnop_strategy_args {
-	struct vnodeop_desc *a_desc;
-	struct buf *a_bp;
-};
-
 /*!
  *  @function VNOP_STRATEGY
  *  @abstract Initiate I/O on a file (both read and write).
@@ -1325,12 +1335,12 @@ struct vnop_strategy_args {
  *  @param bp Complete specificiation of requested I/O: region of data involved, whether request is for read or write, and so on.
  *  @return 0 for success, else an error code.
  */
-extern errno_t VNOP_STRATEGY(struct buf *bp);
-
-struct vnop_bwrite_args {
+struct vnop_strategy_args {
 	struct vnodeop_desc *a_desc;
-	buf_t a_bp;
+	struct buf *a_bp;
 };
+
+extern errno_t VNOP_STRATEGY(struct buf *bp);
 
 /*!
  *  @function VNOP_BWRITE
@@ -1341,8 +1351,23 @@ struct vnop_bwrite_args {
  *  @param bp The buffer to write.
  *  @return 0 for success, else an error code.
  */
+struct vnop_bwrite_args {
+	struct vnodeop_desc *a_desc;
+	buf_t a_bp;
+};
+
 extern errno_t VNOP_BWRITE(buf_t bp);
 
+/*!
+ *  @function VNOP_KQFILT_ADD
+ *  @abstract Add a kernel queue filter to a vnode.
+ *  @discussion VNOP_KQFILT_ADD() is called to add a kernel queue filter (kqueue) to a vnode.
+ *  This allows processes to monitor the vnode for specific events.
+ *  @param a_vp The vnode to add the filter to.
+ *  @param a_kn The kernel note (knote) structure describing the filter.
+ *  @param a_context Context to authenticate for the operation.
+ *  @return 0 for success, or an error code.
+ */
 struct vnop_kqfilt_add_args {
 	struct vnodeop_desc *a_desc;
 	struct vnode *a_vp;
@@ -1352,6 +1377,15 @@ struct vnop_kqfilt_add_args {
 extern struct vnodeop_desc vnop_kqfilt_add_desc;
 
 
+/*!
+ *  @function VNOP_KQFILT_REMOVE
+ *  @abstract Remove a kernel queue filter from a vnode.
+ *  @discussion VNOP_KQFILT_REMOVE() is called to remove a kernel queue filter from a vnode.
+ *  @param a_vp The vnode to remove the filter from.
+ *  @param a_ident Identifier for the filter to remove.
+ *  @param a_context Context to authenticate for the operation.
+ *  @return 0 for success, or an error code.
+ */
 struct vnop_kqfilt_remove_args {
 	struct vnodeop_desc *a_desc;
 	struct vnode *a_vp;
@@ -1361,18 +1395,43 @@ struct vnop_kqfilt_remove_args {
 extern struct vnodeop_desc vnop_kqfilt_remove_desc;
 
 
+#define VNODE_MONITOR_BEGIN     0x01
+#define VNODE_MONITOR_END       0x02
+#define VNODE_MONITOR_UPDATE    0x04
 
+/*!
+ *  @function VNOP_MONITOR
+ *  @abstract Indicate to a filesystem that the number of watchers of a file has changed.
+ *  @param vp The vnode whose watch state has changed.
+ *  @param events Unused.  Filesystems can ignore this parameter.
+ *  @param flags Type of change to the watch state.  VNODE_MONITOR_BEGIN is passed when the kernel
+ *  begins tracking a new watcher of a file.  VNODE_MONITOR_END is passed when a watcher stops watching a file.
+ *  VNODE_MONITOR_UPDATE is currently unused.  A filesystem is guaranteed that each VNODE_MONITOR_BEGIN
+ *  will be matched by a VNODE_MONITOR_END with the same "handle" argument.
+ *  @param handle Unique identifier for a given watcher. A VNODE_MONITOR_BEGIN for a given handle will be matched with a
+ *  VNODE_MONITOR_END for the same handle; a filesystem need not consider this parameter unless
+ *  it for some reason wants be able to match specific VNOP_MONITOR calls rather than just keeping
+ *  a count.
+ *  @param ctx The context which is starting to monitor a file or ending a watch on a file.  A matching
+ *  pair of VNODE_MONITOR_BEGIN and VNODE_MONITOR_END need not have the same context.
+ *  @discussion VNOP_MONITOR() is intended to let networked filesystems know when they should bother
+ *  listening for changes to files which occur remotely, so that they can post notifications using
+ *  vnode_notify().  Local filesystems should not implement a monitor vnop.
+ *  It is called when there is a new watcher for a file or when a watcher for a file goes away.
+ *  Each BEGIN will be matched with an END with the same handle.  Note that vnode_ismonitored() can
+ *  be used to see if there are currently watchers for a file.
+ */
+struct vnop_monitor_args {
+	struct vnodeop_desc *a_desc;
+	vnode_t a_vp;
+	uint32_t a_events;
+	uint32_t a_flags;
+	void *a_handle;
+	vfs_context_t a_context;
+};
 
 
 struct label;
-struct vnop_setlabel_args {
-	struct vnodeop_desc *a_desc;
-	struct vnode *a_vp;
-	struct label *a_vl;
-	vfs_context_t a_context;
-};
-extern struct vnodeop_desc vnop_setlabel_desc;
-
 /*!
  *  @function VNOP_SETLABEL
  *  @abstract Associate a MACF label with a file.
@@ -1381,6 +1440,14 @@ extern struct vnodeop_desc vnop_setlabel_desc;
  *  @param ctx Context to authenticate for label change.
  *  @return 0 for success, else an error code.
  */
+struct vnop_setlabel_args {
+	struct vnodeop_desc *a_desc;
+	struct vnode *a_vp;
+	struct label *a_vl;
+	vfs_context_t a_context;
+};
+extern struct vnodeop_desc vnop_setlabel_desc;
+
 
 #ifdef __APPLE_API_UNSTABLE
 
@@ -1390,16 +1457,6 @@ enum nsoperation        { NS_OPEN, NS_CREATE, NS_DELETE };
 
 /* a_flags for vnop_getnamedstream_args: */
 #define NS_GETRAWENCRYPTED 0x00000001
-
-struct vnop_getnamedstream_args {
-	struct vnodeop_desc *a_desc;
-	vnode_t a_vp;
-	vnode_t *a_svpp;
-	const char *a_name;
-	enum nsoperation a_operation;
-	int a_flags;
-	vfs_context_t a_context;
-};
 
 /*!
  *  @function VNOP_GETNAMEDSTREAM
@@ -1417,15 +1474,16 @@ struct vnop_getnamedstream_args {
  *  @param ctx Context to authenticate for getting named stream.
  *  @return 0 for success, else an error code.
  */
-
-struct vnop_makenamedstream_args {
+struct vnop_getnamedstream_args {
 	struct vnodeop_desc *a_desc;
-	vnode_t *a_svpp;
 	vnode_t a_vp;
+	vnode_t *a_svpp;
 	const char *a_name;
+	enum nsoperation a_operation;
 	int a_flags;
 	vfs_context_t a_context;
 };
+
 
 /*!
  *  @function VNOP_MAKENAMEDSTREAM
@@ -1440,15 +1498,15 @@ struct vnop_makenamedstream_args {
  *  @param ctx Context to authenticate creating named stream.
  *  @return 0 for success, else an error code.
  */
-
-struct vnop_removenamedstream_args {
+struct vnop_makenamedstream_args {
 	struct vnodeop_desc *a_desc;
+	vnode_t *a_svpp;
 	vnode_t a_vp;
-	vnode_t a_svp;
 	const char *a_name;
 	int a_flags;
 	vfs_context_t a_context;
 };
+
 
 /*!
  *  @function VNOP_REMOVENAMEDSTREAM
@@ -1462,6 +1520,15 @@ struct vnop_removenamedstream_args {
  *  @param ctx Context to authenticate deleting named stream.
  *  @return 0 for success, else an error code.
  */
+struct vnop_removenamedstream_args {
+	struct vnodeop_desc *a_desc;
+	vnode_t a_vp;
+	vnode_t a_svp;
+	const char *a_name;
+	int a_flags;
+	vfs_context_t a_context;
+};
+
 
 #endif // NAMEDSTREAMS
 
@@ -1470,22 +1537,12 @@ __options_decl(vnode_verify_flags_t, uint32_t, {
 	VNODE_VERIFY_CONTEXT_ALLOC = 1,
 	VNODE_VERIFY_WITH_CONTEXT = 2,
 	VNODE_VERIFY_CONTEXT_FREE = 4,
+	VNODE_VERIFY_PRECOMPUTED = 8,
 });
 
 #define VNODE_VERIFY_DEFAULT VNODE_VERIFY_DEFAULT
 #define VNODE_VERIFY_WITH_CONTEXT VNODE_VERIFY_WITH_CONTEXT
-
-struct vnop_verify_args {
-	struct vnodeop_desc *a_desc;
-	vnode_t a_vp;
-	off_t a_foffset;
-	uint8_t  *a_buf;
-	size_t a_bufsize;
-	size_t *a_verifyblksize;
-	void **a_verify_ctxp;
-	vnode_verify_flags_t a_flags;
-	vfs_context_t a_context;
-};
+#define VNODE_VERIFY_PRECOMPUTED VNODE_VERIFY_PRECOMPUTED
 
 /*!
  *  @function VNOP_VERIFY
@@ -1496,15 +1553,40 @@ struct vnop_verify_args {
  *  @param vp The vnode for which data is to be verified.
  *  @param foffset Offset (in bytes) at which region to be verified starts.
  *  @param buf buffer containing file data at foffset. If this is NULL, then only the verification block size is
- *  being requested.
- *  @param bufsize size of data buffer to be verified.
+ *  being requested. When VNODE_VERIFY_PRECOMPUTED is set, this buffer is for the precomputed verification
+ *  data.
+ *  @param bufsize size of data buffer to be verified. For VNODE_VERIFY_CONTEXT_ALLOC, this specifies the length of the region
+ *  of the file beginning at f_offset that needs verification and the context should be allocated for (f_offset, f_offset + bufsize)
  *  @param verifyblksize pointer to size of verification block size in use for this file. If the verification block size is 0,
  *  no verification will be performed. The verification block size can be any value which is a power of two upto 128KiB.
  *  @param verify_ctxp context for verification to allocated by the FS and used in verification.
  *  @param flags modifier flags.
+ *  if no flags are set (VNODE_VERIFY_DEFAULT), one or both of a_buf and a_verifyblksize is passed. Verification is only required
+ *  if a_buf is passed. In each of the flag values, a_verifyblocksize must be returned if it is set
+ *  For all flag values, the operation to be performed is specified by the value of the flag and the corresponding
+ *  arguments that the operation requires will be set.
+ *  VNODE_VERIFY_CONTEXT_ALLOC : f_offset, bufsize and verify_ctxp.
+ *  VNODE_VERIFY_WITH_CONTEXT : f_offset, buf, bufsize, verify_ctxp
+ *  VNODE_VERIFY_PRECOMPUTED : f_offset, buf, bufsize
+ *  VNODE_VERIFY_CONTEXT_FREE verify_ctxp
  *  @param ctx Context to authenticate for verify request; currently often set to NULL.
- *  @return 0 for success, else an error code.
+ *  @param verifykind Additional information on kind of data to be verified. for example if a specific type of hash function is required.
+ *  Only types defined for vnode_verify_kind_t are supported.
+ *  @return 0 for success, else an error code. For VNODE_VERIFY_PRECOMPUTED, an error return of EAGAIN indicates
+ *  that the Filesystem would like to fallback to VNODE_VERIFY_WITH_CONTEXT.
  */
+struct vnop_verify_args {
+	struct vnodeop_desc *a_desc;
+	vnode_t a_vp;
+	off_t a_foffset;
+	uint8_t  *a_buf;
+	size_t a_bufsize;
+	size_t *a_verifyblksize;
+	void **a_verify_ctxp;
+	vnode_verify_flags_t a_flags;
+	vfs_context_t a_context;
+	vnode_verify_kind_t *a_verifykind; /* vnode_verify_kind_t defined in sys/buf.h */
+};
 
 #endif // defined(__APPLE_API_UNSTABLE)
 

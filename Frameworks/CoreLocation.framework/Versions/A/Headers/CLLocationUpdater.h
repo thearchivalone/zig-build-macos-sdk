@@ -41,37 +41,117 @@ API_AVAILABLE(ios(17.0), macos(14.0), watchos(10.0), tvos(17.0)) NS_REFINED_FOR_
 @interface CLUpdate : NSObject
 
 /*
- *	isStationary
+ *  authorizationDenied
+ *
+ *  Discussion:
+ *      True if updates will be suspended while the app has been denied
+ *      location authorization.
+ *
+ */
+@property (nonatomic, readonly) BOOL authorizationDenied API_AVAILABLE(ios(18.0), watchos(11.0), tvos(18.0), macos(15.0));
+
+/*
+ *  authorizationDeniedGlobally
+ *
+ *  Discussion:
+ *      True if updates will be suspended while the user has disabled Location
+ *      Services system-wide.
+ *
+ */
+@property (nonatomic, readonly) BOOL authorizationDeniedGlobally API_AVAILABLE(ios(18.0), watchos(11.0), tvos(18.0), macos(15.0));
+
+/*
+ *  authorizationRestricted
+ *
+ *  Discussion:
+ *      True if updates will be suspended while the app lacks authorization,
+ *      and authorization changes are prevented by parental restrictions,
+ *      MDM configuration, or other factors.
+ */
+@property (nonatomic, readonly) BOOL authorizationRestricted API_AVAILABLE(ios(18.0), watchos(11.0), tvos(18.0), macos(15.0));
+
+/*
+ *  isStationary
+ *
+ *  Discussion:
+ *      Deprecated. See -stationary.
+ *
+ */
+@property (readonly) BOOL isStationary API_DEPRECATED_WITH_REPLACEMENT("-stationary", ios(17.0, 17.0), macos(14.0, 14.0), tvos(17.0, 17.0));
+
+/*
+ *  stationary
  *
  *  Discussion:
  *      Updates may stop flowing temporarily for many reasons such as
  *      the app is no longer authorized for locations or if its
  *      location becomes unknown.  If CoreLocation stops
  *      delivering updates because the device is stationary, then
- *      isStationary will be set to YES.  Otherwise it will be NO.
+ *      stationary will be set to YES.  Otherwise it will be NO.
  *
- *      If isStationary is YES, then updates may be suspended until
+ *      If stationary is YES, then updates may be suspended until
  *      the user next moves, or their location becomes unknown.
  *
  */
-#if defined(TARGET_OS_VISION) && TARGET_OS_VISION
-@property (readonly) BOOL isStationary API_AVAILABLE(ios(17.0), macos(14.0), watchos(10.0), tvos(17.0), visionos(1.0));
-#else
-@property (readonly) BOOL isStationary API_AVAILABLE(ios(17.0), macos(14.0), watchos(10.0), tvos(17.0));
-#endif
+@property (readonly) BOOL stationary API_AVAILABLE(ios(18.0), watchos(11.0), tvos(18.0), macos(15.0));
 
 /*
- *	location
+ *  insufficientlyInUse
  *
  *  Discussion:
- *		Return the user's location if available, otherwise returns nil.
+ *      True if updates will be suspended while the app is not sufficiently
+ *      in-use.
  *
  */
-#if defined(TARGET_OS_VISION) && TARGET_OS_VISION
+@property (nonatomic, readonly) BOOL insufficientlyInUse API_AVAILABLE(ios(18.0), watchos(11.0), tvos(18.0), macos(15.0));
+
+/*
+ *  locationUnavailable
+ *
+ *  Discussion:
+ *      True if updates will be suspended while the device's location can no
+ *      longer be determined.
+ *
+ */
+@property (nonatomic, readonly) BOOL locationUnavailable API_AVAILABLE(ios(18.0), watchos(11.0), tvos(18.0), macos(15.0));
+
+/*
+ *  accuracyLimited
+ *
+ *  Discussion:
+ *      True if further updates will be suspended for some time while the app is
+ *      subject to accuracy limitation.
+ *
+ */
+@property (nonatomic, readonly) BOOL accuracyLimited API_AVAILABLE(ios(18.0), watchos(11.0), tvos(18.0), macos(15.0));
+
+/*
+ *  serviceSessionRequired
+ *
+ *  Discussion:
+ *      True if LocationServices are disabled because the app has adopted CLRequireExplicitServiceSession
+ *      info.plist key but no CLServiceSession requiring authorization is outstanding yet.
+ *
+ */
+@property (nonatomic, readonly) BOOL serviceSessionRequired API_AVAILABLE(macos(15.0), ios(18.0)) API_UNAVAILABLE(watchos, tvos);
+
+/*
+ *  authorizationRequestInProgress
+ *
+ *  Discussion:
+ *      True if the system is requesting authorization from the user on behalf of the app, but no response has been received yet.
+ *
+ */
+@property (nonatomic, readonly) BOOL authorizationRequestInProgress API_AVAILABLE(macos(15.0), ios(18.0)) API_UNAVAILABLE(watchos, tvos);
+
+/*
+ *  location
+ *
+ *  Discussion:
+ *      Return the user's location if available, otherwise returns nil.
+ *
+ */
 @property (nonatomic, readonly) CLLocation * _Nullable location API_AVAILABLE(ios(17.0), macos(14.0), watchos(10.0), tvos(17.0), visionos(1.0));
-#else
-@property (nonatomic, readonly) CLLocation * _Nullable location API_AVAILABLE(ios(17.0), macos(14.0), watchos(10.0), tvos(17.0));
-#endif
 
 @end
 
@@ -104,11 +184,7 @@ API_AVAILABLE(ios(17.0), macos(14.0), watchos(10.0), tvos(17.0)) NS_REFINED_FOR_
  *
  */
 + (nullable instancetype)liveUpdaterWithQueue:(dispatch_queue_t)queue
-									  handler:(void(^)(CLUpdate *_Nullable update))handler API_AVAILABLE(ios(17.0), macos(14.0), watchos(10.0), tvos(17.0)
-#if defined(TARGET_OS_VISION) && TARGET_OS_VISION
-, visionos(1.0)
-#endif
-) NS_REFINED_FOR_SWIFT;
+									  handler:(void(^)(CLUpdate *_Nullable update))handler API_AVAILABLE(ios(17.0), macos(14.0), watchos(10.0), tvos(17.0), visionos(1.0)) NS_REFINED_FOR_SWIFT;
 
 /*
  *  liveUpdaterWithConfiguration:queue:handler:
@@ -135,11 +211,7 @@ API_AVAILABLE(ios(17.0), macos(14.0), watchos(10.0), tvos(17.0)) NS_REFINED_FOR_
  */
 + (nullable instancetype)liveUpdaterWithConfiguration:(CLLiveUpdateConfiguration)configuration
 												queue:(dispatch_queue_t)queue
-											  handler:(void(^)(CLUpdate * _Nullable update))handler API_AVAILABLE(ios(17.0), macos(14.0), watchos(10.0), tvos(17.0)
-#if defined(TARGET_OS_VISION) && TARGET_OS_VISION
-, visionos(1.0)
-#endif
-) NS_REFINED_FOR_SWIFT;
+											  handler:(void(^)(CLUpdate * _Nullable update))handler API_AVAILABLE(ios(17.0), macos(14.0), watchos(10.0), tvos(17.0), visionos(1.0)) NS_REFINED_FOR_SWIFT;
 																									
 /*
 *  resume
@@ -149,11 +221,7 @@ API_AVAILABLE(ios(17.0), macos(14.0), watchos(10.0), tvos(17.0)) NS_REFINED_FOR_
 *	  	was called. -resume must be called to start the flow of updates when
 *		a CLLocationUpdater is first obtained.
 */
-#if defined(TARGET_OS_VISION) && TARGET_OS_VISION
 - (void)resume API_AVAILABLE(ios(17.0), macos(14.0), watchos(10.0), tvos(17.0), tvos(17.0), visionos(1.0));
-#else
-- (void)resume API_AVAILABLE(ios(17.0), macos(14.0), watchos(10.0), tvos(17.0));
-#endif
 
 /*
 *  pause
@@ -165,11 +233,7 @@ API_AVAILABLE(ios(17.0), macos(14.0), watchos(10.0), tvos(17.0)) NS_REFINED_FOR_
 *		updates where they were left off.
 *
 */
-#if defined(TARGET_OS_VISION) && TARGET_OS_VISION
 - (void)pause API_AVAILABLE(ios(17.0), macos(14.0), watchos(10.0), tvos(17.0), visionos(1.0));
-#else
-- (void)pause API_AVAILABLE(ios(17.0), macos(14.0), watchos(10.0), tvos(17.0));
-#endif
 
 /*
 *  invalidate
@@ -179,11 +243,7 @@ API_AVAILABLE(ios(17.0), macos(14.0), watchos(10.0), tvos(17.0)) NS_REFINED_FOR_
 *      	instance after invalidation results in no-op.
 *
 */
-#if defined(TARGET_OS_VISION) && TARGET_OS_VISION
 - (void)invalidate API_AVAILABLE(ios(17.0), macos(14.0), watchos(10.0), visionos(1.0));
-#else
-- (void)invalidate API_AVAILABLE(ios(17.0), macos(14.0), watchos(10.0), tvos(17.0));
-#endif
 
 @end
 NS_ASSUME_NONNULL_END

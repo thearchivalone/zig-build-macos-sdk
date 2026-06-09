@@ -70,7 +70,8 @@ AVAILABLE_MAC_OS_X_VERSION_10_5_AND_LATER;
 */
 CF_EXPORT
 IOHIDElementRef IOHIDElementCreateWithDictionary(CFAllocatorRef _Nullable allocator, CFDictionaryRef dictionary)
-AVAILABLE_MAC_OS_X_VERSION_10_5_AND_LATER;
+AVAILABLE_MAC_OS_X_VERSION_10_5_AND_LATER
+API_DEPRECATED_WITH_REPLACEMENT("IOHIDDeviceCopyMatchingElements", macos(10.5, API_TO_BE_DEPRECATED));
 
 /*!
 	@function   IOHIDElementGetDevice
@@ -337,7 +338,7 @@ AVAILABLE_MAC_OS_X_VERSION_10_5_AND_LATER;
 
 /*!
 	@function   IOHIDElementGetUnitExponent
-	@abstract   Returns the unit exponenet in base 10 for the element.
+	@abstract   Returns the code associated with the unit exponent as outlined in the HID spec
     @discussion The unit exponent property is described in more detail in Section 6.2.2.7 of the 
                 "Device Class Definition for Human Interface Devices(HID)" Specification, Version 1.11.
     @param      element The element to be queried. If this parameter is not a valid IOHIDElementRef, the behavior is undefined.

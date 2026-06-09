@@ -184,6 +184,7 @@ typedef struct host_priority_info       *host_priority_info_t;
 #define HOST_EXPIRED_TASK_INFO  6       /* Statistics for expired tasks */
 
 
+
 struct host_load_info {
 	integer_t       avenrun[3];     /* scaled by LOAD_SCALE */
 	integer_t       mach_factor[3]; /* scaled by LOAD_SCALE */
@@ -206,11 +207,14 @@ typedef struct vm_purgeable_info        *host_purgable_info_t;
 
 /* size of the latest version of the structure */
 #define HOST_VM_INFO64_LATEST_COUNT HOST_VM_INFO64_COUNT
-#define HOST_VM_INFO64_REV1_COUNT HOST_VM_INFO64_LATEST_COUNT
+#define HOST_VM_INFO64_REV3_COUNT HOST_VM_INFO64_COUNT
+#define HOST_VM_INFO64_REV2_COUNT ((mach_msg_type_number_t) \
+	 (offsetof(vm_statistics64_data_t, total_tag_storage_pages) / sizeof(integer_t)))
+#define HOST_VM_INFO64_REV1_COUNT ((mach_msg_type_number_t) \
+	 (offsetof(vm_statistics64_data_t, swapped_count) / sizeof(integer_t)))
 /* previous versions: adjust the size according to what was added each time */
-#define HOST_VM_INFO64_REV0_COUNT /* added compression and swapper info (14 ints) */ \
-	((mach_msg_type_number_t) \
-	 (HOST_VM_INFO64_REV1_COUNT - 14))
+#define HOST_VM_INFO64_REV0_COUNT ((mach_msg_type_number_t) \
+	 (offsetof(vm_statistics64_data_t, decompressions) / sizeof(integer_t)))
 
 /* in <mach/vm_statistics.h> */
 /* vm_extmod_statistics */

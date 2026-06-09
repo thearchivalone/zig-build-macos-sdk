@@ -1,14 +1,38 @@
-#if !__has_include(<UIFoundation/NSText.h>)
+#if (defined(USE_APPKIT_PUBLIC_HEADERS) && USE_APPKIT_PUBLIC_HEADERS) || !__has_include(<UIFoundation/NSText.h>)
+#import <TargetConditionals.h>
+
+#if !TARGET_OS_IPHONE
+#import <AppKit/AppKitDefines.h>
+#import <Foundation/Foundation.h>
+
 /*
 	NSText.h
 	Application Kit
-	Copyright (c) 1994-2023, Apple Inc.
+	Copyright (c) 1994-2025, Apple Inc.
 	All rights reserved.
 */
 
+NS_HEADER_AUDIT_BEGIN(nullability, sendability)
+
+#if !__NSWRITING_DIRECTION_SHARED_SECTION__
+#define __NSWRITING_DIRECTION_SHARED_SECTION__ 1
+#pragma mark NSWritingDirection
+typedef NS_ENUM(NSInteger, NSWritingDirection) {
+    NSWritingDirectionNatural       = -1,   // Determines direction using the Unicode Bidi Algorithm rules P2 and P3
+    NSWritingDirectionLeftToRight   = 0,    // Left to right writing direction
+    NSWritingDirectionRightToLeft   = 1     // Right to left writing direction
+} API_AVAILABLE(macos(10.0), ios(6.0), watchos(2.0), tvos(9.0), visionos(1.0));
+#endif // !__NSWRITING_DIRECTION_SHARED_SECTION__
+
+NS_HEADER_AUDIT_END(nullability, sendability)
+#endif // !TARGET_OS_IPHONE
+#else
+#import <UIFoundation/NSText.h>
+#endif
+
+#import <AppKit/AppKitDefines.h>
 #import <AppKit/NSView.h>
 #import <AppKit/NSSpellProtocol.h>
-#import <AppKit/AppKitDefines.h>
 
 @class NSColor, NSFont, NSNotification;
 @protocol NSTextDelegate;
@@ -17,8 +41,8 @@ NS_HEADER_AUDIT_BEGIN(nullability, sendability)
 
 #if !TARGET_OS_IPHONE
 
-#if !__NSTEXT_SHARED_SECTION__
-#define __NSTEXT_SHARED_SECTION__ 1
+#if !__NSTEXT_ALIGNMENT_SHARED_SECTION__
+#define __NSTEXT_ALIGNMENT_SHARED_SECTION__ 1
 #pragma mark NSTextAlignment
 typedef NS_ENUM(NSInteger, NSTextAlignment) {
     NSTextAlignmentLeft      = 0,    // Visually left aligned
@@ -30,16 +54,15 @@ typedef NS_ENUM(NSInteger, NSTextAlignment) {
     NSTextAlignmentCenter    = 2,    // Visually centered
 #endif
     NSTextAlignmentJustified = 3,    // Fully-justified. The last line in a paragraph is natural-aligned.
-    NSTextAlignmentNatural   = 4     // Indicates the default alignment for script
-} API_AVAILABLE(macos(10.0), ios(6.0), watchos(2.0), tvos(9.0));
 
-#pragma mark NSWritingDirection
-typedef NS_ENUM(NSInteger, NSWritingDirection) {
-    NSWritingDirectionNatural       = -1,   // Determines direction using the Unicode Bidi Algorithm rules P2 and P3
-    NSWritingDirectionLeftToRight   = 0,    // Left to right writing direction
-    NSWritingDirectionRightToLeft   = 1     // Right to left writing direction
-} API_AVAILABLE(macos(10.0), ios(6.0), watchos(2.0), tvos(9.0));
-#endif // __NSTEXT_SHARED_SECTION__
+    /// Resolved to either ``left`` or ``right`` based on the natural alignment resolution type active in the associated component.
+    ///
+    /// There are two types of natural alignment resolution behavior. The natural alignment is resolved based on either the UI language or the base writing direction.
+    /// The behavior is selected by the ``resolvesNaturalAlignmentWithBaseWritingDirection`` property for ``NSTextLayoutManager``.
+    /// ``NSStringDrawingOptions.resolvesNaturalAlignmentWithBaseWritingDirection`` specifies the base writing direction based resolution for ``NSStringDrawing``.
+    NSTextAlignmentNatural   = 4
+} API_AVAILABLE(macos(10.0), ios(6.0), watchos(2.0), tvos(9.0), visionos(1.0));
+#endif // !__NSTEXT_ALIGNMENT_SHARED_SECTION__
 
 #endif // !TARGET_OS_IPHONE
 
@@ -195,7 +218,5 @@ static const NSTextAlignment NSCenterTextAlignment API_DEPRECATED_WITH_REPLACEME
 static const NSTextAlignment NSJustifiedTextAlignment API_DEPRECATED_WITH_REPLACEMENT("NSTextAlignmentJustified", macos(10.0,10.12))  = NSTextAlignmentJustified;
 static const NSTextAlignment NSNaturalTextAlignment API_DEPRECATED_WITH_REPLACEMENT("NSTextAlignmentNatural", macos(10.0,10.12))  = NSTextAlignmentNatural;
 #endif // !TARGET_OS_IPHONE
+
 NS_HEADER_AUDIT_END(nullability, sendability)
-#else
-#import <UIFoundation/NSText.h>
-#endif

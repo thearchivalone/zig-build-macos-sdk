@@ -156,7 +156,7 @@ public:
 /*! @function inTaskWithOptions
  *   @abstract Creates a memory buffer with memory descriptor for that buffer.
  *   @discussion Added in Mac OS X 10.2, this method allocates a memory buffer with a given size and alignment in the task's address space specified, and returns a memory descriptor instance representing the memory. It is recommended that memory allocated for I/O or sharing via mapping be created via IOBufferMemoryDescriptor. Options passed with the request specify the kind of memory to be allocated - pageablity and sharing are specified with option bits. This function may block and so should not be called from interrupt level or while a simple lock is held.
- *   @param inTask The task the buffer will be allocated in.
+ *   @param inTask The task the buffer will be allocated in. Pass NULL to allocate unmapped memory.
  *   @param options Options for the allocation:<br>
  *   kIODirectionOut, kIODirectionIn - set the direction of the I/O transfer.<br>
  *   kIOMemoryPhysicallyContiguous - pass to request memory be physically contiguous. This option is heavily discouraged. The request may fail if memory is fragmented, may cause large amounts of paging activity, and may take a very long time to execute.<br>
@@ -180,7 +180,7 @@ public:
 /*! @function inTaskWithOptions
  *   @abstract Creates a memory buffer with memory descriptor for that buffer.
  *   @discussion Added in Mac OS X 10.2, this method allocates a memory buffer with a given size and alignment in the task's address space specified, and returns a memory descriptor instance representing the memory. It is recommended that memory allocated for I/O or sharing via mapping be created via IOBufferMemoryDescriptor. Options passed with the request specify the kind of memory to be allocated - pageablity and sharing are specified with option bits. This function may block and so should not be called from interrupt level or while a simple lock is held.
- *   @param inTask The task the buffer will be allocated in.
+ *   @param inTask The task the buffer will be allocated in. Pass NULL to allocate unmapped memory.
  *   @param options Options for the allocation:<br>
  *   kIODirectionOut, kIODirectionIn - set the direction of the I/O transfer.<br>
  *   kIOMemoryPhysicallyContiguous - pass to request memory be physically contiguous. This option is heavily discouraged. The request may fail if memory is fragmented, may cause large amounts of paging activity, and may take a very long time to execute.<br>
@@ -235,7 +235,7 @@ public:
  * capacity.
  */
 	static OSPtr<IOBufferMemoryDescriptor> withCapacity(
-		vm_size_t    capacity,
+		vm_size_t    capacity __xnu_data_size,
 		IODirection  withDirection,
 		bool         withContiguousMemory = false);
 #ifndef __LP64__
@@ -253,7 +253,7 @@ public:
  */
 	static OSPtr<IOBufferMemoryDescriptor> withBytes(
 		const void * bytes,
-		vm_size_t    withLength,
+		vm_size_t    withLength __xnu_data_size,
 		IODirection  withDirection,
 		bool         withContiguousMemory = false);
 
@@ -290,6 +290,7 @@ public:
  *
  * Return the virtual address of the beginning of the buffer
  */
+	__xnu_returns_data_pointer
 	virtual void *getBytesNoCopy();
 
 /*
@@ -297,6 +298,7 @@ public:
  *
  * Return the virtual address of an offset from the beginning of the buffer
  */
+	__xnu_returns_data_pointer
 	virtual void *getBytesNoCopy(vm_size_t start, vm_size_t withLength);
 
 /*
@@ -306,7 +308,7 @@ public:
  * maintains the memory descriptor buffer length.  Note that appendBytes
  * will not copy past the end of the memory descriptor's current capacity.
  */
-	virtual bool appendBytes(const void *bytes, vm_size_t withLength);
+	virtual bool appendBytes(const void *bytes, vm_size_t withLength __xnu_data_size);
 
 #ifndef __LP64__
 	virtual void * getVirtualSegment(IOByteCount offset,

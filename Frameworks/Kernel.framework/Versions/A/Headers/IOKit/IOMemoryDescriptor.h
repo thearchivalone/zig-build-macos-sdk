@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998-2020 Apple Inc. All rights reserved.
+ * Copyright (c) 1998-2020, 2026 Apple Inc. All rights reserved.
  *
  * @APPLE_OSREFERENCE_LICENSE_HEADER_START@
  *
@@ -93,6 +93,7 @@ enum {
 #ifdef __LP64__
 	kIOMemoryTypeVirtual64      = kIOMemoryTypeVirtual,
 	kIOMemoryTypePhysical64     = kIOMemoryTypePhysical,
+	kIOMemoryTypeVnode          = 0x00000060,
 #else /* !__LP64__ */
 	kIOMemoryTypeVirtual64      = 0x00000060,
 	kIOMemoryTypePhysical64     = 0x00000070,
@@ -200,7 +201,6 @@ enum{
 
 
 
-
 /*! @class IOMemoryDescriptor : public OSObject
  *   @abstract An abstract base class defining common methods for describing physical or virtual memory.
  *   @discussion The IOMemoryDescriptor object represents a buffer or range of memory, specified as one or more physical or virtual address ranges. It contains methods to return the memory's physically contiguous segments (fragments), for use with the IOMemoryCursor, and methods to map the memory into any address space with caching and placed mapping options. */
@@ -302,6 +302,17 @@ public:
 
 	IOReturn getPageCounts( IOByteCount * residentPageCount,
 	    IOByteCount * dirtyPageCount);
+
+/*! @function getPageCounts
+ *   @abstract Retrieve the number of resident, dirty, and swapped pages encompassed by an IOMemoryDescriptor.
+ *   @param residentPageCount - If non-null, a pointer to a byte count that will return the number of resident pages encompassed by this IOMemoryDescriptor.
+ *   @param dirtyPageCount - If non-null, a pointer to a byte count that will return the number of resident, dirty pages encompassed by this IOMemoryDescriptor.
+ *   @param swappedPageCount - If non-null, a pointer to a byte count that will return the number of swapped pages encompassed by this IOMemoryDescriptor.
+ *   @result An IOReturn code. */
+
+	IOReturn getPageCounts( IOByteCount * residentPageCount,
+	    IOByteCount * dirtyPageCount,
+	    IOByteCount * swappedPageCount );
 
 /*! @function performOperation
  *   @abstract Perform an operation on the memory descriptor's memory.
@@ -450,6 +461,7 @@ public:
 		UInt32           rangeCount,
 		IOOptionBits     options,
 		task_t           task);
+
 
 /*! @function withOptions
  *   @abstract Master initialiser for all variants of memory descriptors.
@@ -1025,6 +1037,14 @@ public:
 
 	virtual IOReturn complete(IODirection forDirection = kIODirectionNone) APPLE_KEXT_OVERRIDE;
 
+	virtual LIBKERN_RETURNS_NOT_RETAINED IOMemoryMap *      makeMapping(
+		IOMemoryDescriptor *    owner,
+		task_t                  intoTask,
+		IOVirtualAddress        atAddress,
+		IOOptionBits            options,
+		IOByteCount             offset,
+		IOByteCount             length ) APPLE_KEXT_OVERRIDE;
+
 	virtual IOReturn doMap(
 		vm_map_t                addressMap,
 		IOVirtualAddress *      atAddress,
@@ -1042,6 +1062,8 @@ public:
 // Factory method for cloning a persistent IOMD, see IOMemoryDescriptor
 	static OSPtr<IOMemoryDescriptor>
 	withPersistentMemoryDescriptor(IOGeneralMemoryDescriptor *originalMD);
+
+	IOOptionBits memoryReferenceCreateOptions(IOOptionBits options, IOMemoryMap * map);
 };
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

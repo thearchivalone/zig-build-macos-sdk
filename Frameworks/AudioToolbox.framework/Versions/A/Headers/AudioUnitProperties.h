@@ -1162,7 +1162,7 @@ typedef struct AudioUnitFrequencyResponseBin AudioUnitFrequencyResponseBin;
 */
 typedef OSStatus (*HostCallback_GetBeatAndTempo)(void * __nullable	inHostUserData,
 											Float64	* __nullable	outCurrentBeat,
-											Float64	* __nullable	outCurrentTempo);
+											Float64	* __nullable	outCurrentTempo) CA_REALTIME_API;
 
 /*!
 	@typedef		HostCallback_GetMusicalTimeLocation
@@ -1189,7 +1189,7 @@ typedef OSStatus (*HostCallback_GetMusicalTimeLocation)(void * __nullable	inHost
 												UInt32 * __nullable			outDeltaSampleOffsetToNextBeat,
 												Float32 * __nullable		outTimeSig_Numerator,
 												UInt32 * __nullable			outTimeSig_Denominator,
-												Float64 * __nullable		outCurrentMeasureDownBeat);
+												Float64 * __nullable		outCurrentMeasureDownBeat) CA_REALTIME_API;
 
 /*!
 	@typedef		HostCallback_GetTransportState
@@ -1220,7 +1220,7 @@ typedef OSStatus (*HostCallback_GetTransportState)(void * __nullable	inHostUserD
 										Float64 * __nullable			outCurrentSampleInTimeLine,
 										Boolean * __nullable			outIsCycling,
 										Float64 * __nullable			outCycleStartBeat,
-										Float64 * __nullable			outCycleEndBeat);
+										Float64 * __nullable			outCycleEndBeat) CA_REALTIME_API;
 
 /*!
 	@typedef		HostCallback_GetTransportState2
@@ -1253,7 +1253,7 @@ typedef OSStatus (*HostCallback_GetTransportState2)(void * __nullable	inHostUser
 										Float64 * __nullable			outCurrentSampleInTimeLine,
 										Boolean * __nullable			outIsCycling,
 										Float64 * __nullable			outCycleStartBeat,
-										Float64 * __nullable			outCycleEndBeat);
+										Float64 * __nullable			outCycleEndBeat) CA_REALTIME_API;
 
 /*!
 	@struct			HostCallbackInfo
@@ -1281,7 +1281,6 @@ struct AUDependentParameter {
 };
 typedef struct AUDependentParameter AUDependentParameter;
 
-#if !(0 && 0)
 #if !TARGET_OS_IPHONE
 /*!
 	@struct			AudioUnitCocoaViewInfo
@@ -1307,7 +1306,6 @@ struct AUHostVersionIdentifier {
 };
 typedef struct AUHostVersionIdentifier AUHostVersionIdentifier;
 #endif //!TARGET_OS_IPHONE
-#endif 
 
 /*!
 	@struct			MIDIPacketList
@@ -1323,7 +1321,7 @@ typedef OSStatus
 (*AUMIDIOutputCallback)(void * __nullable				userData,
 						const AudioTimeStamp *			timeStamp,
 						UInt32							midiOutNum,
-						const struct MIDIPacketList *	pktlist);
+						const struct MIDIPacketList *	pktlist) CA_REALTIME_API;
 
 /*!
 	@struct			AUMIDIOutputCallbackStruct
@@ -1400,7 +1398,7 @@ typedef struct AudioUnitRenderContext AudioUnitRenderContext
 
 	For further background, see <AudioToolbox/AudioWorkInterval.h>.
 */
-typedef void (^AURenderContextObserver)(const AudioUnitRenderContext *context)
+typedef void (^AURenderContextObserver)(const AudioUnitRenderContext *context) CA_REALTIME_API
 	__SWIFT_UNAVAILABLE_MSG("Swift is not supported for use with audio realtime threads");
 #endif 
 /*!
@@ -1427,9 +1425,9 @@ typedef int64_t AUEventSampleTime;
 	@param eventList
 					One full MIDI, partial MIDI SysEx, or a full SysEx UMP message.
 */
-typedef OSStatus (^ AUMIDIEventListBlock)(AUEventSampleTime					eventSampleTime,
-										  uint8_t 							cable,
-										const struct MIDIEventList *		eventList);
+typedef OSStatus (^AUMIDIEventListBlock)(AUEventSampleTime	eventSampleTime,
+										 uint8_t 							cable,
+										 const struct MIDIEventList *		eventList) CA_REALTIME_API;
 
 //=====================================================================================================================
 #pragma mark - Parameter Definitions
@@ -2072,9 +2070,11 @@ typedef struct AUParameterMIDIMapping AUParameterMIDIMapping;
     @abstract       The collection of Instrument Unit Property IDs
 
 	@constant		kMusicDeviceProperty_MIDIXMLNames
-	@discussion			Scope:
-						Value Type:
-						Access:
+	@discussion			Scope:              Global
+						Value Type:         CFURLRef
+						Access:             read
+ 
+                        This property's value specifies a URL to a local file containg the XML Instrument description.
 
 	@constant		kMusicDeviceProperty_PartGroup
 	@discussion			Scope:				Part
@@ -2506,6 +2506,16 @@ CF_ENUM(UInt32) {
                         Note that as an os_object subclass, workgroup objects are reference-counted,
                         and that AudioUnitGetProperty returns a +1 reference, which the client
                         is responsible for releasing when it is finished with it.
+
+     @constant       kAudioOutputUnitProperty_IntendedSpatialExperience
+                         Scope:            Global
+                         Value Type:     CASpatialAudioExperience* (non-nil)
+                         Access:         read/write
+
+                         Set this output AudioUnit's intended spatial experience override. The default
+                         value of CAAutomaticSpatialAudio means the AudioUnit uses its
+                         AVAudioSession's intended spatial experience. See CASpatialAudioExperience
+                         for more details.
 */
 CF_ENUM(AudioUnitPropertyID) {
 // range  (2000 -> 2999)
@@ -2521,6 +2531,8 @@ CF_ENUM(AudioUnitPropertyID) {
 	kAudioOutputUnitProperty_OSWorkgroup
 		__SWIFT_UNAVAILABLE_MSG("Swift is not supported for use with audio realtime threads")
 													= 2015,
+
+    kAudioOutputUnitProperty_IntendedSpatialExperience API_AVAILABLE(visionos(26.0)) API_UNAVAILABLE(ios, watchos, tvos, macos) CF_REFINED_FOR_SWIFT = 2016,
 };
 
 #if AU_SUPPORT_INTERAPP_AUDIO
@@ -3004,9 +3016,9 @@ CF_ENUM(AudioUnitPropertyID) {
 	kAudioUnitProperty_SpatialMixerAttenuationCurve			= 3013,
 	kAudioUnitProperty_SpatialMixerOutputType				= 3100,
 	kAudioUnitProperty_SpatialMixerPointSourceInHeadMode	= 3103,
-    kAudioUnitProperty_SpatialMixerEnableHeadTracking API_AVAILABLE(macos(12.3)) API_UNAVAILABLE(ios, tvos) API_UNAVAILABLE(watchos) = 3111,
-    kAudioUnitProperty_SpatialMixerPersonalizedHRTFMode API_AVAILABLE(macos(13.0)) API_UNAVAILABLE(ios, tvos) API_UNAVAILABLE(watchos) = 3113,
-    kAudioUnitProperty_SpatialMixerAnyInputIsUsingPersonalizedHRTF API_AVAILABLE(macos(14.0)) API_UNAVAILABLE(ios, tvos) API_UNAVAILABLE(watchos) = 3116
+    kAudioUnitProperty_SpatialMixerEnableHeadTracking API_AVAILABLE(macos(12.3), ios(18.0), tvos(18.0)) API_UNAVAILABLE(watchos, visionos) = 3111,
+    kAudioUnitProperty_SpatialMixerPersonalizedHRTFMode API_AVAILABLE(macos(13.0), ios(18.0), tvos(18.0)) API_UNAVAILABLE(watchos) = 3113,
+    kAudioUnitProperty_SpatialMixerAnyInputIsUsingPersonalizedHRTF API_AVAILABLE(macos(14.0), ios(18.0), tvos(18.0)) API_UNAVAILABLE(watchos) = 3116
 };
 
 /*!
@@ -3122,9 +3134,9 @@ typedef CF_OPTIONS(UInt32, AUSpatialMixerRenderingFlags) {
                      head-related transfer function (HRTF).
 */
 typedef CF_ENUM(UInt32, AUSpatialMixerPersonalizedHRTFMode) {
-    kSpatialMixerPersonalizedHRTFMode_Off CF_SWIFT_NAME(off) API_AVAILABLE(macos(13.0)) API_UNAVAILABLE(ios, tvos) API_UNAVAILABLE(watchos) = 0,
-    kSpatialMixerPersonalizedHRTFMode_On CF_SWIFT_NAME(on) API_AVAILABLE(macos(13.0)) API_UNAVAILABLE(ios, tvos) API_UNAVAILABLE(watchos) = 1,
-    kSpatialMixerPersonalizedHRTFMode_Auto CF_SWIFT_NAME(auto) API_AVAILABLE(macos(13.0)) API_UNAVAILABLE(ios, tvos) API_UNAVAILABLE(watchos) = 2
+    kSpatialMixerPersonalizedHRTFMode_Off CF_SWIFT_NAME(off) API_AVAILABLE(macos(13.0), ios(18.0), tvos(18.0)) API_UNAVAILABLE(watchos) = 0,
+    kSpatialMixerPersonalizedHRTFMode_On CF_SWIFT_NAME(on) API_AVAILABLE(macos(13.0), ios(18.0), tvos(18.0)) API_UNAVAILABLE(watchos) = 1,
+    kSpatialMixerPersonalizedHRTFMode_Auto CF_SWIFT_NAME(auto) API_AVAILABLE(macos(13.0), ios(18.0), tvos(18.0)) API_UNAVAILABLE(watchos) = 2
 };
 
 /*!
@@ -3169,6 +3181,35 @@ typedef CF_ENUM(UInt32, AUSpatialMixerPointSourceInHeadMode) {
 
 
 //=====================================================================================================================
+#pragma mark - AUAudioMix
+/*!
+    @enum           AUAudioMix Property IDs
+    @abstract       The collection of property IDs for AUAudioMix
+ 
+    @discussion     AUAudioMix also supports kAudioUnitProperty_SpatialMixerOutputType
+                    This sets the type of output hardware used by AUSpatialMixer when spatialization is enabled.
+                    See AUSpatialMixer properties and AUSpatialMixerOutputType
+    
+    @constant        kAUAudioMixProperty_SpatialAudioMixMetadata
+                       Scope:            Global
+                        Value Type:     CFDataRef
+                        Access:           Read / Write
+ 
+                        Remix metadata from the file asset
+                        
+    @constant        kAUAudioMixProperty_EnableSpatialization
+                        Scope:            Global
+                        Value Type:     UInt32
+                        Access:           Read / Write
+ 
+                        0 - Output format is FOA + mono foreground (Default)
+                        1 - Enable AUSpatialMixer to render to mono/stereo/surround formats
+ */
+CF_ENUM(AudioUnitPropertyID) {
+    kAUAudioMixProperty_SpatialAudioMixMetadata API_AVAILABLE(macos(26.0), ios(26.0)) API_UNAVAILABLE(watchos, tvos, visionos) = 5000,
+    kAUAudioMixProperty_EnableSpatialization API_AVAILABLE(macos(26.0), ios(26.0)) API_UNAVAILABLE(watchos, tvos, visionos) = 5001,
+};
+
 #pragma mark - _3DMixer (Deprecated)
 /*!
     // AUMixer3D is deprecated. Use AUSpatialMixer instead.
@@ -3400,7 +3441,7 @@ typedef struct ScheduledAudioSlice ScheduledAudioSlice; // forward dec, see defi
 /*!
 	@typedef			ScheduledAudioSliceCompletionProc
 */
-typedef void (*ScheduledAudioSliceCompletionProc)(void * __nullable userData, ScheduledAudioSlice *bufferList);
+typedef void (*ScheduledAudioSliceCompletionProc)(void * __nullable userData, ScheduledAudioSlice *bufferList) CA_REALTIME_API;
 
 /*
 	@struct				ScheduledAudioSlice
@@ -3775,7 +3816,6 @@ CF_ENUM(AudioUnitPropertyID) {
 						For the preset instruments, the numeric ID of a particular preset within that bank to load.
  						Range is 0 to 127.
  */
-#if !(0 && 0)
 struct AUSamplerInstrumentData {
 	CFURLRef				fileURL;
 	UInt8					instrumentType;
@@ -3784,7 +3824,6 @@ struct AUSamplerInstrumentData {
 	UInt8					presetID;
 };
 typedef struct AUSamplerInstrumentData AUSamplerInstrumentData;
-#endif 
 
 /*
 	@enum			InstrumentTypes
@@ -4132,7 +4171,6 @@ enum {
 
 // Deprecated in favor of the newer AUSamplerInstrumentData
 // structure and its supporting property.
-#if !(0 && 0)
 typedef struct AUSamplerBankPresetData {
 	CFURLRef				bankURL;
 	UInt8					bankMSB;
@@ -4140,7 +4178,6 @@ typedef struct AUSamplerBankPresetData {
 	UInt8					presetID;
 	UInt8					reserved;
 } AUSamplerBankPresetData;
-#endif 
 
 CF_ENUM(AudioUnitPropertyID) {
 	kAUSamplerProperty_LoadPresetFromBank			= 4100,

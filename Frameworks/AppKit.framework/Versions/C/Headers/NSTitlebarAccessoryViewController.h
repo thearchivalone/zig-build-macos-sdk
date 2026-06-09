@@ -1,13 +1,14 @@
 /*
     NSTitlebarAccessoryViewController.h
     Application Kit
-    Copyright (c) 2014-2023, Apple Inc.
+    Copyright (c) 2014-2024, Apple Inc.
     All rights reserved.
 */
 
-#import <AppKit/NSViewController.h>
-#import <AppKit/NSLayoutConstraint.h>
 #import <AppKit/AppKitDefines.h>
+#import <AppKit/NSLayoutConstraint.h>
+#import <AppKit/NSScrollEdgeEffect.h>
+#import <AppKit/NSViewController.h>
 
 @class NSClipView;
 
@@ -41,7 +42,7 @@ API_AVAILABLE(macos(10.10))
 */
 @property CGFloat fullScreenMinHeight;
 
-/* Indicates whether the accessory view is actually visible in the window. This property only applies to controllers set with the top or bottom layoutAtribute. When set, this property will collapse the accessory view to 0 height (animatable) but NOT remove it from the window. That way, you can easily show and hide it without difficulty. Set through the animator object to animate it. */
+/* Indicates whether the accessory view is actually visible in the window. This property only applies to controllers set with the top or bottom layoutAttribute. When set, this property will collapse the accessory view to 0 height (animatable) but NOT remove it from the window. That way, you can easily show and hide it without difficulty. Set through the animator object to animate it. */
 @property (getter=isHidden) BOOL hidden API_AVAILABLE(macos(10.12));
 
 /* Whether the accessory should automatically size to the standard system default sizing over the view's current frame size.
@@ -61,6 +62,13 @@ API_AVAILABLE(macos(10.10))
    NOTE: NSTitlebarAccessoryViewController will observe the view's frame for changes. You can change the view's frame in a direction that "makes sense". For instance, changing the height when the layoutAttribute is NSLayoutAttributeBottom, or changing the width when the layoutAttribute is NSLayoutAttributeRight. The other size direction will automatically be filled to the maximum size as required for the window.
 
  */
+
+/// The titlebar accessory’s preferred effect for content scrolling behind it.
+///
+/// To allow for a soft edge on the bottom edge of a titlebar accessory:
+///
+///     titlebarAccessoryViewController.preferredScrollEdgeEffectStyle = NSScrollEdgeEffectStyle.softStyle;
+@property (strong) NSScrollEdgeEffectStyle *preferredScrollEdgeEffectStyle API_AVAILABLE(macos(26.1));
 
 @end
 

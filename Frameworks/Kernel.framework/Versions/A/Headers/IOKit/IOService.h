@@ -1540,12 +1540,14 @@ private:
 	static void publishHiddenMedia(IOService * parent);
 	static bool publishHiddenMediaApplier(const OSObject * entry, void * context);
 	bool canTerminateForReplacement(IOService * client);
+	void unregisterAllInterrupts(void);
 
 private:
 
 	bool matchPassive(OSDictionary * table, uint32_t options);
 	bool matchInternal(OSDictionary * table, uint32_t options, unsigned int * did);
 	static bool instanceMatch(const OSObject * entry, void * context);
+	OSDictionary * _copyPropertiesForMatching(void);
 
 	static OSPtr<OSObject>  copyExistingServices( OSDictionary * matching,
 	    IOOptionBits inState, IOOptionBits options = 0 );
@@ -1588,7 +1590,8 @@ private:
 
 	IOReturn waitForState( UInt32 mask, UInt32 value, uint64_t timeout );
 
-	UInt32 _adjustBusy( SInt32 delta );
+	UInt32 _adjustBusy(SInt32 delta);
+	UInt32 _adjustBusy(SInt32 delta, bool unlock);
 
 	bool terminatePhase1( IOOptionBits options = 0 );
 	void scheduleTerminatePhase2( IOOptionBits options = 0 );
@@ -1888,6 +1891,13 @@ public:
  *   @result The current power state's index into the device's power state array. */
 
 	UInt32 getPowerState( void );
+
+/*! @function getDesiredPowerState
+ *   @abstract Determines a device's desired power state.
+ *   @discussion A device's "desired power state" is updated at the start of each power state transition (e.g. transition from state 1 to state 0, or state 0 to state 2).
+ *   @result The desired power state's index into the device's power state array. */
+
+	UInt32 getDesiredPowerState( void );
 
 /*! @function setPowerState
  *   @abstract Requests a power managed driver to change the power state of its device.

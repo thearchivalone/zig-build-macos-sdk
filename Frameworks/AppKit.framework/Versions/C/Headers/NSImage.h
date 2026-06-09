@@ -1,7 +1,7 @@
 /*
 	NSImage.h
 	Application Kit
-	Copyright (c) 1994-2023, Apple Inc.
+	Copyright (c) 1994-2024, Apple Inc.
 	All rights reserved.
 */
 
@@ -81,20 +81,20 @@ __attribute__((objc_subclassing_restricted))
 /// @param description The image’s accessibility description. This description is used automatically by interface elements that display images. Like all accessibility descriptions, use a short localized string that does not include the name of the interface element. For instance, “delete” rather than “delete button”.
 + (nullable instancetype)imageWithSystemSymbolName:(NSString *)name accessibilityDescription:(nullable NSString *)description API_AVAILABLE(macos(11.0));
 
-/// Creates a system symbol image with the specified name and value. The @c value argument is only accommodated if the symbol supports variable rendering.
+/// Creates a system symbol image with the specified name and value. The `value` argument is only accommodated if the symbol supports variable rendering.
 /// @param name A name from the system’s SF Symbols catalog
 /// @param value The value represented by the symbol. The value should be between 0 and 1 inclusive ([0,1]).
 /// @param description The image’s accessibility description. This description is used automatically by interface elements that display images. Like all accessibility descriptions, use a short localized string that does not include the name of the interface element. For instance, “delete” rather than “delete button”.
 /// @note Values less than 0 or greater than 1 will be clamped to 0 and 1, respectively.
 + (nullable instancetype)imageWithSystemSymbolName:(NSString *)name variableValue:(double)value accessibilityDescription:(nullable NSString *)description API_AVAILABLE(macos(13.0));
 
-/// Creates a symbol image with the specified name and value. The @c value argument is only accommodated if the symbol supports variable rendering.
+/// Creates a symbol image with the specified name and value. The `value` argument is only accommodated if the symbol supports variable rendering.
 /// @param name A name of a symbol image file in the main bundle’s catalog
 /// @param value The value represented by the symbol. The value should be between 0 and 1 inclusive ([0,1]).
 /// @note Values less than 0 or greater than 1 will be clamped to 0 and 1, respectively.
 + (nullable instancetype)imageWithSymbolName:(NSString *)name variableValue:(double)value API_AVAILABLE(macos(13.0));
 
-/// Creates a symbol image with the specified name and value. The @c value argument is only accommodated if the symbol supports variable rendering.
+/// Creates a symbol image with the specified name and value. The `value` argument is only accommodated if the symbol supports variable rendering.
 /// @param name A name of a symbol image file in the main bundle’s catalog
 /// @param bundle The bundle containing the image file or asset catalog. Specify `nil` to search the app’s main bundle.
 /// @param value The value represented by the symbol. The value should be between 0 and 1 inclusive ([0,1]).
@@ -235,7 +235,9 @@ __attribute__((objc_subclassing_restricted))
 
 @property (readonly, copy) NSImageSymbolConfiguration *symbolConfiguration API_AVAILABLE(macos(12.0));
 
-/// Creates and returns a new image with the specified locale. If the receiver contains locale-sensitive representations, the returned image will prefer to draw using representations appropriate for the specified locale. If locale is `nil`, the returned image uses the default behavior of choosing representations appropriate for the system’s currently-configured locale.
+/// Creates and returns a new image with the specified locale.
+///
+/// If the receiver contains locale-sensitive representations, the returned image will prefer to draw using representations appropriate for the specified locale. If locale is `nil`, the returned image uses the default behavior of choosing representations appropriate for the system’s currently-configured locale.
 - (NSImage *)imageWithLocale:(nullable NSLocale *)locale NS_SWIFT_NAME(withLocale(_:)) API_AVAILABLE(macos(14.0));
 
 /// The image’s preferred locale for resolving representations, if one has been specified using `-imageWithLocale:`. Otherwise, `nil`.
@@ -533,6 +535,26 @@ typedef NS_ENUM(NSInteger, NSImageSymbolScale) {
     NSImageSymbolScaleLarge = 3,
 } NS_SWIFT_NAME(NSImage.SymbolScale) API_AVAILABLE(macos(11.0));
 
+typedef NS_ENUM(NSInteger, NSImageSymbolVariableValueMode) {
+    /// Automatically selects an appropriate variable value mode for the symbol.
+    NSImageSymbolVariableValueModeAutomatic = 0,
+    /// The "color" variable value mode. Sets the opacity of each variable layer to
+    /// either on or off depending on how its threshold compared to the current value.
+    NSImageSymbolVariableValueModeColor,
+    /// The "draw" variable value mode. Changes the drawn length of each variable layer
+    /// to either based on how its range relates to the current value.
+    NSImageSymbolVariableValueModeDraw,
+} API_AVAILABLE(macos(26.0)) NS_SWIFT_NAME(NSImage.SymbolVariableValueMode) NS_SWIFT_SENDABLE;
+
+typedef NS_ENUM(NSInteger, NSImageSymbolColorRenderingMode) {
+    /// Automatically uses an appropriate color rendering mode for the symbol’s color layers.
+    NSImageSymbolColorRenderingModeAutomatic = 0,
+    /// Renders the symbol’s color layers using flat colors.
+    NSImageSymbolColorRenderingModeFlat,
+    /// Renders the symbol’s color layers using gradients.
+    NSImageSymbolColorRenderingModeGradient,
+} API_AVAILABLE(macos(26.0)) NS_SWIFT_NAME(NSImage.SymbolColorRenderingMode) NS_SWIFT_SENDABLE;
+
 API_AVAILABLE(macos(11.0)) NS_SWIFT_NAME(NSImage.SymbolConfiguration)
 @interface NSImageSymbolConfiguration : NSObject <NSCopying, NSSecureCoding>
 
@@ -551,12 +573,12 @@ API_AVAILABLE(macos(11.0)) NS_SWIFT_NAME(NSImage.SymbolConfiguration)
 #pragma mark - Creating a Color Configuration
 
 /**
- Create a configuration that specifies that the symbol should prefer its monochrome variant.
+ Creates a configuration that specifies that the symbol should prefer its monochrome variant.
  */
 + (instancetype)configurationPreferringMonochrome NS_SWIFT_NAME(preferringMonochrome()) API_AVAILABLE(macos(13.0));
 
 /**
- Create a configuration that specifies that the symbol should prefer its hierarchical variant, if one exists.
+ Creates a configuration that specifies that the symbol should prefer its hierarchical variant, if one exists.
  
  If the symbol doesn’t support hierarchical, the result will be a monochrome (templated) symbol.
  */
@@ -590,6 +612,16 @@ API_AVAILABLE(macos(11.0)) NS_SWIFT_NAME(NSImage.SymbolConfiguration)
  If the symbol supports neither, the result will be a monochrome (templated) symbol.
  */
 + (instancetype)configurationPreferringMulticolor NS_SWIFT_NAME(preferringMulticolor()) API_AVAILABLE(macos(12.0));
+
+/**
+ Create a configuration with a specified variable value mode.
+ */
++ (instancetype)configurationWithVariableValueMode:(NSImageSymbolVariableValueMode)variableValueMode API_AVAILABLE(macos(26.0));
+
+/**
+ Create a configuration with a specific color rendering mode.
+ */
++ (instancetype)configurationWithColorRenderingMode:(NSImageSymbolColorRenderingMode)mode API_AVAILABLE(macos(26.0));
 
 #pragma mark - Instance Methods
 

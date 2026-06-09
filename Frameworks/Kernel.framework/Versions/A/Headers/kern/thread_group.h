@@ -41,6 +41,8 @@ struct thread_group;
 #endif
 
 #if CONFIG_THREAD_GROUPS
+
+
 #include <kern/assert.h>
 #include <kern/queue.h>
 #include <machine/machine_routines.h>
@@ -53,6 +55,7 @@ struct thread_group;
 #define THREAD_GROUP_VM              3       // kernel VM threads
 #define THREAD_GROUP_IO_STORAGE      4       // kernel io storage threads
 #define THREAD_GROUP_PERF_CONTROLLER 5       // kernel CLPC threads
+#define THREAD_GROUP_CELLULAR        6       // kernel Cellular threads
 
 #define THREAD_GROUP_INVALID    UINT64_MAX
 
@@ -73,6 +76,7 @@ struct thread_group;
 #define THREAD_GROUP_FLAGS_MANAGED              0x200
 #define THREAD_GROUP_FLAGS_STRICT_TIMERS        0x400
 #define THREAD_GROUP_FLAGS_GAME_MODE            0x800
+#define THREAD_GROUP_FLAGS_CARPLAY_MODE         0x1000
 
 
 #define THREAD_GROUP_FLAGS_EXCLUSIVE ( \
@@ -92,7 +96,8 @@ static_assert(
     THREAD_GROUP_FLAGS_UI_APP |     \
     THREAD_GROUP_FLAGS_MANAGED |    \
     THREAD_GROUP_FLAGS_STRICT_TIMERS | \
-    THREAD_GROUP_FLAGS_GAME_MODE )
+    THREAD_GROUP_FLAGS_GAME_MODE | \
+    THREAD_GROUP_FLAGS_CARPLAY_MODE)
 
 static_assert(
 	(THREAD_GROUP_FLAGS_SHARED & THREAD_GROUP_EXCLUSIVE_FLAGS_MASK) == 0,

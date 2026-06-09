@@ -29,6 +29,8 @@
 extern "C" {
 #endif
 
+#define CLAMP_TO_INT_MAX(expr) (((expr) > INT_MAX) ? INT_MAX : (int)(expr))
+
 /* #define XSLT_DEBUG_PROFILE_CACHE */
 
 /**
@@ -1416,6 +1418,8 @@ struct _xsltStylePreComp {
 
 #endif /* XSLT_REFACTORED */
 
+typedef struct _xsltRVTList xsltRVTList;
+typedef xsltRVTList *xsltRVTListPtr;
 
 /*
  * The in-memory structure corresponding to an XSLT Variable
@@ -1433,7 +1437,7 @@ struct _xsltStackElem {
     xmlNodePtr tree;		/* the sequence constructor if no eval
 				    string or the location */
     xmlXPathObjectPtr value;	/* The value if computed */
-    xmlDocPtr fragment;		/* The Result Tree Fragments (needed for XSLT 1.0)
+    xsltRVTListPtr fragment;	/* The Result Tree Fragments (needed for XSLT 1.0)
 				   which are bound to the variable's lifetime. */
     int level;                  /* the depth in the tree;
                                    -1 if persistent (e.g. a given xsl:with-param) */
@@ -1644,10 +1648,15 @@ struct _xsltStylesheet {
 #endif
 };
 
+struct _xsltRVTList {
+  xmlDocPtr RVT;
+  xsltRVTListPtr next;
+};
+
 typedef struct _xsltTransformCache xsltTransformCache;
 typedef xsltTransformCache *xsltTransformCachePtr;
 struct _xsltTransformCache {
-    xmlDocPtr RVT;
+    xsltRVTListPtr rvtList;
     int nbRVT;
     xsltStackElemPtr stackItems;
     int nbStackItems;
@@ -1747,8 +1756,8 @@ struct _xsltTransformContext {
      * handling of temporary Result Value Tree
      * (XSLT 1.0 term: "Result Tree Fragment")
      */
-    xmlDocPtr       tmpRVT;		/* list of RVT without persistance */
-    xmlDocPtr       persistRVT;		/* list of persistant RVTs */
+    xsltRVTListPtr  tmpRVTList;		/* list of RVT without persistance */
+    xsltRVTListPtr  persistRVTList;	/* list of persistant RVTs */
     int             ctxtflags;          /* context processing flags */
 
     /*
@@ -1781,7 +1790,7 @@ struct _xsltTransformContext {
     xmlDocPtr initialContextDoc;
     xsltTransformCachePtr cache;
     void *contextVariable; /* the current variable item */
-    xmlDocPtr localRVT; /* list of local tree fragments; will be freed when
+    xsltRVTListPtr localRVTList; /* list of local tree fragments; will be freed when
 			   the instruction which created the fragment
                            exits */
     xmlDocPtr localRVTBase; /* Obsolete */
@@ -1940,6 +1949,9 @@ XSLTPUBFUN void XSLTCALL
 XSLTPUBFUN void XSLTCALL
 			xsltReleaseRVT		(xsltTransformContextPtr ctxt,
 						 xmlDocPtr RVT);
+XSLTPUBFUN void XSLTCALL
+            xsltReleaseRVTList    (xsltTransformContextPtr ctxt,
+                                   xsltRVTListPtr list) LIBXSLT_API_AVAILABLE_MACOS26_IOS26_WATCHOS26_TVOS26;
 /*
  * Extra functions for Attribute Value Templates
  */

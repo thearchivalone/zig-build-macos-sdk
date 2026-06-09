@@ -57,11 +57,19 @@ __BEGIN_DECLS
 #include <kern/clock.h>
 
 /*
- * min/max macros.
+ * IOMin/IOMax macros.
  */
 
-#define min(a, b) ((a) < (b) ? (a) : (b))
-#define max(a, b) ((a) > (b) ? (a) : (b))
+#define IOMin(a, b) ((a) < (b) ? (a) : (b))
+#define IOMax(a, b) ((a) > (b) ? (a) : (b))
+
+/* FIXME(rdar://155575647): Remove deprecated `max` and `min` macros from <IOKit/IOLib.h> */
+#define min(a, b) \
+	_Pragma("message \"min is deprecated. Please use IOMin instead.\"") \
+	IOMin(a, b)
+#define max(a, b) \
+	_Pragma("message \"max is deprecated. Please use IOMax instead.\"") \
+	IOMax(a, b)
 
 /*
  * Safe functions to compute array sizes (saturate to a size that can't be
@@ -80,6 +88,14 @@ IOMallocArraySize(vm_size_t hdr_size, vm_size_t elem_size, vm_size_t elem_count)
 	}
 	return s;
 }
+
+#define IOKIT_TYPE_IS_COMPATIBLE_PTR(ptr, type) \
+	(__builtin_xnu_types_compatible(os_get_pointee_type(ptr), type) ||   \
+	    __builtin_xnu_types_compatible(os_get_pointee_type(ptr), void))  \
+
+#define IOKIT_TYPE_ASSERT_COMPATIBLE_POINTER(ptr, type) \
+	_Static_assert(IOKIT_TYPE_IS_COMPATIBLE_PTR(ptr, type), \
+	    "Pointer type is not compatible with specified type")
 
 /*
  * These are opaque to the user.
@@ -113,7 +129,7 @@ void * IOMallocZero(vm_size_t size)  __attribute__((alloc_size(1)));
 void   IOFree(void * address, vm_size_t size);
 
 /*! @function IOMallocAligned
- *   @abstract Allocates wired memory in the kernel map, with an alignment restriction.
+ *   @abstract Allocates wired memory in the shared data heap, with an alignment restriction.
  *   @discussion This is a utility to allocate memory in the kernel, with an alignment restriction which is specified as a byte count. This function may block and so should not be called from interrupt level or while a simple lock is held.
  *   @param size Size of the memory requested.
  *   @param alignment Byte count of the alignment for the memory. For example, pass 256 to get memory allocated at an address with bit 0-7 zero.
@@ -179,6 +195,75 @@ void * IOMallocPageableZero(vm_size_t size, vm_size_t alignment) __attribute__((
 
 void IOFreePageable(void * address, vm_size_t size);
 
+
+/*! @function IOMallocData
+ *   @abstract Allocates wired memory in the kernel map, from a separate section meant for pure data.
+ *   @discussion Same as IOMalloc except that this function should be used for allocating pure data.
+ *   @param size Size of the memory requested.
+ *   @result Pointer to the allocated memory, or zero on failure. */
+void * IOMallocData(vm_size_t size) __attribute__((alloc_size(1)));
+
+/*! @function IOMallocZeroData
+ *   @abstract Allocates wired memory in the kernel map, from a separate section meant for pure data bytes that don't contain pointers.
+ *   @discussion Same as IOMallocData except that the memory returned is zeroed.
+ *   @param size Size of the memory requested.
+ *   @result Pointer to the allocated memory, or zero on failure. */
+void * IOMallocZeroData(vm_size_t size) __attribute__((alloc_size(1)));
+
+/*! @function IOMallocDataShareable
+ *   @abstract Allocates wired memory in the kernel map, from a separate section meant for pure data that meant to be shared.
+ *   @discussion Same as IOMalloc except that this function should be used for allocating pure data.
+ *   @param size Size of the memory requested.
+ *   @result Pointer to the allocated memory, or zero on failure. */
+void * IOMallocDataShareable(vm_size_t size) __attribute__((alloc_size(1)));
+
+/*! @function IOMallocZeroDataShareable
+ *   @abstract Allocates wired memory in the kernel map, from a separate section meant for pure data bytes that don't contain pointers and meant to be shared.
+ *   @discussion Same as IOMallocDataShareable except that the memory returned is zeroed.
+ *   @param size Size of the memory requested.
+ *   @result Pointer to the allocated memory, or zero on failure. */
+void * IOMallocZeroDataShareable(vm_size_t size) __attribute__((alloc_size(1)));
+
+
+/*! @function IOFreeData
+ *   @abstract Frees memory allocated with IOMallocData or IOMallocZeroData.
+ *   @discussion This function frees memory allocated with IOMallocData/IOMallocZeroData, it may block and so should not be called from interrupt level or while a simple lock is held.
+ *   @param address Virtual address of the allocated memory. Passing NULL here is acceptable.
+ *   @param size Size of the memory allocated. It is acceptable to pass 0 size for a NULL address. */
+void IOFreeData(void * address, vm_size_t size);
+
+/*! @function IOFreeDataShareable
+ *   @abstract Frees memory allocated with IOMallocDataShareable or IOMallocZeroDataShareable.
+ *   @discussion This function frees memory allocated with IOMallocDataShareable/IOMallocZeroDataShareable, it may block and so should not be called from interrupt level or while a simple lock is held.
+ *   @param address Virtual address of the allocated memory. Passing NULL here is acceptable.
+ *   @param size Size of the memory allocated. It is acceptable to pass 0 size for a NULL address. */
+void IOFreeDataShareable(void * address, vm_size_t size);
+
+#define IONewData(type, count) \
+	((type *)IOMallocData(IOMallocArraySize(0, sizeof(type), count)))
+
+#define IONewZeroData(type, count) \
+	((type *)IOMallocZeroData(IOMallocArraySize(0, sizeof(type), count)))
+
+#define IONewDataShareable(type, count) \
+	((type *)IOMallocDataShareable(IOMallocArraySize(0, sizeof(type), count)))
+
+#define IONewZeroDataShareable(type, count) \
+	((type *)IOMallocZeroDataShareable(IOMallocArraySize(0, sizeof(type), count)))
+
+#define IODeleteData(ptr, type, count) ({ \
+	vm_size_t  __count = (vm_size_t)(count);             \
+	IOKIT_TYPE_ASSERT_COMPATIBLE_POINTER(ptr, type);     \
+	IOFreeData(os_ptr_load_and_erase(ptr),               \
+	    IOMallocArraySize(0, sizeof(type), __count));    \
+})
+
+#define IODeleteDataShareable(ptr, type, count) ({ \
+	vm_size_t  __count = (vm_size_t)(count);             \
+	IOKIT_TYPE_ASSERT_COMPATIBLE_POINTER(ptr, type);     \
+	IOFreeDataShareable(os_ptr_load_and_erase(ptr),      \
+	    IOMallocArraySize(0, sizeof(type), __count));    \
+})
 
 
 /*

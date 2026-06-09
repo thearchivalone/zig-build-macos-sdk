@@ -43,6 +43,14 @@ NS_HEADER_AUDIT_BEGIN(nullability, sendability)
     #define CK_SUBCLASSING_RESTRICTED __attribute__((__objc_subclassing_restricted__))
 #endif
 
+#ifndef CK_SUBCLASSING_EXTERNALLY_RESTRICTED
+    #if defined(CK_BUILDING_CK)
+        #define CK_SUBCLASSING_EXTERNALLY_RESTRICTED
+    #else
+        #define CK_SUBCLASSING_EXTERNALLY_RESTRICTED __attribute__((__objc_subclassing_restricted__))
+    #endif
+#endif
+
 
 #ifndef CK_SUBCLASSING_DEPRECATED
     #define CK_SUBCLASSING_DEPRECATED // we can't actually emit a warning, but heed this annotation anyway!
@@ -52,5 +60,14 @@ NS_HEADER_AUDIT_BEGIN(nullability, sendability)
 #ifndef CK_UNAVAILABLE
     #define CK_UNAVAILABLE(msg) __attribute__((unavailable(msg)))
 #endif
+
+#ifndef CK_NEWLY_UNAVAILABLE
+    #if (!defined(CK_BUILDING_CK) || !CK_BUILDING_CK)
+        #define CK_NEWLY_UNAVAILABLE(msg) __attribute__((unavailable(msg)))
+    #else
+        #define CK_NEWLY_UNAVAILABLE(msg) CK_EXTERN
+    #endif
+#endif
+
 
 NS_HEADER_AUDIT_END(nullability, sendability)

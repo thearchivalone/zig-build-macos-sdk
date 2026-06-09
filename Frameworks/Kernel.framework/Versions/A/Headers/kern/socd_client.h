@@ -41,21 +41,32 @@
 
 __BEGIN_DECLS
 
+/* "stickiness" is an attribute in the debugid that means "dont overwrite this entry" */
+#define SOCD_TRACE_MODE_NONE 0x0
+#define SOCD_TRACE_MODE_STICKY_TRACEPOINT 0x1
+
 /* socd trace event id format within kdebug code */
-#define SOCD_TRACE_CLASS_MASK   (0x3c00)
-#define SOCD_TRACE_CLASS_SMASK  (0xf)
+#define SOCD_TRACE_MODE_MASK    (0x3000)
+#define SOCD_TRACE_MODE_SMASK   (0x3)
+#define SOCD_TRACE_MODE_OFFSET  (12)
+
+#define SOCD_TRACE_CLASS_MASK   (0x0c00)
+#define SOCD_TRACE_CLASS_SMASK  (0x3)
 #define SOCD_TRACE_CLASS_OFFSET (10)
+
 #define SOCD_TRACE_CODE_MASK    (0x3ff)
 #define SOCD_TRACE_CODE_SMASK   (SOCD_TRACE_CODE_MASK)
 #define SOCD_TRACE_CODE_OFFSET  (0)
 
 #define SOCD_TRACE_EXTRACT_EVENTID(debugid) (KDBG_EXTRACT_CODE(debugid))
+#define SOCD_TRACE_EXTRACT_MODE(debugid) ((SOCD_TRACE_EXTRACT_EVENTID(debugid) & SOCD_TRACE_MODE_MASK) >> SOCD_TRACE_MODE_OFFSET)
 #define SOCD_TRACE_EXTRACT_CLASS(debugid) ((SOCD_TRACE_EXTRACT_EVENTID(debugid) & SOCD_TRACE_CLASS_MASK) >> SOCD_TRACE_CLASS_OFFSET)
 #define SOCD_TRACE_EXTRACT_CODE(debugid) ((SOCD_TRACE_EXTRACT_EVENTID(debugid) & SOCD_TRACE_CODE_MASK) >> SOCD_TRACE_CODE_OFFSET)
 
-/* Generate an eventid corresponding to Class, Code. */
-#define SOCD_TRACE_EVENTID(class, code) \
-	(((unsigned)((class)  &  SOCD_TRACE_CLASS_SMASK) << SOCD_TRACE_CLASS_OFFSET) | \
+/* Generate an eventid corresponding to Mode, Class, Code. */
+#define SOCD_TRACE_EVENTID(class, mode, code) \
+	(((unsigned)((mode)  &  SOCD_TRACE_MODE_SMASK) << SOCD_TRACE_MODE_OFFSET) | \
+	((unsigned)((class)  &  SOCD_TRACE_CLASS_SMASK) << SOCD_TRACE_CLASS_OFFSET) | \
 	 ((unsigned)((code)   &  SOCD_TRACE_CODE_SMASK) << SOCD_TRACE_CODE_OFFSET))
 
 /* SOCD_TRACE_GEN_STR is used by socd parser to symbolicate trace classes & codes */
@@ -63,10 +74,17 @@ __BEGIN_DECLS
 #define SOCD_TRACE_GEN_CLASS_ENUM(entry) SOCD_TRACE_CLASS_##entry,
 #define SOCD_TRACE_GEN_CODE_ENUM(entry) SOCD_TRACE_CODE_##entry,
 
-/* List of socd trace classes */
+/* *
+ * List of socd trace classes
+ *
+ * XNU: Tracepoints from xnu itself
+ * WDT: Tracepoints from whatever kext is in charge of the system watchdog
+ * SOC: Tracepoints relating to SoC-wide events or errors (e.g. an SoC thermal sensor reading)
+ */
 #define SOCD_TRACE_FOR_EACH_CLASS(iter) \
 	iter(XNU) \
-	iter(WDT)
+	iter(WDT) \
+	iter(SOC)
 
 /* List of xnu trace codes */
 #define SOCD_TRACE_FOR_EACH_XNU_CODE(iter) \

@@ -1,7 +1,7 @@
 /*
 	NSColorWell.h
 	Application Kit
-	Copyright (c) 1994-2023, Apple Inc.
+	Copyright (c) 1994-2024, Apple Inc.
 	All rights reserved.
 */
 
@@ -42,6 +42,9 @@ typedef NS_ENUM(NSInteger, NSColorWellStyle) {
 /// Controls alpha support for the current color well, and the visibility of alpha slider in the color panel.
 /// When `NSColor.ignoresAlpha` (deprecated) is set to `YES`, this property will always return `NO` and alpha is not supported globally.
 @property BOOL supportsAlpha API_AVAILABLE(macos(14.0));
+
+/// The maximum linear exposure a color in this color well can be set to. Defaults to 1 and ignores any value less than 1. If set to a value >= 2, the color picked for this well may have a linear exposure applied to it.
+@property CGFloat maximumLinearExposure API_AVAILABLE(macos(26.0));
 
 @end
 

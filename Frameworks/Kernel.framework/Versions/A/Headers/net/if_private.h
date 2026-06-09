@@ -112,8 +112,8 @@
 #define IFEF_NOACKPRI           0x00200000      /* No TCP ACK prioritization */
 #define IFEF_AWDL_RESTRICTED    0x00400000      /* Restricted AWDL mode */
 #define IFEF_2KCL               0x00800000      /* prefers 2K cluster (socket based tunnel) */
-#define IFEF_ECN_ENABLE         0x01000000      /* use ECN for TCP connections on the interface */
-#define IFEF_ECN_DISABLE        0x02000000      /* do not use ECN for TCP connections on the interface */
+#define IFEF_UNUSED1            0x01000000
+#define IFEF_UNUSED2            0x02000000
 #define IFEF_SKYWALK_NATIVE     0x04000000      /* Native Skywalk support */
 #define IFEF_3CA                0x08000000      /* Capable of 3CA */
 #define IFEF_SENDLIST           0x10000000      /* Supports tx packet lists */
@@ -207,6 +207,7 @@ struct  ifreq {
 #define IFRTYPE_SUBFAMILY_MANAGEMENT    12
 		} ifru_type;
 		u_int32_t ifru_functional_type;
+		u_int32_t ifru_peer_egress_functional_type;
 #define IFRTYPE_FUNCTIONAL_UNKNOWN              0
 #define IFRTYPE_FUNCTIONAL_LOOPBACK             1
 #define IFRTYPE_FUNCTIONAL_WIRED                2
@@ -230,6 +231,10 @@ struct  ifreq {
 #define IFRTYPE_ECN_DEFAULT             0
 #define IFRTYPE_ECN_ENABLE              1
 #define IFRTYPE_ECN_DISABLE             2
+		uint32_t ifru_l4s_mode;
+#define IFRTYPE_L4S_DEFAULT             0
+#define IFRTYPE_L4S_ENABLE              1
+#define IFRTYPE_L4S_DISABLE             2
 		u_int32_t ifru_qosmarking_mode;
 #define IFRTYPE_QOSMARKING_MODE_NONE            0
 #define IFRTYPE_QOSMARKING_FASTLANE     1       /* supported: socket/channel */
@@ -237,6 +242,7 @@ struct  ifreq {
 #define IFRTYPE_QOSMARKING_CUSTOM       3       /* supported: socket/channel */
 		u_int32_t ifru_qosmarking_enabled;
 		u_int32_t ifru_disable_output;
+		int32_t   ifru_point_to_point_mdns;
 		u_int32_t ifru_low_internet;
 #define IFRTYPE_LOW_INTERNET_DISABLE_UL_DL      0x0000
 #define IFRTYPE_LOW_INTERNET_ENABLE_UL          0x0001
@@ -254,6 +260,10 @@ struct  ifreq {
 			u_int8_t channel;
 		} ifru_radio_details;
 		uint64_t ifru_creation_generation_id;
+		u_int8_t ifru_is_directlink;
+		u_int8_t ifru_is_vpn;
+		uint32_t ifru_delay_wake_pkt_event;
+		u_int8_t ifru_is_companionlink;
 	} ifr_ifru;
 #define ifr_addr        ifr_ifru.ifru_addr      /* address */
 #define ifr_dstaddr     ifr_ifru.ifru_dstaddr   /* other end of p-to-p link */
@@ -286,17 +296,20 @@ struct  ifreq {
 #define ifr_constrained   ifr_ifru.ifru_constrained
 #define ifr_type        ifr_ifru.ifru_type      /* interface type */
 #define ifr_functional_type     ifr_ifru.ifru_functional_type
+#define ifr_peer_egress_functional_type ifr_ifru.ifru_peer_egress_functional_type
 #define ifr_2kcl        ifr_ifru.ifru_2kcl
 #define ifr_start_delay_qlen    ifr_ifru.ifru_start_delay.qlen
 #define ifr_start_delay_timeout ifr_ifru.ifru_start_delay.timeout
 #define ifr_interface_state     ifr_ifru.ifru_interface_state
 #define ifr_probe_connectivity  ifr_ifru.ifru_probe_connectivity
 #define ifr_ecn_mode    ifr_ifru.ifru_ecn_mode
+#define ifr_l4s_mode    ifr_ifru.ifru_l4s_mode
 #define ifr_qosmarking_mode     ifr_ifru.ifru_qosmarking_mode
 #define ifr_fastlane_capable    ifr_qosmarking_mode
 #define ifr_qosmarking_enabled  ifr_ifru.ifru_qosmarking_enabled
 #define ifr_fastlane_enabled    ifr_qosmarking_enabled
 #define ifr_disable_output      ifr_ifru.ifru_disable_output
+#define ifr_point_to_point_mdns ifr_ifru.ifru_point_to_point_mdns
 #define ifr_low_internet        ifr_ifru.ifru_low_internet
 #define ifr_low_power_mode      ifr_ifru.ifru_low_power_mode
 #define ifr_tcp_kao_max         ifr_ifru.ifru_tcp_kao_max
@@ -305,6 +318,10 @@ struct  ifreq {
 #define ifr_estimated_throughput  ifr_ifru.ifru_estimated_throughput
 #define ifr_radio_details       ifr_ifru.ifru_radio_details
 #define ifr_creation_generation_id       ifr_ifru.ifru_creation_generation_id
+#define ifr_is_directlink       ifr_ifru.ifru_is_directlink
+#define ifr_is_vpn              ifr_ifru.ifru_is_vpn
+#define ifr_delay_wake_pkt_event         ifr_ifru.ifru_delay_wake_pkt_event
+#define ifr_is_companionlink    ifr_ifru.ifru_is_companionlink
 };
 
 #define _SIZEOF_ADDR_IFREQ(ifr) \
@@ -332,6 +349,7 @@ enum {
 	IFNET_LQM_THRESH_GOOD           = 100
 };
 #define IFNET_LQM_THRESH_BAD    IFNET_LQM_THRESH_ABORT
+
 
 
 /*
@@ -366,12 +384,43 @@ struct if_descreq {
  *		scheduling strategy (e.g. 802.11 WMM), and that the networking
  *		stack is only responsible for creating multiple queues for the
  *		corresponding service classes.
+ *	IFNET_SCHED_MODEL_FQ_CODEL Use legacy FQ_CoDel as the output packet
+ *		scheduling model. This also schedules traffic classes.
+ *		This legacy FQ-CoDel implementation employs flow control
+ *		when queuing dealy is above the configured threshold.
+ *	IFNET_SCHED_MODEL_FQ_CODEL_DM Legacy FQ_CoDel but for driver/media that
+ *		requires strict scheduling strategy. The driver is responisble
+ *		for selecting the appropriate SVC at dequeue time.
+ *	IFNET_SCHED_MODEL_FQ_CODEL_NEW RFC compliant FQ_CoDel implementation.
+ *		This impplementation does not rely on flow control but rather packet
+ *		drops and ECN markings to bring down queuing delay.
+ *	IFNET_SCHED_MODEL_FQ_CODEL_NEW_DM Same as IFNET_SCHED_MODEL_FQ_CODEL_NEW
+ *		but for driver/media that requires strict scheduling strategy.
  */
+
+ #define IFNET_SCHED_MODEL_LIST \
+	X(IFNET_SCHED_MODEL_NORMAL,            0x00000000, normal)                    \
+	X(IFNET_SCHED_MODEL_DRIVER_MANAGED,    0x00000001, driver managed)            \
+	X(IFNET_SCHED_MODEL_FQ_CODEL,          0x00000002, fq_codel)                  \
+	X(IFNET_SCHED_MODEL_FQ_CODEL_DM,       0x00000004, fq_codel DM)   \
+	X(IFNET_SCHED_MODEL_FQ_CODEL_NEW,      0x00000008, fq_codel_new)              \
+	X(IFNET_SCHED_MODEL_FQ_CODEL_NEW_DM,   0x00000010, fq_codel_new DM)
 enum {
-	IFNET_SCHED_MODEL_NORMAL                = 0,
-	IFNET_SCHED_MODEL_DRIVER_MANAGED        = 1,
-	IFNET_SCHED_MODEL_FQ_CODEL              = 2,
+#define X(name, value, ...) name = value,
+	IFNET_SCHED_MODEL_LIST
+#undef X
 };
+
+#define IFNET_SCHED_DRIVER_MANGED_MODELS \
+	(IFNET_SCHED_MODEL_DRIVER_MANAGED | IFNET_SCHED_MODEL_FQ_CODEL_DM | IFNET_SCHED_MODEL_FQ_CODEL_NEW_DM)
+
+#define IFNET_SCHED_VALID_MODELS                                   \
+    (IFNET_SCHED_MODEL_NORMAL | IFNET_SCHED_MODEL_DRIVER_MANAGED | \
+	IFNET_SCHED_MODEL_FQ_CODEL | IFNET_SCHED_MODEL_FQ_CODEL_DM |   \
+	IFNET_SCHED_MODEL_FQ_CODEL_NEW | IFNET_SCHED_MODEL_FQ_CODEL_NEW_DM)
+
+#define IFNET_MODEL_IS_VALID(_model) \
+	(((_model == IFNET_SCHED_MODEL_NORMAL) || ((_model) & IFNET_SCHED_VALID_MODELS)) && ((_model) & (_model - 1)) == 0)
 
 /*
  * Values for iflpr_flags
@@ -427,8 +476,6 @@ enum {
 	IFNET_RSSI_UNKNOWN      = ((-2147483647) - 1),    /* INT32_MIN */
 };
 
-
-#if !__has_ptrcheck
 /*
  * DLIL KEV_DL_NODE_PRESENCE/KEV_DL_NODE_ABSENCE event structures
  */
@@ -447,7 +494,6 @@ struct kev_dl_node_absence {
 	struct sockaddr_in6     sin6_node_address;
 	struct sockaddr_dl      sdl_node_address;
 };
-#endif
 
 /*
  * Structure for SIOC[SG]IFTHROTTLE
@@ -627,7 +673,6 @@ struct if_protolistreq {
 };
 
 
-
 /*
  * Entitlement to send/receive data on an INTCOPROC interface
  */
@@ -644,6 +689,12 @@ struct if_protolistreq {
  * Entitlement to make change to a management interface
  */
 #define MANAGEMENT_CONTROL_ENTITLEMENT "com.apple.private.network.management.control"
+
+/*
+ * Entitlement to allow socket access on ultra-constrained interfaces
+ */
+#define ULTRA_CONSTRAINED_ENTITLEMENT "com.apple.private.network.ultraconstrained"
+
 
 #endif /* (_POSIX_C_SOURCE && !_DARWIN_C_SOURCE) */
 

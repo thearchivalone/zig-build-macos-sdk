@@ -25,7 +25,8 @@ CF_ASSUME_NONNULL_BEGIN
     
 #endif
 
-#define icVersion4Number 0x04000000L /* 4.0.0, BCD */
+#define icVersion4Number       0x04000000L /* 4.0.0, BCD */
+#define icVersion4Point4Number 0x04400000L /* 4.4.0, BCD */
 
 CSEXTERN CFStringRef kColorSyncGenericGrayProfile CS_AVAILABLE_STARTING(10.4, 16.0);          /* com.apple.ColorSync.GenericGray  */
 CSEXTERN CFStringRef kColorSyncGenericGrayGamma22Profile CS_AVAILABLE_STARTING(10.4, 16.0);   /* com.apple.ColorSync.GenericGrayGamma2.2  */
@@ -123,6 +124,19 @@ CSEXTERN ColorSyncProfileRef __nullable ColorSyncProfileCreateWithURL(CFURLRef u
     *   
     *   returns ColorSyncProfileRef or NULL in case of failure
     */
+
+CSEXTERN CFStringRef kColorSyncDoNotSubstituteProfiles CS_AVAILABLE_STARTING(26.1, 26.1);
+    /*
+     * Use the above key with kCFBooleanTrue value to skip substitution with a matching system provided profile
+     */
+CSEXTERN ColorSyncProfileRef __nullable ColorSyncProfileCreateWithURLAndOptions(CFURLRef url, CFDictionaryRef __nullable options, CFErrorRef* __nullable error) CS_AVAILABLE_STARTING(26.1, 26.1);
+    /*
+     *   url     - URL to the profile data.
+     *   options - a dictionary with creation options, e.g. kColorSyncDoNotSubstituteProfiles
+     *   error   - (optional) pointer to the error which will be returned in case of failure
+     *
+     *   returns ColorSyncProfileRef or NULL in case of failure
+     */
 
 CSEXTERN ColorSyncProfileRef __nullable ColorSyncProfileCreateWithName(CFStringRef name) CS_AVAILABLE_STARTING(10.4, 16.0);
    /*
@@ -227,15 +241,6 @@ CSEXTERN float ColorSyncProfileEstimateGammaWithDisplayID (const int32_t display
     *   returns non-zero value if success or 0.0 in case of error.
     */
 
-CSEXTERN float ColorSyncProfileEstimateGamma (ColorSyncProfileRef prof, CFErrorRef* __nullable error) CS_AVAILABLE_STARTING(10.4) CS_UNAVAILABLE_EMBEDDED;
-    /*
-    *   prof    - profile to perform estimation on
-    *   error   - (optional) pointer to the error which will be returned in
-    *             case of failure
-    *   
-    *   returns non-zero value if success or 0.0 in case of error
-    */
-    
 CSEXTERN bool ColorSyncProfileGetDisplayTransferFormulaFromVCGT(ColorSyncProfileRef profile,
                                                                 float* redMin,   float* redMax,   float* redGamma,
                                                                 float* greenMin, float* greenMax, float* greenGamma,
@@ -254,6 +259,15 @@ CSEXTERN bool ColorSyncProfileGetDisplayTransferFormulaFromVCGT(ColorSyncProfile
      */
     
 
+CSEXTERN float ColorSyncProfileEstimateGamma (ColorSyncProfileRef prof, CFErrorRef* __nullable error) CS_AVAILABLE_STARTING(10.4, 26.1);
+    /*
+    *   prof    - profile to perform estimation on
+    *   error   - (optional) pointer to the error which will be returned in
+    *             case of failure
+    *
+    *   returns non-zero value if success or 0.0 in case of error
+    */
+    
 #define COLORSYNC_MD5_LENGTH  16
 
 typedef struct { uint8_t digest[COLORSYNC_MD5_LENGTH]; } ColorSyncMD5;

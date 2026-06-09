@@ -1,13 +1,13 @@
 --- !tapi-tbd
 tbd-version:     4
-targets:         [ x86_64-macos, arm64-macos, arm64e-macos ]
+targets:         [ x86_64-macos, arm64e-macos ]
 install-name:    '/System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/PrintCore.framework/Versions/A/PrintCore'
-current-version: 582.1
+current-version: 601.2
 parent-umbrella:
-  - targets:         [ x86_64-macos, arm64-macos, arm64e-macos ]
+  - targets:         [ x86_64-macos, arm64e-macos ]
     umbrella:        ApplicationServices
 exports:
-  - targets:         [ x86_64-macos, arm64-macos, arm64e-macos ]
+  - targets:         [ x86_64-macos, arm64e-macos ]
     symbols:         [ _CPLAutoSelectCancel, _CPLAutoSelectCreateContext, _CPLAutoSelectGetInfo, 
                        _CPLAutoSelectHasNewPPD, _CPLAutoSelectInstallableOptions, 
                        _CPLAutoSelectPPD, _CPLAutoSelectReleaseContext, _CPLAutoSelectSetIsBinaryOK, 
@@ -72,7 +72,7 @@ exports:
                        _PMPrinterChargeInfoURI, _PMPrinterCopyACL, _PMPrinterCopyDefaultUserCredentials, 
                        _PMPrinterCopyDescriptionURL, _PMPrinterCopyDeviceURI, _PMPrinterCopyFinalDeviceURI, 
                        _PMPrinterCopyHostName, _PMPrinterCopyMembers, _PMPrinterCopyOAUTHInfo, 
-                       _PMPrinterCopyPresets, _PMPrinterCopyRequiredUserCredentials, 
+                       _PMPrinterCopyPresets, _PMPrinterCopyPrinterUUID, _PMPrinterCopyRequiredUserCredentials, 
                        _PMPrinterCopyScannerUUID, _PMPrinterCopyScanningApp, _PMPrinterCopyScanningAppPath, 
                        _PMPrinterCopyState, _PMPrinterCopySuppliesURI, _PMPrinterCopyTempPPDURL, 
                        _PMPrinterCreateFromPrinterID, _PMPrinterCreatePaperInfoListForMenuPriv, 
@@ -138,7 +138,7 @@ exports:
                        _PMTicketSetCFString, _PMTicketSetCString, _PMTicketSetDouble, 
                        _PMTicketSetItem, _PMTicketSetPMRect, _PMTicketSetSInt32, 
                        _PMTicketSetTicket, _PMTicketSetUInt32, _PMTicketToLightXML, 
-                       _PMTicketToXML, _PMWorkflowCopyItems, _PMWorkflowSubmitPDFWithOptions, 
+                       _PMTicketToXML, _PMWatermarkDraw, _PMWorkflowCopyItems, _PMWorkflowSubmitPDFWithOptions, 
                        _PMWorkflowSubmitPDFWithSettings, _PMXMLToTicket, __PMLog, 
                        __PMLogLocalize, __PMLogPerf, __ZN12PMBaseObject14SetAppReadOnlyEh, 
                        __ZN12PMBaseObject15CopyObjectStateEPS_, __ZN12PMBaseObject16CreateEmptyArrayEv, 

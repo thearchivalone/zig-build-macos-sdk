@@ -6,47 +6,7 @@
 #include <Spatial/SPProjectiveTransform3D.h>
 #include <Spatial/SPPoint3D.h>
 
-// MARK: - SPVector3DMake
-
-/*!
- @abstract Creates a point with the specified coordinates.
- 
- @param x The first element of the vector.
- @param y The second element of the vector.
- @param z The third element of the vector.
- @returns A new vector.
- */
-SPATIAL_INLINE
-SPATIAL_OVERLOADABLE
-SPVector3D SPVector3DMake(double x, double y, double z)
-__API_AVAILABLE(macos(13.0), ios(16.0), watchos(9.0), tvos(16.0));
-
-SPATIAL_REFINED_FOR_SWIFT
-SPATIAL_OVERLOADABLE
-SPVector3D SPVector3DMake(double x, double y, double z) {
-    return (SPVector3D){ .x = x, .y = y, .z = z };
-}
-
-// MARK: - SPVector3DMakeWithVector
-
-/*!
- @abstract Creates a vector with elements specified as a 3-element SIMD vector.
- 
- @param xyz The source simd vector.
- @returns A new vector.
- */
-SPATIAL_INLINE
-SPATIAL_OVERLOADABLE
-SPVector3D SPVector3DMakeWithVector(simd_double3 xyz)
-__API_AVAILABLE(macos(13.0), ios(16.0), watchos(9.0), tvos(16.0));
-
-SPATIAL_REFINED_FOR_SWIFT
-SPATIAL_OVERLOADABLE
-SPVector3D SPVector3DMakeWithVector(simd_double3 xyz) {
-    return (SPVector3D){ .vector = xyz};
-}
-
-// MARK: - SPPoint3DMakeWithRotationAxis
+// MARK: - SPVector3DMakeWithRotationAxis
 
 /*!
  @abstract Creates a vector with elements specified as dimensions of a rotation axis structure.
@@ -62,10 +22,10 @@ __API_AVAILABLE(macos(13.0), ios(16.0), watchos(9.0), tvos(16.0));
 SPATIAL_REFINED_FOR_SWIFT
 SPATIAL_OVERLOADABLE
 SPVector3D SPVector3DMakeWithRotationAxis(SPRotationAxis3D axis) {
-    return (SPVector3D){ .vector = axis.vector };
+    return SPVector3DMake(axis.vector.x, axis.vector.y, axis.vector.z);
 }
 
-// MARK: - SPPoint3DMakeWithSize
+// MARK: - SPVector3DMakeWithSize
 
 /*!
  @abstract Creates a vector with elements specified as dimensions of a size structure.
@@ -81,10 +41,10 @@ __API_AVAILABLE(macos(13.0), ios(16.0), watchos(9.0), tvos(16.0));
 SPATIAL_REFINED_FOR_SWIFT
 SPATIAL_OVERLOADABLE
 SPVector3D SPVector3DMakeWithSize(SPSize3D size) {
-    return (SPVector3D){ .vector = size.vector };
+    return SPVector3DMake(size.vector.x, size.vector.y, size.vector.z);
 }
 
-// MARK: - SPPoint3DMakeWithPoint
+// MARK: - SPVector3DMakeWithPoint
 
 /*!
  @abstract Creates a vector with elements specified a coordinates of a point structure.
@@ -100,7 +60,7 @@ __API_AVAILABLE(macos(13.0), ios(16.0), watchos(9.0), tvos(16.0));
 SPATIAL_REFINED_FOR_SWIFT
 SPATIAL_OVERLOADABLE
 SPVector3D SPVector3DMakeWithPoint(SPPoint3D point) {
-    return (SPVector3D){ .vector = point.vector};
+    return SPVector3DMake(point.vector.x, point.vector.y,point.vector.z);
 }
 
 // MARK: - SPVector3DEqualToPoint
@@ -137,7 +97,7 @@ SPATIAL_REFINED_FOR_SWIFT
 SPATIAL_OVERLOADABLE
 SPVector3D SPVector3DScaleBy(SPVector3D vector, double x, double y, double z) {
     
-    return (SPVector3D){ .vector = vector.vector * simd_make_double3(x, y, z)};
+    return SPVector3DMakeWithVector(vector.vector * simd_make_double3(x, y, z));
 }
 
 
@@ -165,7 +125,7 @@ SPVector3D SPVector3DApplyAffineTransform(SPVector3D vector,
     
     simd_double3 transformed = simd_mul(transform.matrix, rhs).xyz;
     
-    return (SPVector3D){ .vector = transformed };
+    return SPVector3DMakeWithVector(transformed);
 }
 
 // MARK: - SPVector3DApplyProjectiveTransform
@@ -192,7 +152,7 @@ SPVector3D SPVector3DApplyProjectiveTransform(SPVector3D vector,
     
     simd_double3 transformed = simd_mul(transform.matrix, rhs).xyz;
     
-    return (SPVector3D){ .vector = transformed };
+    return SPVector3DMakeWithVector(transformed);
 }
 
 // MARK: - SPVector3DUnapplyAffineTransform
@@ -326,7 +286,7 @@ SPATIAL_REFINED_FOR_SWIFT
 SPATIAL_OVERLOADABLE
 SPVector3D SPVector3DScaleBySize(SPVector3D vector, SPSize3D scale) {
     
-    return (SPVector3D){ .vector = vector.vector * scale.vector };
+    return SPVector3DMakeWithVector(vector.vector * scale.vector);
 }
 
 // MARK: - SPVector3DScaleUniform
@@ -347,7 +307,7 @@ SPATIAL_REFINED_FOR_SWIFT
 SPATIAL_OVERLOADABLE
 SPVector3D SPVector3DScaleUniform(SPVector3D vector, double scale) {
     
-    return (SPVector3D){ .vector = vector.vector * scale };
+    return SPVector3DMakeWithVector(vector.vector * scale);
 }
 
 // MARK: - SPVector3DRotate
@@ -427,7 +387,7 @@ SPATIAL_OVERLOADABLE
 SPVector3D SPVector3DCrossProduct(SPVector3D x, SPVector3D y) {
     
     simd_double3 d = simd_cross(x.vector, y.vector);
-    return (SPVector3D){ .vector = d };
+    return SPVector3DMakeWithVector(d);
 }
 
 /*!
@@ -443,7 +403,7 @@ SPATIAL_OVERLOADABLE
 SPVector3D SPVector3DNormalize(SPVector3D x) {
     
     simd_double3 d = simd_normalize(x.vector);
-    return (SPVector3D){ .vector = d };
+    return SPVector3DMakeWithVector(d);
 }
 
 /*!
@@ -459,7 +419,7 @@ SPATIAL_OVERLOADABLE
 SPVector3D SPVector3DProject(SPVector3D x, SPVector3D y) {
     
     simd_double3 d = simd_project(x.vector, y.vector);
-    return (SPVector3D){ .vector = d };
+    return SPVector3DMakeWithVector(d);
 }
 
 /*!
@@ -474,8 +434,8 @@ SPATIAL_REFINED_FOR_SWIFT
 SPATIAL_OVERLOADABLE
 SPVector3D SPVector3DReflect(SPVector3D x, SPVector3D y) {
     
-    simd_double3 d = simd_project(x.vector, y.vector);
-    return (SPVector3D){ .vector = d };
+    simd_double3 d = simd_reflect(x.vector, y.vector);
+    return SPVector3DMakeWithVector(d);
 }
 
 /*!
@@ -549,14 +509,126 @@ SPATIAL_OVERLOADABLE
 SPVector3D SPVector3DUnapplyPose(SPVector3D vector,
                                  SPPose3D pose) {
     
-    simd_double4 v = simd_make_double4(vector.vector, 0);
-    simd_double4x4 m = simd_matrix4x4(pose.rotation.quaternion);
-    m.columns[3].xyz = pose.position.vector;
-    m = simd_inverse(m);
+    return SPVector3DRotate(vector, SPRotation3DInverse(pose.rotation));
+}
+
+// MARK: - Transform by Scaled Pose
+
+/*!
+ @abstract Returns a vector that's transformed by the specified scaled pose.
+ 
+ @param vector The source vector.
+ @param pose The scaled pose that the function applies to the vector.
+ @returns The transformed vector.
+ */
+SPATIAL_INLINE
+SPATIAL_OVERLOADABLE
+SPVector3D SPVector3DApplyScaledPose(SPVector3D vector,
+                                     SPScaledPose3D pose)
+__API_AVAILABLE(macos(15.0), ios(18.0), watchos(11.0), tvos(18.0));
+
+SPATIAL_REFINED_FOR_SWIFT
+SPATIAL_OVERLOADABLE
+SPVector3D SPVector3DApplyScaledPose(SPVector3D vector,
+                                     SPScaledPose3D pose) {
     
-    simd_double3 transformed = simd_mul(m, v).xyz;
+    simd_double3 v = vector.vector * pose.scale;
+    v = simd_act(pose.rotation.quaternion, v);
     
-    return (SPVector3D){ .vector = transformed };
+    return SPVector3DMakeWithVector(v);
+}
+
+/*!
+ @abstract Returns a vector that's transformed by the inverse of the specified scaled pose.
+ 
+ @param vector The source vector.
+ @param pose The pose that the function unapplies to the vector.
+ @returns The transformed vector.
+ */
+SPATIAL_INLINE
+SPATIAL_OVERLOADABLE
+SPVector3D SPVector3DUnapplyScaledPose(SPVector3D vector,
+                                       SPScaledPose3D pose)
+__API_AVAILABLE(macos(15.0), ios(18.0), watchos(11.0), tvos(18.0));
+
+SPATIAL_REFINED_FOR_SWIFT
+SPATIAL_OVERLOADABLE
+SPVector3D SPVector3DUnapplyScaledPose(SPVector3D vector,
+                                       SPScaledPose3D pose) {
+    
+    simd_quatd invPoseRot = simd_inverse(pose.rotation.quaternion);
+    simd_double3 invPosePos = simd_act(invPoseRot, -pose.position.vector);
+    
+    simd_double3 v = simd_act(invPoseRot, vector.vector);
+    v /= pose.scale;
+    
+    return SPVector3DMakeWithVector(v);
+}
+
+// MARK: - Spherical coordinate support
+
+/*!
+ @abstract Returns a Spatial vector that represents the Cartesian coordinates of the specified spherical coordinates structure.
+ 
+ @param coords The source spherical coordinates structure.
+ @returns A new vector that contains the spherical coorddinates converted to Cartesian coordinates.
+ */
+SPATIAL_INLINE
+SPATIAL_OVERLOADABLE
+SPVector3D SPVector3DMakeWithSphericalCoordinates(SPSphericalCoordinates3D coords)
+__API_AVAILABLE(macos(15.0), ios(18.0), watchos(11.0), tvos(18.0));
+
+SPATIAL_REFINED_FOR_SWIFT
+SPATIAL_OVERLOADABLE
+SPVector3D SPVector3DMakeWithSphericalCoordinates(SPSphericalCoordinates3D coords) {
+    
+    SPPoint3D point = SPPoint3DMakeWithSphericalCoordinates(coords);
+    
+    return SPVector3DMakeWithPoint(point);
+}
+
+/*!
+ @abstract Returns a Spatial vector that represents the linear interpolation at @p t between two vectors.
+ 
+ @param from The starting vector.
+ @param to The ending vector.
+ @param t The value, between @p 0 and @p 1, that the function interpolates at.
+ 
+ @returns A new rotation. When @p t=0, the result is the @p from vector. When @p t=1.0, the result
+ is the @p to vector. For any other value of @p t, the result is a linear linear interpolation between the
+ two vectors.
+ */
+SPATIAL_INLINE
+SPATIAL_OVERLOADABLE
+SPVector3D SPVector3DLerp(SPVector3D from, SPVector3D to, SPVector3D t)
+__API_AVAILABLE(macos(26.0), ios(26.0), watchos(26.0), tvos(26.0), visionos(26.0));
+
+SPATIAL_REFINED_FOR_SWIFT
+SPATIAL_OVERLOADABLE
+SPVector3D SPVector3DLerp(SPVector3D from, SPVector3D to, SPVector3D t) {
+    
+    return SPVector3DMakeWithVector(simd_mix(from.vector, to.vector, t.vector));
+}
+
+/*!
+ @abstract Returns a Spatial vector that represents the smooth interpolation at @p x between two vectors.
+ 
+ @param edge0 The lower edge of the interpolation function.
+ @param edge1 The upper edge of the interpolation function.
+ @param x The value that the function interpolates at.
+ 
+ @returns A new vector with each element set to `0` if `x <= edge0`, `1` if `x >= edge1`, and a Hermite interpolation between `0` and `1` if `edge0 < x < edge1`.
+ */
+SPATIAL_INLINE
+SPATIAL_OVERLOADABLE
+SPVector3D SPVector3DSmoothstep(SPVector3D edge0, SPVector3D edge1, SPVector3D x)
+__API_AVAILABLE(macos(26.0), ios(26.0), watchos(26.0), tvos(26.0), visionos(26.0));
+
+SPATIAL_REFINED_FOR_SWIFT
+SPATIAL_OVERLOADABLE
+SPVector3D SPVector3DSmoothstep(SPVector3D edge0, SPVector3D edge1, SPVector3D x) {
+    
+    return SPVector3DMakeWithVector(simd_smoothstep(edge0.vector, edge1.vector, x.vector));
 }
 
 #endif /* SPVector3D_h */

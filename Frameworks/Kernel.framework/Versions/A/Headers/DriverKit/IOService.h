@@ -1,6 +1,6 @@
-/* iig(DriverKit-324.60.3) generated from IOService.iig */
+/* iig(DriverKit-456.120.3) generated from IOService.iig */
 
-/* IOService.iig:1-71 */
+/* IOService.iig:1-88 */
 /*
  * Copyright (c) 2019-2019 Apple Inc. All rights reserved.
  *
@@ -58,10 +58,13 @@ enum {
 	kIOServicePowerCapabilityOff = 0x00000000,
 	kIOServicePowerCapabilityOn  = 0x00000002,
 	kIOServicePowerCapabilityLow = 0x00010000,
+	kIOServicePowerCapabilityLPW = 0x00020000,
 };
 
 enum {
-	_kIOPMWakeEventSource = 0x00000001,
+	_kIOPMWakeEventSource           = 0x00000001,
+	_kIOPMWakeEventFullWake         = 0x00000002,
+	_kIOPMWakeEventPossibleFullWake = 0x00000004,
 };
 
 // values for OSNumber kIOSystemStateHaltDescriptionKey:kIOSystemStateHaltDescriptionHaltStateKey
@@ -70,7 +73,21 @@ enum {
 	kIOServiceHaltStateRestart  = 0x00000002,
 };
 
-/* source class IOService IOService.iig:72-551 */
+// Bitfields for CreatePMAssertion
+enum {
+    /*! kIOServicePMAssertionCPUBit
+     * When set, PM kernel will prefer to leave the CPU and core hardware
+     * running in "Dark Wake" state, instead of sleeping.
+     */
+	kIOServicePMAssertionCPUBit             = 0x001,
+
+    /*! kIOServicePMAssertionForceFullWakeupBit
+     * When set, the system will immediately do a full wakeup after going to sleep.
+     */
+	kIOServicePMAssertionForceFullWakeupBit = 0x800,
+};
+
+/* source class IOService IOService.iig:89-603 */
 
 #if __DOCUMENTATION__
 #define KERNEL IIG_KERNEL
@@ -257,6 +274,16 @@ public:
 	virtual kern_return_t
 	ChangePowerState(
 		uint32_t powerFlags);
+
+	/*!
+     * @brief       Request provider to create a power override.
+     * @discussion  Allows a driver to ignore power desires of its children, similar to powerOverrideOnPriv in IOKit, enabling its power state to be governed solely by its own desire (set via IOService::ChangePowerState)
+     * @param       enable Whether to enable or disable the power override.
+     * @return      kIOReturnSuccess on success. See IOReturn.h for error codes.
+     */
+	virtual kern_return_t
+	SetPowerOverride(
+		bool enable);
 
     /*!
      * @brief       Request create a new user client for a client process.
@@ -482,6 +509,7 @@ public:
 	const char *
 	StringFromReturn(
 		 IOReturn    retval) LOCALONLY;
+
 #endif /* PRIVATE_WIFI_ONLY */
 
 	/*! @function RemoveProperty
@@ -513,12 +541,11 @@ public:
     * @function StateNotificationItemCreate
     * @abstract Create a state notification item.
     * @param    itemName name of the item.
-    * @param    schema dictionary describing behaviors for the item. Keys are defined in
-    *           IOKitKeys.h kIOStateNotification*
+    * @param    value initial value of the item. Can be set to NULL.
     * @return   kIOReturnSuccess on success. See IOReturn.h for error codes.
 	*/
 	virtual kern_return_t
-	StateNotificationItemCreate(OSString * itemName, OSDictionary * schema);
+	StateNotificationItemCreate(OSString * itemName, OSDictionary * value);
 
    /*!
     * @function StateNotificationItemSet
@@ -540,6 +567,31 @@ public:
 	virtual kern_return_t
 	StateNotificationItemCopy(OSString * itemName, OSDictionary ** value);
 
+   /*!
+    * @function CreatePMAssertion
+    * @abstract Create a power management assertion.
+    * @param    assertionBits Bit masks including all the flavors that require to be asserted.
+    * @param    assertionID pointer that will contain the unique identifier of the created
+    *           power assertion.
+    * @param    synced indicates if the assertion must prevent an imminent sleep transition.
+    *           When set to true, and if a system sleep is irreversible, the call will return
+    *           kIOReturnBusy, in which case the assertion is not created. Only
+    *           kIOServicePMAssertionCPUBit is valid for assertionBits if sleepSafe is set to
+    *           true.
+    * @return   kIOReturnSuccess on success. See IOReturn.h for error codes.
+	*/
+	virtual kern_return_t
+	CreatePMAssertion(uint32_t assertionBits, uint64_t * assertionID, bool synced);
+
+   /*!
+    * @function ReleasePMAssertion
+    * @abstract Release a previously created power management assertion.
+    * @param    assertionID the assertion ID returned by CreatePMAssertion.
+    * @return   kIOReturnSuccess on success. See IOReturn.h for error codes.
+	*/
+	virtual kern_return_t
+	ReleasePMAssertion(uint64_t assertionID);
+
 private:
 	virtual void
 	Stop_async(
@@ -555,7 +607,7 @@ private:
 #undef KERNEL
 #else /* __DOCUMENTATION__ */
 
-/* generated class IOService IOService.iig:72-551 */
+/* generated class IOService IOService.iig:89-603 */
 
 #define IOService_Start_ID            0xab6f76dde6d693f2ULL
 #define IOService_Stop_ID            0x98e715041c459fa5ULL
@@ -570,6 +622,7 @@ private:
 #define IOService_JoinPMTree_ID            0xf26c46526735efffULL
 #define IOService_SetPowerState_ID            0xd200fde7d57ecca6ULL
 #define IOService_ChangePowerState_ID            0xdb75cfc3395484a0ULL
+#define IOService_SetPowerOverride_ID            0xdca775718f07ae4fULL
 #define IOService_NewUserClient_ID            0xf669efffcb89ed9cULL
 #define IOService_Create_ID            0xe1a46dbd68bbe09cULL
 #define IOService_Terminate_ID            0xf7a595d9927810c8ULL
@@ -591,6 +644,8 @@ private:
 #define IOService_StateNotificationItemCreate_ID            0xb35947bdab354e9eULL
 #define IOService_StateNotificationItemSet_ID            0xb318c8fa26b5b891ULL
 #define IOService_StateNotificationItemCopy_ID            0xad2e6404fde4b615ULL
+#define IOService_CreatePMAssertion_ID            0xabc814d03b619a1cULL
+#define IOService_ReleasePMAssertion_ID            0xb2c356503bbc13dcULL
 #define IOService_Stop_async_ID            0xa8c93137712a16a2ULL
 #define IOService__NewUserClient_ID            0x80b22dd60ee3abb6ULL
 
@@ -644,6 +699,9 @@ private:
 
 #define IOService_ChangePowerState_Args \
         uint32_t powerFlags
+
+#define IOService_SetPowerOverride_Args \
+        bool enable
 
 #define IOService_NewUserClient_Args \
         uint32_t type, \
@@ -719,7 +777,7 @@ private:
 
 #define IOService_StateNotificationItemCreate_Args \
         OSString * itemName, \
-        OSDictionary * schema
+        OSDictionary * value
 
 #define IOService_StateNotificationItemSet_Args \
         OSString * itemName, \
@@ -728,6 +786,14 @@ private:
 #define IOService_StateNotificationItemCopy_Args \
         OSString * itemName, \
         OSDictionary ** value
+
+#define IOService_CreatePMAssertion_Args \
+        uint32_t assertionBits, \
+        uint64_t * assertionID, \
+        bool synced
+
+#define IOService_ReleasePMAssertion_Args \
+        uint64_t assertionID
 
 #define IOService_Stop_async_Args \
         IOService * provider
@@ -812,6 +878,11 @@ public:\
     kern_return_t\
     ChangePowerState(\
         uint32_t powerFlags,\
+        OSDispatchMethod supermethod = NULL);\
+\
+    kern_return_t\
+    SetPowerOverride(\
+        bool enable,\
         OSDispatchMethod supermethod = NULL);\
 \
     kern_return_t\
@@ -974,7 +1045,7 @@ public:\
     kern_return_t\
     StateNotificationItemCreate(\
         OSString * itemName,\
-        OSDictionary * schema,\
+        OSDictionary * value,\
         OSDispatchMethod supermethod = NULL);\
 \
     kern_return_t\
@@ -987,6 +1058,18 @@ public:\
     StateNotificationItemCopy(\
         OSString * itemName,\
         OSDictionary ** value,\
+        OSDispatchMethod supermethod = NULL);\
+\
+    kern_return_t\
+    CreatePMAssertion(\
+        uint32_t assertionBits,\
+        uint64_t * assertionID,\
+        bool synced,\
+        OSDispatchMethod supermethod = NULL);\
+\
+    kern_return_t\
+    ReleasePMAssertion(\
+        uint64_t assertionID,\
         OSDispatchMethod supermethod = NULL);\
 \
     void\
@@ -1117,6 +1200,12 @@ public:\
         OSMetaClassBase * target,\
         ChangePowerState_Handler func);\
 \
+    typedef kern_return_t (*SetPowerOverride_Handler)(OSMetaClassBase * target, IOService_SetPowerOverride_Args);\
+    static kern_return_t\
+    SetPowerOverride_Invoke(const IORPC rpc,\
+        OSMetaClassBase * target,\
+        SetPowerOverride_Handler func);\
+\
     typedef kern_return_t (*NewUserClient_Handler)(OSMetaClassBase * target, IOService_NewUserClient_Args);\
     static kern_return_t\
     NewUserClient_Invoke(const IORPC rpc,\
@@ -1243,6 +1332,18 @@ public:\
         OSMetaClassBase * target,\
         StateNotificationItemCopy_Handler func);\
 \
+    typedef kern_return_t (*CreatePMAssertion_Handler)(OSMetaClassBase * target, IOService_CreatePMAssertion_Args);\
+    static kern_return_t\
+    CreatePMAssertion_Invoke(const IORPC rpc,\
+        OSMetaClassBase * target,\
+        CreatePMAssertion_Handler func);\
+\
+    typedef kern_return_t (*ReleasePMAssertion_Handler)(OSMetaClassBase * target, IOService_ReleasePMAssertion_Args);\
+    static kern_return_t\
+    ReleasePMAssertion_Invoke(const IORPC rpc,\
+        OSMetaClassBase * target,\
+        ReleasePMAssertion_Handler func);\
+\
     typedef void (*Stop_async_Handler)(OSMetaClassBase * target, IOService_Stop_async_Args);\
     static kern_return_t\
     Stop_async_Invoke(const IORPC rpc,\
@@ -1288,6 +1389,9 @@ protected:\
 \
     kern_return_t\
     ChangePowerState_Impl(IOService_ChangePowerState_Args);\
+\
+    kern_return_t\
+    SetPowerOverride_Impl(IOService_SetPowerOverride_Args);\
 \
     kern_return_t\
     NewUserClient_Impl(IOService_NewUserClient_Args);\
@@ -1346,6 +1450,12 @@ protected:\
     kern_return_t\
     StateNotificationItemCopy_Impl(IOService_StateNotificationItemCopy_Args);\
 \
+    kern_return_t\
+    CreatePMAssertion_Impl(IOService_CreatePMAssertion_Args);\
+\
+    kern_return_t\
+    ReleasePMAssertion_Impl(IOService_ReleasePMAssertion_Args);\
+\
 
 
 #define IOService_VirtualMethods \
@@ -1367,6 +1477,6 @@ public:\
 
 #endif /* !__DOCUMENTATION__ */
 
-/* IOService.iig:553- */
+/* IOService.iig:605- */
 
 #endif /* ! _IOKIT_UIOSERVICE_H */

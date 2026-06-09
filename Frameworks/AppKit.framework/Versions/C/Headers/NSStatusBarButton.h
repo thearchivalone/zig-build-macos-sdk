@@ -1,7 +1,7 @@
 /*
     NSStatusBarButton.h
     Application Kit
-    Copyright (c) 1997-2023, Apple Inc.
+    Copyright (c) 1997-2024, Apple Inc.
     All rights reserved.
 */
 
@@ -16,7 +16,9 @@ APPKIT_API_UNAVAILABLE_BEGIN_MACCATALYST
 API_AVAILABLE(macos(10.10))
 @interface NSStatusBarButton : NSButton
 
-/// If `YES`, the status bar icon has a disabled/off appearance while still being functional, such as allowing selection and actions. Defaults to `NO`.
+/// Determines whether the status bar icon has a disabled/off appearance while still being functional, such as allowing selection and actions.
+/// 
+/// The default value is `false`.
 @property BOOL appearsDisabled;
 
 @end

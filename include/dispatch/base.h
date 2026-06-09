@@ -222,6 +222,12 @@
 #define DISPATCH_COLD
 #endif
 
+#if __has_attribute(no_sanitize)
+#define DISPATCH_NO_UBSAN __attribute__((no_sanitize("undefined")))
+#else
+#define DISPATCH_NO_UBSAN
+#endif
+
 #if __has_feature(assume_nonnull)
 #define DISPATCH_ASSUME_NONNULL_BEGIN _Pragma("clang assume_nonnull begin")
 #define DISPATCH_ASSUME_NONNULL_END   _Pragma("clang assume_nonnull end")
@@ -244,11 +250,13 @@
 #define DISPATCH_SIZED_BY(X)
 #endif
 
-#define DISPATCH_OSX_SUPPORTS_AT_LEAST(macos, ios, tvos, watchos) \
+#define DISPATCH_OSX_SUPPORTS_AT_LEAST(macos, ios, tvos, watchos, bridgeos, visionos) \
 	 (	(defined(__MAC_OS_X_VERSION_MIN_REQUIRED) && __MAC_OS_X_VERSION_MIN_REQUIRED >= macos) \
 	||	(defined(__IPHONE_OS_VERSION_MIN_REQUIRED) && __IPHONE_OS_VERSION_MIN_REQUIRED >= ios) \
 	||	(defined(__TV_OS_VERSION_MIN_REQUIRED) && __TV_OS_VERSION_MIN_REQUIRED >= tvos) \
 	||	(defined(__WATCH_OS_VERSION_MIN_REQUIRED) && __WATCH_OS_VERSION_MIN_REQUIRED >= watchos) \
+	||	(defined(__BRIDGE_OS_VERSION_MIN_REQUIRED) && __BRIDGE_OS_VERSION_MIN_REQUIRED >= bridgeos) \
+	||	(defined(__VISION_OS_VERSION_MIN_REQUIRED) && __VISION_OS_VERSION_MIN_REQUIRED >= visionos) \
 	)
 
 #if !__has_feature(nullability)
@@ -303,11 +311,13 @@
 
 #if __has_feature(enumerator_attributes)
 #define DISPATCH_ENUM_API_AVAILABLE(...) API_AVAILABLE(__VA_ARGS__)
+#define DISPATCH_ENUM_SPI_AVAILABLE(...) API_UNAVAILABLE(__VA_ARGS__)
 #define DISPATCH_ENUM_API_DEPRECATED(...) API_DEPRECATED(__VA_ARGS__)
 #define DISPATCH_ENUM_API_DEPRECATED_WITH_REPLACEMENT(...) \
 		API_DEPRECATED_WITH_REPLACEMENT(__VA_ARGS__)
 #else
 #define DISPATCH_ENUM_API_AVAILABLE(...)
+#define DISPATCH_ENUM_SPI_AVAILABLE(...)
 #define DISPATCH_ENUM_API_DEPRECATED(...)
 #define DISPATCH_ENUM_API_DEPRECATED_WITH_REPLACEMENT(...)
 #endif

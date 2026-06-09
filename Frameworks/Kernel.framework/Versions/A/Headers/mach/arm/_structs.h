@@ -62,6 +62,12 @@ _STRUCT_ARM_EXCEPTION_STATE64
 	__uint32_t __esr;       /* Exception syndrome */
 	__uint32_t __exception; /* number of arm exception taken */
 };
+#define _STRUCT_ARM_EXCEPTION_STATE64_V2 struct __darwin_arm_exception_state64_v2
+_STRUCT_ARM_EXCEPTION_STATE64_V2
+{
+	__uint64_t __far;       /* Virtual Fault Address */
+	__uint64_t __esr;       /* Exception syndrome */
+};
 #else /* !__DARWIN_UNIX03 */
 #define _STRUCT_ARM_EXCEPTION_STATE64 struct arm_exception_state64
 _STRUCT_ARM_EXCEPTION_STATE64
@@ -69,6 +75,12 @@ _STRUCT_ARM_EXCEPTION_STATE64
 	__uint64_t far;         /* Virtual Fault Address */
 	__uint32_t esr;         /* Exception syndrome */
 	__uint32_t exception;   /* number of arm exception taken */
+};
+#define _STRUCT_ARM_EXCEPTION_STATE64_V2 struct arm_exception_state64_v2
+_STRUCT_ARM_EXCEPTION_STATE64_V2
+{
+	__uint64_t far;         /* Virtual Fault Address */
+	__uint64_t esr;         /* Exception syndrome */
 };
 #endif /* __DARWIN_UNIX03 */
 
@@ -100,6 +112,7 @@ _STRUCT_ARM_THREAD_STATE
 #define __DARWIN_ARM_THREAD_STATE64_FLAGS_IB_SIGNED_LR 0x2
 #define __DARWIN_ARM_THREAD_STATE64_FLAGS_KERNEL_SIGNED_PC 0x4
 #define __DARWIN_ARM_THREAD_STATE64_FLAGS_KERNEL_SIGNED_LR 0x8
+#define __DARWIN_ARM_THREAD_STATE64_FLAGS_CUSTOM_X18_ABI 0x10
 
 #define __DARWIN_ARM_THREAD_STATE64_USER_DIVERSIFIER_MASK 0xff000000
 #define __DARWIN_ARM_THREAD_STATE64_SIGRETURN_PC_MASK 0x000f0000
@@ -221,6 +234,72 @@ _STRUCT_ARM_PAGEIN_STATE
 {
 	int __pagein_error;
 };
+
+#if __DARWIN_UNIX03
+#define _STRUCT_ARM_SME_STATE struct __darwin_arm_sme_state
+_STRUCT_ARM_SME_STATE
+{
+	__uint64_t      __svcr;
+	__uint64_t      __tpidr2_el0;
+	__uint16_t      __svl_b;
+};
+
+#define _STRUCT_ARM_SVE_Z_STATE struct __darwin_arm_sve_z_state
+_STRUCT_ARM_SVE_Z_STATE
+{
+	char            __z[16][256];
+} __attribute__((aligned(4)));
+
+#define _STRUCT_ARM_SVE_P_STATE struct __darwin_arm_sve_p_state
+_STRUCT_ARM_SVE_P_STATE
+{
+	char            __p[16][256 / 8];
+} __attribute__((aligned(4)));
+
+#define _STRUCT_ARM_SME_ZA_STATE struct __darwin_arm_sme_za_state
+_STRUCT_ARM_SME_ZA_STATE
+{
+	char            __za[4096];
+} __attribute__((aligned(4)));
+
+#define _STRUCT_ARM_SME2_STATE struct __darwin_arm_sme2_state
+_STRUCT_ARM_SME2_STATE
+{
+	char            __zt0[64];
+} __attribute__((aligned(4)));
+#else /* !__DARWIN_UNIX03 */
+#define _STRUCT_ARM_SME_STATE struct arm_sme_state
+_STRUCT_ARM_SME_STATE
+{
+	__uint64_t      svcr;
+	__uint64_t      tpidr2_el0;
+	__uint16_t      svl_b;
+};
+
+#define _STRUCT_ARM_SVE_Z_STATE struct arm_sve_z_state
+_STRUCT_ARM_SVE_Z_STATE
+{
+	char            z[16][256];
+} __attribute__((aligned(4)));
+
+#define _STRUCT_ARM_SVE_P_STATE struct arm_sve_p_state
+_STRUCT_ARM_SVE_P_STATE
+{
+	char            p[16][256 / 8];
+} __attribute__((aligned(4)));
+
+#define _STRUCT_ARM_SME_ZA_STATE struct arm_sme_za_state
+_STRUCT_ARM_SME_ZA_STATE
+{
+	char            za[4096];
+} __attribute__((aligned(4)));
+
+#define _STRUCT_ARM_SME2_STATE struct arm_sme2_state
+_STRUCT_ARM_SME2_STATE
+{
+	char            zt0[64];
+} __attribute__((aligned(4)));
+#endif /* __DARWIN_UNIX03 */
 
 /*
  * Debug State

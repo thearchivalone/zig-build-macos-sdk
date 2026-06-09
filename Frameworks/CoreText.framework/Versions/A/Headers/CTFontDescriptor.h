@@ -46,6 +46,7 @@ typedef const struct CF_BRIDGED_TYPE(NSFontDescriptor) __CTFontDescriptor * CTFo
                 references.
     @result     The identifier for the opaque type CTFontDescriptorRef.
 */
+CT_EXPORT
 CFTypeID CTFontDescriptorGetTypeID( void ) CT_AVAILABLE(macos(10.5), ios(3.2), watchos(2.0), tvos(9.0));
 
 /*! --------------------------------------------------------------------------
@@ -96,8 +97,10 @@ CT_EXPORT const CFStringRef kCTFontTraitsAttribute CT_AVAILABLE(macos(10.5), ios
 CT_EXPORT const CFStringRef kCTFontVariationAttribute CT_AVAILABLE(macos(10.5), ios(3.2), watchos(2.0), tvos(9.0));
 /*!
     @defined    kCTFontVariationAxesAttribute
-    @discussion An array of variation axis dictionaries or null if the font does not support variations. Each variation axis dictionary contains the five kCTFontVariationAxis* keys.
+    @discussion An array of variation axis dictionaries or null if the font does not support variations. Each variation axis dictionary contains the five kCTFontVariationAxis-prefixed keys.
+                Unlike the result of CTFontCopyVariationAxes(), kCTFontVariationAxisNameKey values for this attribute are not localized.
                 Before macOS 13.0 and iOS 16.0 this attribute is not accurate and CTFontCopyVariationAxes() should be used instead.
+
     @seealso    CTFontCopyVariationAxes
 */
 CT_EXPORT const CFStringRef kCTFontVariationAxesAttribute CT_AVAILABLE(macos(10.13), ios(11.0), watchos(4.0), tvos(11.0));
@@ -146,7 +149,10 @@ CT_EXPORT const CFStringRef kCTFontMacintoshEncodingsAttribute CT_AVAILABLE(maco
 /*!
     @defined    kCTFontFeaturesAttribute
     @abstract   The array of font features.
-    @discussion This key is used to specify or obtain the font features for a font reference. The value associated with this key is a CFArrayRef of font feature dictionaries. This features list contains the feature information from the 'feat' table of the font. See the CTFontCopyFeatures() API in   CTFont.h.
+    @discussion This key is used to specify or obtain the font features for a font reference. The value associated with this key is a CFArrayRef of font feature dictionaries as documented for CTFontCopyFeatures() in <CoreText/CTFont.h>.
+                Unlike the result of CTFontCopyFeatures(), this attribute does not contain localized names.
+
+    @seealso    CTFontCopyFeatures
 */
 CT_EXPORT const CFStringRef kCTFontFeaturesAttribute CT_AVAILABLE(macos(10.5), ios(3.2), watchos(2.0), tvos(9.0));
 /*!
@@ -288,6 +294,13 @@ CT_EXPORT const CFStringRef kCTFontDownloadedAttribute CT_AVAILABLE(macos(10.12)
 */
 CT_EXPORT const CFStringRef kCTFontOpticalSizeAttribute CT_AVAILABLE(macos(10.9), ios(7.0), watchos(2.0), tvos(9.0));
 
+/*!
+    @defined    kCTFontDescriptorLanguageAttribute
+    @abstract   The language identifier for font fallback selection.
+    @discussion The value associated with this key is a CFStringRef. If specified in a font descriptor, it is used to select the appropriate font fallback list for the language. This key should not be confused with kCTLanguageAttributeName, which is defined in CTStringAttributes.h.
+ */
+CT_EXPORT const CFStringRef kCTFontDescriptorLanguageAttribute CT_AVAILABLE(macos(10.15), ios(13.0), watchos(6.0), tvos(13.0));
+
 /*! --------------------------------------------------------------------------
     @group Descriptor Creation
 *///--------------------------------------------------------------------------
@@ -306,6 +319,7 @@ CT_EXPORT const CFStringRef kCTFontOpticalSizeAttribute CT_AVAILABLE(macos(10.9)
 
     @discussion If you are trying to create a system UI font descriptor (with name beginning with a "."), you should create a font with CTFontCreateUIFontForLanguage() or appropriate AppKit/UIKit APIs instead, then use CTFontCopyFontDescriptor() to get its font descriptor.
 */
+CT_EXPORT
 CTFontDescriptorRef CTFontDescriptorCreateWithNameAndSize(
     CFStringRef         name,
     CGFloat             size ) CT_AVAILABLE(macos(10.5), ios(3.2), watchos(2.0), tvos(9.0));
@@ -319,6 +333,7 @@ CTFontDescriptorRef CTFontDescriptorCreateWithNameAndSize(
 
     @result     This function creates a new font descriptor with the attributes specified. This dictionary can contain arbitrary attributes that will be preserved, however unrecognized attributes will be ignored on font creation and and may not be preserved over the round trip (descriptor -> font -> descriptor).
 */
+CT_EXPORT
 CTFontDescriptorRef CTFontDescriptorCreateWithAttributes(
     CFDictionaryRef     attributes ) CT_AVAILABLE(macos(10.5), ios(3.2), watchos(2.0), tvos(9.0));
 
@@ -333,9 +348,11 @@ CTFontDescriptorRef CTFontDescriptorCreateWithAttributes(
                 A CFDictionaryRef of arbitrary attributes.
 
     @result     This function creates a new copy of the original font descriptor with attributes augmented by those specified. If there are conflicts between attributes, the new attributes will replace existing ones, except for kCTFontVariationAttribute and kCTFontFeatureSettingsAttribute which will be merged.
-
                 Starting with macOS 10.12 and iOS 10.0, setting the value of kCTFontFeatureSettingsAttribute to kCFNull will clear the feature settings of the original font descriptor. Setting the value of any individual feature settings pair in the kCTFontFeatureSettingsAttribute value array to kCFNull will clear that feature setting alone. For example, an element like @{ (id)kCTFontFeatureTypeIdentifierKey: @(kLigaturesType), (id)kCTFontFeatureSelectorIdentifierKey: (id)kCFNull } means clear the kLigatureType feature set in the original font descriptor. An element like @[ @"liga", (id)kCFNull ] will have the same effect.
+
+    @seealso    kCTFontFeatureSettingsAttribute
 */
+CT_EXPORT
 CTFontDescriptorRef CTFontDescriptorCreateCopyWithAttributes(
     CTFontDescriptorRef     original,
     CFDictionaryRef         attributes ) CT_AVAILABLE(macos(10.5), ios(3.2), watchos(2.0), tvos(9.0));
@@ -352,6 +369,7 @@ CTFontDescriptorRef CTFontDescriptorCreateCopyWithAttributes(
 
     @result     Returns a new font reference with the original traits in the given family, or NULL if none found in the system.
 */
+CT_EXPORT
 CTFontDescriptorRef _Nullable CTFontDescriptorCreateCopyWithFamily(
     CTFontDescriptorRef     original,
     CFStringRef             family ) CT_AVAILABLE(macos(10.9), ios(7.0), watchos(2.0), tvos(9.0));
@@ -371,6 +389,7 @@ CTFontDescriptorRef _Nullable CTFontDescriptorCreateCopyWithFamily(
 
     @result     Returns a new font descriptor reference in the same family with the given symbolic traits, or NULL if none found in the system.
 */
+CT_EXPORT
 CTFontDescriptorRef _Nullable CTFontDescriptorCreateCopyWithSymbolicTraits(
     CTFontDescriptorRef     original,
     CTFontSymbolicTraits    symTraitValue,
@@ -391,6 +410,7 @@ CTFontDescriptorRef _Nullable CTFontDescriptorCreateCopyWithSymbolicTraits(
 
     @result     This function returns a copy of the original font descriptor with a new variation instance. This is a convenience method for easily creating new variation font instances.
 */
+CT_EXPORT
 CTFontDescriptorRef CTFontDescriptorCreateCopyWithVariation(
     CTFontDescriptorRef     original,
     CFNumberRef             variationIdentifier,
@@ -412,7 +432,11 @@ CTFontDescriptorRef CTFontDescriptorCreateCopyWithVariation(
                 The feature selector identifier.
 
     @result     A copy of the original font descriptor modified with the given feature settings.
+
+    @seealso    CTFontDescriptorCreateCopyWithAttributes
+    @seealso    kCTFontFeatureSettingsAttribute
 */
+CT_EXPORT
 CTFontDescriptorRef CTFontDescriptorCreateCopyWithFeature(
     CTFontDescriptorRef     original,
     CFNumberRef             featureTypeIdentifier,
@@ -430,6 +454,7 @@ CTFontDescriptorRef CTFontDescriptorCreateCopyWithFeature(
 
     @result     This function returns a retained array of normalized font descriptors matching the attributes present in descriptor. If descriptor itself is normalized then the array will contain only one item, the original descriptor.
 */
+CT_EXPORT
 CFArrayRef _Nullable CTFontDescriptorCreateMatchingFontDescriptors(
     CTFontDescriptorRef     descriptor,
     CFSetRef _Nullable      mandatoryAttributes ) CT_AVAILABLE(macos(10.5), ios(3.2), watchos(2.0), tvos(9.0));
@@ -446,6 +471,7 @@ CFArrayRef _Nullable CTFontDescriptorCreateMatchingFontDescriptors(
 
     @result     This function returns a retained normalized font descriptor matching the attributes present in descriptor. The original descriptor may be returned in normalized form.
 */
+CT_EXPORT
 CTFontDescriptorRef _Nullable CTFontDescriptorCreateMatchingFontDescriptor(
     CTFontDescriptorRef     descriptor,
     CFSetRef _Nullable      mandatoryAttributes ) CT_AVAILABLE(macos(10.5), ios(3.2), watchos(2.0), tvos(9.0));
@@ -521,6 +547,7 @@ typedef bool (^CTFontDescriptorProgressHandler)(CTFontDescriptorMatchingState st
     @result     false if it couldn't start the work.
 */
     
+CT_EXPORT
 bool CTFontDescriptorMatchFontDescriptorsWithProgressHandler(
     CFArrayRef                          descriptors,
     CFSetRef _Nullable                  mandatoryAttributes,
@@ -541,6 +568,7 @@ bool CTFontDescriptorMatchFontDescriptorsWithProgressHandler(
 
     @result     A retained reference to the font descriptor attributes dictionary. This dictionary will contain the minimum number of attributes to fully specify this particular font descriptor.
 */
+CT_EXPORT
 CFDictionaryRef CTFontDescriptorCopyAttributes(
     CTFontDescriptorRef     descriptor ) CT_AVAILABLE(macos(10.5), ios(3.2), watchos(2.0), tvos(9.0));
 
@@ -556,6 +584,7 @@ CFDictionaryRef CTFontDescriptorCopyAttributes(
 
     @result     A retained reference to the requested attribute, or NULL if the requested attribute is not present. Refer to the attribute definitions for documentation as to how each attribute is packaged as a CFType.
 */
+CT_EXPORT
 CFTypeRef _Nullable CTFontDescriptorCopyAttribute(
     CTFontDescriptorRef     descriptor,
     CFStringRef             attribute ) CT_AVAILABLE(macos(10.5), ios(3.2), watchos(2.0), tvos(9.0));
@@ -578,6 +607,7 @@ CFTypeRef _Nullable CTFontDescriptorCopyAttribute(
 
     @result     A retained reference to the requested attribute, or NULL if the requested attribute is not present. Refer to the attribute definitions for documentation as to how each attribute is packaged as a CFType.
 */
+CT_EXPORT
 CFTypeRef _Nullable CTFontDescriptorCopyLocalizedAttribute(
     CTFontDescriptorRef     descriptor,
     CFStringRef             attribute,

@@ -50,7 +50,7 @@ extern "C" {
  you will still want to use those algorithms in the situations described.
 
  Brotli is a widely adopted content-encoding-method for the web. Thus, Brotli
- is included in libcompression escpecially to provide decoding capabilities.
+ is included in libcompression especially to provide decoding capabilities.
  In many other use-cases, one of the above mentioned algorithms is probably a
  better choice.
 
@@ -124,7 +124,7 @@ typedef enum {
     /* Apple-specific algorithms */
     COMPRESSION_LZFSE    = 0x801,       // available starting OS X 10.11, iOS 9.0
     COMPRESSION_LZBITMAP = 0x702,       // buffer API only, available starting OS X 12.0, iOS 15.0
-
+  
 } compression_algorithm;
 
 /******************************************************************************

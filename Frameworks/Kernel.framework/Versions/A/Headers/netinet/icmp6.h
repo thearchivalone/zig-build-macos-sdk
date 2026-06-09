@@ -314,11 +314,13 @@ struct nd_opt_hdr {             /* Neighbor discovery option header */
 #define ND_OPT_REDIRECTED_HEADER        4
 #define ND_OPT_MTU                      5
 #define ND_OPT_NONCE                    14      /* RFC 3971 */
+#define ND_OPT_PVD                      21      /* RFC 8801 */
 #define ND_OPT_ROUTE_INFO               24      /* RFC 4191 */
 #define ND_OPT_RDNSS                    25      /* RFC 6106 */
 #define ND_OPT_DNSSL                    31      /* RFC 6106 */
 #define ND_OPT_CAPTIVE_PORTAL           37      /* RFC 7710 */
 #define ND_OPT_PREF64                   38      /* RFC 8781 */
+#define ND_OPT_DNR                      144     /* RFC 9463 */
 
 struct nd_opt_prefix_info {     /* prefix information */
 	u_int8_t        nd_opt_pi_type;
@@ -386,6 +388,20 @@ struct nd_opt_dnssl {   /* domain name search list */
 } __attribute__((__packed__));
 
 /*
+ * DNR (Discovery of Network-designated Resolvers) RFC 9463
+ */
+struct nd_opt_dnr {
+	u_int8_t            nd_opt_dnr_type;
+	u_int8_t            nd_opt_dnr_len;
+	u_int8_t            nd_opt_dnr_svc_priority[2];
+	u_int8_t            nd_opt_dnr_lifetime[4];
+	u_int8_t            nd_opt_dnr_adn_len[2];
+	u_int8_t            nd_opt_dnr_continuation[1];
+} __attribute__((__packed__));
+
+#define ND_OPT_DNR_MIN_LENGTH   offsetof(struct nd_opt_dnr, nd_opt_dnr_continuation)
+
+/*
  * PREF64 (NAT64 prefix) RFC 8781
  */
 struct nd_opt_pref64 {   /* NAT64 prefix */
@@ -404,6 +420,28 @@ struct nd_opt_pref64 {   /* NAT64 prefix */
 #define ND_OPT_PREF64_PLC_56                    2
 #define ND_OPT_PREF64_PLC_64                    1
 #define ND_OPT_PREF64_PLC_96                    0
+
+/*
+ * PvD (Provisioning Domain) RFC 8801
+ */
+struct nd_opt_pvd {
+	u_int8_t        nd_opt_pvd_type;
+	u_int8_t        nd_opt_pvd_len;
+	/* http:		1 bit */
+	/* legacy:		1 bit */
+	/* ra:			1 bit */
+	/* reserved:	9 bits */
+	/* delay:		4 bits */
+	u_int8_t        nd_opt_flags_delay[2];
+	u_int16_t       nd_opt_pvd_seq;
+	u_int8_t        nd_opt_pvd_id[1];
+} __attribute__((__packed__));
+
+#define ND_OPT_PVD_MIN_LENGTH  offsetof(struct nd_opt_pvd, nd_opt_pvd_id)
+#define ND_OPT_PVD_FLAGS_HTTP          0x80
+#define ND_OPT_PVD_FLAGS_LEGACY        0x40
+#define ND_OPT_PVD_FLAGS_RA            0x20
+#define ND_OPT_PVD_DELAY_MASK          0x0f
 
 /*
  * icmp6 namelookup
@@ -575,14 +613,9 @@ struct icmp6_filter {
 };
 
 #define ICMP6_FILTER_SETPASSALL(filterp) \
-do {                                                            \
-	int i; u_char *ptr;                                     \
-	ptr = (u_char *)filterp;                                        \
-	for (i = 0; i < sizeof(struct icmp6_filter); i++)       \
-	        ptr[i] = 0xff;                                  \
-} while (0)
+	memset(filterp, 0xff, sizeof(struct icmp6_filter))
 #define ICMP6_FILTER_SETBLOCKALL(filterp) \
-	bzero(filterp, sizeof(struct icmp6_filter))
+	memset(filterp, 0x00, sizeof(struct icmp6_filter))
 
 #define ICMP6_FILTER_SETPASS(type, filterp) \
 	(((filterp)->icmp6_filt[(type) >> 5]) |= (1u << ((type) & 31)))
@@ -687,7 +720,8 @@ struct icmp6stat {
 #define ICMPV6CTL_ND6_ACCEPT_6TO4       25
 #define ICMPV6CTL_ND6_OPTIMISTIC_DAD    26      /* RFC 4429 */
 #define ICMPV6CTL_ERRPPSLIMIT_RANDOM_INCR 27
-#define ICMPV6CTL_MAXID                 28
+#define ICMPV6CTL_ND6_RTILIST           28
+#define ICMPV6CTL_MAXID                 29
 
 
 #endif /* !_NETINET_ICMP6_H_ */

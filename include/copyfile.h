@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2021 Apple, Inc. All rights reserved.
+ * Copyright (c) 2004-2023 Apple, Inc. All rights reserved.
  *
  * @APPLE_LICENSE_HEADER_START@
  * 
@@ -79,6 +79,10 @@ typedef int (*copyfile_callback_t)(int, int, copyfile_state_t, const char *__uns
 #define	COPYFILE_STATE_DST_BSIZE	12
 #define	COPYFILE_STATE_BSIZE		13
 #define	COPYFILE_STATE_FORBID_CROSS_MOUNT	14
+#define	COPYFILE_STATE_NOCPROTECT	15
+#define	COPYFILE_STATE_PRESERVE_SUID		16
+#define	COPYFILE_STATE_RECURSIVE_SRC_FTSENT	17
+#define	COPYFILE_STATE_FORBID_DST_EXISTING_SYMLINKS	18
 
 
 #define	COPYFILE_DISABLE_VAR	"COPYFILE_DISABLE"
@@ -94,6 +98,7 @@ typedef int (*copyfile_callback_t)(int, int, copyfile_state_t, const char *__uns
 #define COPYFILE_METADATA   (COPYFILE_SECURITY | COPYFILE_XATTR)
 #define COPYFILE_ALL	    (COPYFILE_METADATA | COPYFILE_DATA)
 
+#define COPYFILE_NOCACHE	(1<<14) /* when using fcopyfile() force the fd to turn caching off */
 #define	COPYFILE_RECURSIVE	(1<<15)	/* Descend into hierarchies */
 #define COPYFILE_CHECK		(1<<16) /* return flags for xattr or acls if set */
 #define COPYFILE_EXCL		(1<<17) /* fail if destination exists */

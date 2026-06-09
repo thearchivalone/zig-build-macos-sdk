@@ -539,6 +539,11 @@ public:
 		unsigned int    cnt,
 		int          (* printf_func)(const char *fmt, ...),
 		uint32_t        flags);
+	static void foreachKextInBacktrace(
+		vm_offset_t   * addr,
+		uint32_t        cnt,
+		uint32_t        flags,
+		void         (^ handler)(OSKextLoadedKextSummary *summary, uint32_t index));
 	bool isDriverKit(void);
 	bool isInFileset(void);
 private:
@@ -737,6 +742,7 @@ public:
 	}
 };
 
+extern "C" int OSKextIsInUserspaceReboot(void);
 extern "C" void OSKextResetAfterUserspaceReboot(void);
 
 #endif /* !_LIBKERN_OSKEXT_H */

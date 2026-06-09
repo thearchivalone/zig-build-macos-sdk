@@ -1,5 +1,5 @@
 /*	NSURL.h
-	Copyright (c) 1997-2019, Apple Inc. All rights reserved.
+	Copyright (c) 1997-2023, Apple Inc. All rights reserved.
 */
 
 #import <Foundation/NSObject.h>
@@ -415,7 +415,10 @@ typedef NSString * NSURLUbiquitousSharedItemPermissions NS_TYPED_ENUM;
 FOUNDATION_EXPORT NSURLUbiquitousSharedItemPermissions const NSURLUbiquitousSharedItemPermissionsReadOnly     API_AVAILABLE(macosx(10.12), ios(10.0)) API_UNAVAILABLE(watchos, tvos); // the current user is only allowed to read this item
 FOUNDATION_EXPORT NSURLUbiquitousSharedItemPermissions const NSURLUbiquitousSharedItemPermissionsReadWrite    API_AVAILABLE(macosx(10.12), ios(10.0)) API_UNAVAILABLE(watchos, tvos); // the current user is allowed to both read and write this item
 
-/* Working with Bookmarks and alias (bookmark) files 
+FOUNDATION_EXPORT NSURLResourceKey const NSURLUbiquitousItemSupportedSyncControlsKey API_AVAILABLE(ios(26.0), macos(26.0), watchos(26.0), tvos(26.0), visionos(26.0)); // returns the read-only value of the NSFileManagerSupportedSyncControls options as a NSNumber.
+FOUNDATION_EXPORT NSURLResourceKey const NSURLUbiquitousItemIsSyncPausedKey API_AVAILABLE(ios(26.0), macos(26.0), watchos(26.0), tvos(26.0), visionos(26.0)); // returns a boolean.
+
+/* Working with Bookmarks and alias (bookmark) files
  */
 
 typedef NS_OPTIONS(NSUInteger, NSURLBookmarkCreationOptions) {
@@ -505,11 +508,7 @@ typedef NSUInteger NSURLBookmarkFileCreationOptions;
 NS_SWIFT_SENDABLE // Immutable with no mutable subclasses
 API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0))
 // NSURLQueryItem encapsulates a single query name-value pair. The name and value strings of a query name-value pair are not percent encoded. For use with the NSURLComponents queryItems property.
-@interface NSURLQueryItem : NSObject <NSSecureCoding, NSCopying> {
-@private
-    NSString *_name;
-    NSString *_value;
-}
+@interface NSURLQueryItem : NSObject <NSSecureCoding, NSCopying> 
 - (instancetype)initWithName:(NSString *)name value:(nullable NSString *)value NS_DESIGNATED_INITIALIZER;
 + (instancetype)queryItemWithName:(NSString *)name value:(nullable NSString *)value;
 @property (readonly) NSString *name;
@@ -643,13 +642,11 @@ API_AVAILABLE(macos(10.9), ios(7.0), watchos(2.0), tvos(9.0))
 
 @interface NSString (NSURLUtilities)
 
-#if !0
 // Returns a new string made from the receiver by replacing all characters not in the allowedCharacters set with percent encoded characters. UTF-8 encoding is used to determine the correct percent encoded characters. Entire URL strings cannot be percent-encoded. This method is intended to percent-encode a URL component or subcomponent string, NOT the entire URL string. Any characters in allowedCharacters outside of the 7-bit ASCII range are ignored.
 - (nullable NSString *)stringByAddingPercentEncodingWithAllowedCharacters:(NSCharacterSet *)allowedCharacters API_AVAILABLE(macos(10.9), ios(7.0), watchos(2.0), tvos(9.0));
 
 // Returns a new string made from the receiver by replacing all percent encoded sequences with the matching UTF-8 characters.
 @property (nullable, readonly, copy) NSString *stringByRemovingPercentEncoding API_AVAILABLE(macos(10.9), ios(7.0), watchos(2.0), tvos(9.0));
-#endif 
 
 
 - (nullable NSString *)stringByAddingPercentEscapesUsingEncoding:(NSStringEncoding)enc API_DEPRECATED("Use -stringByAddingPercentEncodingWithAllowedCharacters: instead, which always uses the recommended UTF-8 encoding, and which encodes for a specific URL component or subcomponent since each URL component or subcomponent has different rules for what characters are valid.", macos(10.0,10.11), ios(2.0,9.0), watchos(2.0,2.0), tvos(9.0,9.0));

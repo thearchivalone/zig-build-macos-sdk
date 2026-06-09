@@ -122,7 +122,8 @@ CF_ENUM(SSLCipherSuite)
     TLS_ECDHE_PSK_WITH_AES_256_CBC_SHA     =    0xC036,
 
     /* ChaCha20-Poly1305 Cipher Suites for Transport Layer Security (TLS), RFC 7905 */
-    TLS_PSK_WITH_CHACHA20_POLY1305_SHA256  =    0xCCAB,
+    TLS_PSK_WITH_CHACHA20_POLY1305_SHA256       =    0xCCAB,
+    TLS_ECDHE_PSK_WITH_CHACHA20_POLY1305_SHA256 =    0xCCAC,
 
     /* TLS 1.2 addenda, RFC 5246 */
 
@@ -267,12 +268,14 @@ CF_ENUM(SSLCipherSuite)
  * Convenience ciphersuite groups that collate ciphersuites of comparable security
  * properties into a single alias.
  */
+API_AVAILABLE(macos(10.14), ios(12.0), watchos(5.0), tvos(12.0))
 typedef CF_ENUM(int, SSLCiphersuiteGroup) {
     kSSLCiphersuiteGroupDefault,
     kSSLCiphersuiteGroupCompatibility,
     kSSLCiphersuiteGroupLegacy,
     kSSLCiphersuiteGroupATS,
     kSSLCiphersuiteGroupATSCompatibility,
+    kSSLCiphersuiteGroupATSFCP_v2_1 API_AVAILABLE(macos(26.5), ios(26.5), tvos(26.5), watchos(26.5), visionos(26.5)),
 };
 
 #endif	/* !_SECURITY_CIPHERSUITE_H_ */

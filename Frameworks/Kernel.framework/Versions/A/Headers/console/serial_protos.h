@@ -40,6 +40,7 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
+#include <libkern/section_keywords.h>
 
 void serial_keyboard_init(void);
 void serial_keyboard_start(void) __dead2;
@@ -70,8 +71,13 @@ extern uint32_t serialmode;
  * serial. Requires SERIALMODE_INPUT set, ingored otherwise.  */
 #define SERIALMODE_ON_DEMAND  0x40
 
+#if CONFIG_EXCLAVES
+
+
+#endif
+
 extern uint32_t cons_ops_index;
-extern const uint32_t nconsops;
+extern __security_const_early uint32_t nconsops;
 
 /* disable_serial_output disables kprintf() *and* unbuffered panic output. */
 extern bool disable_serial_output;

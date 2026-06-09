@@ -71,7 +71,11 @@
 #define OS_WEAK __attribute__((__weak__))
 #define OS_WEAK_IMPORT __attribute__((__weak_import__))
 #define OS_NOINLINE __attribute__((__noinline__))
+#ifndef __BUILDING_XNU_LIBRARY__
 #define OS_ALWAYS_INLINE __attribute__((__always_inline__))
+#else /* __BUILDING_XNU_LIBRARY__ */
+#define OS_ALWAYS_INLINE
+#endif /* __BUILDING_XNU_LIBRARY__ */
 #define OS_TRANSPARENT_UNION __attribute__((__transparent_union__))
 #define OS_ALIGNED(n) __attribute__((__aligned__((n))))
 #define OS_FORMAT_PRINTF(x, y) __attribute__((__format__(printf,x,y)))
@@ -246,8 +250,12 @@
 #if __has_attribute(__swift_attr__)
 #define OS_SWIFT_UNAVAILABLE_FROM_ASYNC(msg) \
 	__attribute__((__swift_attr__("@_unavailableFromAsync(message: \"" msg "\")")))
+#define OS_SWIFT_NONISOLATED __attribute__((__swift_attr__("nonisolated")))
+#define OS_SWIFT_NONISOLATED_UNSAFE __attribute__((__swift_attr__("nonisolated(unsafe)")))
 #else
 #define OS_SWIFT_UNAVAILABLE_FROM_ASYNC(msg)
+#define OS_SWIFT_NONISOLATED
+#define OS_SWIFT_NONISOLATED_UNSAFE
 #endif
 
 #if __has_attribute(swift_private)
@@ -338,5 +346,6 @@ typedef void (^os_block_t)(void);
 #define OS_HEADER_INDEXABLE __header_indexable
 #define OS_COUNTED_BY(N) __counted_by(N)
 #define OS_SIZED_BY(N) __sized_by(N)
+
 
 #endif // __OS_BASE__

@@ -101,6 +101,8 @@ __BEGIN_DECLS
 #define kIOHIDTransportSPUValue                 "SPU"
 #define kIOHIDTransportBTAACPValue              "BT-AACP"
 #define kIOHIDTransportFIFOValue                "FIFO"
+#define kIOHIDTransportVirtualValue             "Virtual"
+#define kIOHIDTransportInductiveInBandValue     "Inductive In-Band"
 
 
 #define kIOHIDCategoryAutomotiveValue       "Automotive"
@@ -489,6 +491,22 @@ typedef uint8_t IOHIDAccelerationAlgorithmType;
                  clients and converted as needed.
  */
 #define kIOHIDPointerAccelerationMinimumKey  "HIDPointerAccelerationMinimum"
+
+/*!
+ * @define kIOHIDPrimaryTrackpadCanBeDisabledKey
+ * @abstract
+ * Data property that determines whether primary trackpad can be disabled.
+ */
+#define kIOHIDPrimaryTrackpadCanBeDisabledKey "PrimaryTrackpadCanBeDisabled"
+
+/*!
+     @defined    kIOHIDKeyboardFunctionKeyCountKey
+     @abstract   Property which provides the number of available function keys
+     @discussion For keyboards with a function key row, the number of available function keys will likely need to be 
+                    published within the system for consumers to enable functionality that is  dependent on the
+                    number of available keys.
+ */
+#define kIOHIDKeyboardFunctionKeyCountKey "HIDKeyboardFunctionKeyCount"
 
 __END_DECLS
 

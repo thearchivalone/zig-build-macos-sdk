@@ -31,6 +31,13 @@
 
 #if CONFIG_EXCLAVES
 
+#include <kern/thread_call.h>
+#include <libkern/OSTypes.h>
+#include <stdbool.h>
+#include <stdint.h>
+
+#include <IOKit/IOReturn.h>
+
 #ifdef __cplusplus
 
 #include <libkern/c++/OSDictionary.h>
@@ -100,11 +107,57 @@ struct IOExclaveAsyncNotificationUpcallArgs {
 
 enum IOExclaveMapperOperationUpcallType {
 	MapperActivate,
+	MapperDeactivate,
 };
 
 struct IOExclaveMapperOperationUpcallArgs {
 	enum IOExclaveMapperOperationUpcallType type;
 	uint32_t mapperIndex;
+};
+
+enum IOExclaveANEUpcallType {
+	kIOExclaveANEUpcallTypeSetPowerState,
+	kIOExclaveANEUpcallTypeWorkSubmit,
+	kIOExclaveANEUpcallTypeWorkBegin,
+	kIOExclaveANEUpcallTypeWorkEnd,
+};
+
+struct IOExclaveANEUpcallArgs {
+	enum IOExclaveANEUpcallType type;
+	union {
+		struct {
+			uint32_t desired_state;
+		} setpowerstate_args;
+		struct {
+			uint64_t arg0;
+			uint64_t arg1;
+			uint64_t arg2;
+		} work_args;
+	};
+};
+
+enum IOExclaveLPWUpcallType {
+	kIOExclaveLPWUpcallTypeCreateAssertion,
+	kIOExclaveLPWUpcallTypeReleaseAssertion,
+	kIOExclaveLPWUpcallTypeRequestRunMode,
+};
+
+struct IOExclaveLPWUpcallArgs {
+	enum IOExclaveLPWUpcallType type;
+	union {
+		struct {
+			uint64_t id_out;
+			uint64_t owner;
+			uint64_t data;
+			uint64_t types;
+		} createassertion;
+		struct {
+			uint64_t id;
+		} releaseassertion;
+		struct {
+			uint64_t runmode_mask;
+		} requestrunmode;
+	} data;
 };
 
 
@@ -113,6 +166,14 @@ bool IOExclaveTimerUpcallHandler(uint64_t id, struct IOExclaveTimerUpcallArgs *a
 bool IOExclaveLockWorkloop(uint64_t id, bool lock);
 bool IOExclaveAsyncNotificationUpcallHandler(uint64_t id, struct IOExclaveAsyncNotificationUpcallArgs *args);
 bool IOExclaveMapperOperationUpcallHandler(uint64_t id, struct IOExclaveMapperOperationUpcallArgs *args);
+bool IOExclaveANEUpcallHandler(uint64_t id, struct IOExclaveANEUpcallArgs *args, bool *result);
+IOReturn IOExclaveLPWUpcallHandler(struct IOExclaveLPWUpcallArgs *args);
+
+IOReturn IOExclaveLPWCreateAssertion(uint64_t *id_out, const char *desc);
+IOReturn IOExclaveLPWReleaseAssertion(uint64_t id);
+
+
+void IOExclavesFullWake(const char * reason);
 
 /* Test support */
 
@@ -121,6 +182,8 @@ struct IOExclaveTestSignalInterruptParam {
 	uint64_t index;
 };
 void IOExclaveTestSignalInterrupt(thread_call_param_t, thread_call_param_t);
+
+void exclaves_wait_for_cpu_init(void);
 
 #ifdef __cplusplus
 } /* extern "C" */

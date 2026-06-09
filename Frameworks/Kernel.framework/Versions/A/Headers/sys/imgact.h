@@ -132,7 +132,7 @@ struct image_params {
 	uint64_t ip_dyld_fsid;
 	uint64_t ip_dyld_fsobjid;
 	uint64_t ip_inherited_jop_pid;
-	unsigned int    ip_simulator_binary;    /* simulator binary flags */
+	unsigned int    ip_flags2;              /* extended image flags */
 };
 
 /*
@@ -146,23 +146,29 @@ struct image_params {
 #define IMGPF_SPAWN             0x00000010      /* spawn (without setexec) */
 #define IMGPF_DISABLE_ASLR      0x00000020      /* disable ASLR */
 #define IMGPF_ALLOW_DATA_EXEC   0x00000040      /* forcibly disallow data execution */
+#if XNU_TARGET_OS_OSX
+#define IMGPF_3P_PLUGINS        0x00000080      /* this platform binary might load third party plugins */
+#endif /* XNU_TARGET_OS_OSX */
 #define IMGPF_EXEC              0x00000100      /* exec */
 #define IMGPF_HIGH_BITS_ASLR    0x00000200      /* randomize high bits of ASLR slide */
 #define IMGPF_IS_64BIT_DATA     0x00000400      /* exec to a 64Bit register state */
 #define IMGPF_DRIVER            0x00000800      /* exec of a driver binary (no LC_MAIN) */
-#define IMGPF_RESLIDE           0x00001000     /* reslide the shared cache */
+#define IMGPF_RESLIDE           0x00001000      /* reslide the shared cache */
 #define IMGPF_PLUGIN_HOST_DISABLE_A_KEYS  0x00002000     /* process hosts plugins, disable ptr auth A keys */
 #define IMGPF_HW_TPRO           0x00004000      /* HW support for read-only/read-write trusted paths  */
+#define IMGPF_HARDENED_HEAP     0x00008000      /* enable hardened-heap for the process */
 #define IMGPF_ROSETTA           0x10000000      /* load rosetta runtime */
 #define IMGPF_ALT_ROSETTA       0x20000000      /* load alternative rosetta runtime */
 #define IMGPF_NOJOP             0x80000000
 
+#if __x86_64__
 /*
  * Simulator binary flags
  */
-#define IMGPF_SB_DEFAULT         0               /* Default value, did not check if it is a simulator binary */
-#define IMGPF_SB_TRUE            1               /* Binary is a simulator binary */
-#define IMGPF_SB_FALSE           2               /* Binary is not a simulator binary */
-
+#define IMGPF2_SB_MASK                          0x00000003      /* Space for IMGPF2_SB tristate */
+#define IMGPF2_SB_DEFAULT                       0x00000000      /* Default value, did not check if it is a simulator binary */
+#define IMGPF2_SB_TRUE                          0x00000001      /* Binary is a simulator binary */
+#define IMGPF2_SB_FALSE                         0x00000002      /* Binary is not a simulator binary */
+#endif /* __x86_64__ */
 
 #endif  /* !_SYS_IMGACT */

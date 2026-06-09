@@ -427,7 +427,7 @@
 /* #undef HAVE_NETINET6_IP6_VAR_H */
 
 /* Define to 1 if you have the <netinet6/nd6.h> header file. */
-/* #undef HAVE_NETINET6_ND6_H */
+#define HAVE_NETINET6_ND6_H 1
 
 /* Define to 1 if you have the <netinet6/tcp6_fsm.h> header file. */
 /* #undef HAVE_NETINET6_TCP6_FSM_H */
@@ -1259,10 +1259,10 @@
 #define NETSNMP_CAN_DO_CRYPTO 1
 
 /* sysctl works to get boottime, etc... */
-#define NETSNMP_CAN_USE_SYSCTL 1
+/* #undef NETSNMP_CAN_USE_SYSCTL */
 
 /* configure options specified */
-#define NETSNMP_CONFIGURE_OPTIONS " '--prefix=/usr' '--mandir=/usr/share/man' '--infodir=/usr/share/info' '--disable-dependency-tracking' '--sysconfdir=/etc' '--with-install-prefix=/AppleInternal/Library/BuildRoots/0032d1ee-80fd-11ee-8227-6aecfccc70fe/Library/Caches/com.apple.xbs/Binaries/net_snmp/install/TempContent/Root' '--with-default-snmp-version=2' '--with-persistent-directory=/var/db/net-snmp' '--with-defaults' '--without-rpm' '--with-sys-contact=postmaster@example.com' '--with-mib-modules=host ucd-snmp/diskio ucd-snmp/loadave ' '--disable-static' '--enable-ipv6' '--without-perl-modules' '--disable-perl-cc-checks' '--disable-embedded-perl' '--datarootdir=/usr/share' '--with-openssl=/usr/libressl/' '--without-kmem-usage' 'CC=/AppleInternal/Library/BuildRoots/0032d1ee-80fd-11ee-8227-6aecfccc70fe/Applications/Xcode.app/Contents/Developer/Toolchains/OSX14.2.xctoolchain/usr/bin/cc' 'CFLAGS=-arch arm64e -arch x86_64 -g -Os -pipe -DBUILD=177 -DMACOSX_DEPLOYMENT_TARGET=14.2 -F/AppleInternal/Library/BuildRoots/0032d1ee-80fd-11ee-8227-6aecfccc70fe/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.Internal.sdk/System/Library/PrivateFrameworks/ -F/AppleInternal/Library/BuildRoots/0032d1ee-80fd-11ee-8227-6aecfccc70fe/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.Internal.sdk/System/Library/Frameworks/ -iwithsysroot /usr/local/libressl/include -L/AppleInternal/Library/BuildRoots/0032d1ee-80fd-11ee-8227-6aecfccc70fe/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.Internal.sdk/usr/local/libressl/lib' 'LDFLAGS=-arch arm64e -arch x86_64            '"
+#define NETSNMP_CONFIGURE_OPTIONS " '--prefix=/usr' '--mandir=/usr/share/man' '--infodir=/usr/share/info' '--disable-dependency-tracking' '--sysconfdir=/etc' '--with-install-prefix=/AppleInternal/Library/BuildRoots/4~CNqOugANZdQ7O9f_WXjqjoBfCMnyQvFLsyf-nqI/Library/Caches/com.apple.xbs/TemporaryDirectory.Cgr78q/Binaries/net_snmp/install/TempContent/Root' '--with-default-snmp-version=2' '--with-persistent-directory=/var/db/net-snmp' '--with-defaults' '--without-rpm' '--with-sys-contact=postmaster@example.com' '--with-mib-modules=host ucd-snmp/diskio ucd-snmp/loadave ' '--disable-static' '--enable-ipv6' '--without-perl-modules' '--disable-perl-cc-checks' '--disable-embedded-perl' '--datarootdir=/usr/share' '--with-openssl=/usr/libressl/' '--without-kmem-usage' 'CC=/AppleInternal/Library/BuildRoots/4~CNqOugANZdQ7O9f_WXjqjoBfCMnyQvFLsyf-nqI/Applications/Xcode.app/Contents/Developer/Toolchains/OSX26.5.xctoolchain/usr/bin/cc' 'CFLAGS=-arch arm64e -arch x86_64 -g -Os -pipe -DBUILD=177 -DMACOSX_DEPLOYMENT_TARGET=26.5 -F/AppleInternal/Library/BuildRoots/4~CNqOugANZdQ7O9f_WXjqjoBfCMnyQvFLsyf-nqI/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.Internal.sdk/System/Library/PrivateFrameworks/ -F/AppleInternal/Library/BuildRoots/4~CNqOugANZdQ7O9f_WXjqjoBfCMnyQvFLsyf-nqI/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.Internal.sdk/System/Library/Frameworks/ -iwithsysroot /usr/local/libressl/include -L/AppleInternal/Library/BuildRoots/4~CNqOugANZdQ7O9f_WXjqjoBfCMnyQvFLsyf-nqI/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.5.Internal.sdk/usr/local/libressl/lib' 'LDFLAGS=-arch arm64e -arch x86_64            '"
 
 /* default location to look for mibs to load using the above tokens and/or
    those in the MIBS envrionment variable */
@@ -1669,7 +1669,7 @@
 #define NETSNMP_MAX_PERSISTENT_BACKUPS 10
 
 /* define the system type include file here */
-#define NETSNMP_SYSTEM_INCLUDE_FILE "net-snmp/system/darwin23.h"
+#define NETSNMP_SYSTEM_INCLUDE_FILE "net-snmp/system/darwin.h"
 
 /* define the machine (cpu) type include file here */
 #define NETSNMP_MACHINE_INCLUDE_FILE "net-snmp/machine/generic.h"

@@ -14,6 +14,23 @@
 XPC_ASSUME_NONNULL_BEGIN
 __BEGIN_DECLS
 
+/*!
+ * @define XPC_TYPE_SESSION
+ *
+ * @discussion
+ * Sessions represent a stateful connection between a client and a service. When either end of the connection
+ * disconnects, the entire session will be invalidated. In this case the system will make no attempt to
+ * reestablish the connection or relaunch the service.
+ *
+ * Clients can initiate a session with a service that accepts xpc_connection_t connections but session
+ * semantics will be maintained.
+ *
+ * Sessions can be created in an active or inactive state. They must be
+ * activated and subsequently cancelled before they can be released.
+ *
+ */
+OS_OBJECT_DECL_SENDABLE_CLASS(xpc_session);
+
 #pragma mark Constants
 /*!
  * @typedef xpc_session_create_flags_t
@@ -94,13 +111,14 @@ xpc_session_copy_description(xpc_session_t session);
  * This will fail if the specified XPC service is either not found or is
  * unavailable.
  */
-API_AVAILABLE(macos(13.0), ios(16.0), tvos(16.0), watchos(9.0))
+API_AVAILABLE(macos(13.0), macCatalyst(16.0))
+API_UNAVAILABLE(ios, tvos, watchos)
 XPC_EXPORT XPC_SWIFT_NOEXPORT XPC_RETURNS_RETAINED XPC_WARN_RESULT
 xpc_session_t _Nullable
 xpc_session_create_xpc_service(const char *name,
 		dispatch_queue_t _Nullable target_queue,
 		xpc_session_create_flags_t flags,
-		xpc_rich_error_t _Nullable * _Nullable error_out);
+		xpc_rich_error_t _Nullable XPC_GIVES_REFERENCE * _Nullable error_out);
 
 /*!
  * @function xpc_session_create_mach_service
@@ -124,9 +142,6 @@ xpc_session_create_xpc_service(const char *name,
  * An out-parameter that, if set and in the event of an error, will point to an
  * {@link xpc_rich_error_t} describing the details of any errors that occurred.
  *
- * @param cancel_handler
- * The cancel handler block that will be executed when this session is canceled.
- *
  * @result
  * On success this returns a new session object. The returned session is
  * activated by default and can be used to send messages. The caller is
@@ -139,13 +154,14 @@ xpc_session_create_xpc_service(const char *name,
  * bootstrap or is otherwise unavailable.
  *
  */
-API_AVAILABLE(macos(13.0), ios(16.0), tvos(16.0), watchos(9.0))
+API_AVAILABLE(macos(13.0), macCatalyst(16.0))
+API_UNAVAILABLE(ios, tvos, watchos)
 XPC_EXPORT XPC_SWIFT_NOEXPORT XPC_RETURNS_RETAINED XPC_WARN_RESULT
 xpc_session_t _Nullable
 xpc_session_create_mach_service(const char *mach_service,
 		dispatch_queue_t _Nullable target_queue,
 		xpc_session_create_flags_t flags,
-		xpc_rich_error_t _Nullable * _Nullable error_out);
+		xpc_rich_error_t _Nullable XPC_GIVES_REFERENCE * _Nullable error_out);
 
 #pragma mark Session Configuration
 /*!
@@ -231,8 +247,8 @@ xpc_session_set_target_queue(xpc_session_t session,
  *
  * @discussion
  * xpc_session_activate must not be called on a session that has been already
- * activated. Releasing the last reference on an inactive session that was
- * created with an xpc_session_create*() will trigger an API misuse crash.
+ * activated. Releasing the last reference on an inactive session or an
+ * active session that has not been cancelled will trigger an API misuse crash.
  *
  * If activation fails, the session is automatically cancelled. 
  */
@@ -240,7 +256,7 @@ API_AVAILABLE(macos(13.0), ios(16.0), tvos(16.0), watchos(9.0))
 XPC_EXPORT XPC_SWIFT_NOEXPORT
 bool
 xpc_session_activate(xpc_session_t session,
-		xpc_rich_error_t _Nullable * _Nullable error_out);
+		xpc_rich_error_t _Nullable XPC_GIVES_REFERENCE * _Nullable error_out);
 
 /*!
  * @function xpc_session_cancel
@@ -253,8 +269,9 @@ xpc_session_activate(xpc_session_t session,
  * The session object to cancel.
  *
  * @discussion
- * Session must have been activated to be canceled. Cancellation is asynchronous
- * and non-preemptive.
+ * Session must have been activated to be cancelled and must be cancelled
+ * before the last reference can be released. Cancellation is asynchronous and
+ * non-preemptive.
  */
 API_AVAILABLE(macos(13.0), ios(16.0), tvos(16.0), watchos(9.0))
 XPC_EXPORT XPC_SWIFT_NOEXPORT
@@ -333,7 +350,7 @@ API_AVAILABLE(macos(13.0), ios(16.0), tvos(16.0), watchos(9.0))
 XPC_EXPORT XPC_SWIFT_NOEXPORT XPC_RETURNS_RETAINED XPC_WARN_RESULT
 xpc_object_t _Nullable
 xpc_session_send_message_with_reply_sync(xpc_session_t session,
-		xpc_object_t message, xpc_rich_error_t _Nullable * _Nullable error_out);
+		xpc_object_t message, xpc_rich_error_t _Nullable XPC_GIVES_REFERENCE * _Nullable error_out);
 
 /*!
  * @function xpc_session_send_message_with_reply_async
@@ -366,6 +383,76 @@ XPC_EXPORT XPC_SWIFT_NOEXPORT
 void
 xpc_session_send_message_with_reply_async(xpc_session_t session,
 		xpc_object_t message, xpc_session_reply_handler_t reply_handler);
+
+/*!
+ * @function xpc_session_set_peer_code_signing_requirement
+ * Requires that the session peer satisfies a code signing requirement.
+ *
+ * @param session
+ * The session object which is to be modified.
+ *
+ * @param requirement
+ * The code signing requirement to be satisfied by the peer. It is safe to
+ * deallocate the requirement string after calling this function.
+ *
+ * @result
+ * 0 on success, non-zero on error
+ *
+ * @discussion
+ * This function will return an error promptly if the code signing requirement
+ * string is invalid.
+ *
+ * It is a programming error to call `xpc_session_set_peer_*requirement` more
+ * than once per session.
+ *
+ * All messages received on this session will be checked to ensure they come
+ * from a peer who satisfies the code signing requirement. When message or a
+ * reply is received on the session and the peer does not satisfy the
+ * requirement the session will be cancelled. A rich error describing the peer
+ * code signing error will be passed to the cancellation handler. For
+ * `xpc_session_send_message_with_reply_*` NULL will be returned instead of
+ * reply, with `error_out` pointing to that rich error.
+ *
+ * @see https://developer.apple.com/documentation/technotes/tn3127-inside-code-signing-requirements
+ */
+API_AVAILABLE(macos(14.4))
+API_UNAVAILABLE(ios, tvos, watchos)
+XPC_EXPORT XPC_NONNULL_ALL XPC_WARN_RESULT
+int
+xpc_session_set_peer_code_signing_requirement(xpc_session_t session, const char *requirement);
+
+/*!
+ * @function xpc_session_set_peer_requirement
+ * Requires that the session peer satisfies a requirement.
+ *
+ * @param session
+ * The session object which is to be modified. Must be inactive.
+ *
+ * @param requirement
+ * The requirement to be satisfied by the peer. It will be retained by XPC.
+ *
+ * @discussion
+ * It is a programming error to call `xpc_session_set_peer_*requirement` more
+ * than once per session.
+ *
+ * All messages received on this session will be checked to ensure they come
+ * from a peer who satisfies the requirement. When a reply is expected on the
+ * session and the peer does not satisfy the requirement, the session will be
+ * canceled with cancellation handler called with a rich error describing the
+ * peer code signing error. For `xpc_session_send_message_with_reply_sync` NULL
+ * will be returned instead of reply, with `error_out` (if set) pointing to the
+ * rich error describing the peer code signing error.
+ */
+API_AVAILABLE(macos(26.0), ios(26.0), tvos(26.0), watchos(26.0))
+
+XPC_EXPORT XPC_SWIFT_NOEXPORT XPC_NONNULL_ALL
+void
+xpc_session_set_peer_requirement(xpc_session_t session, xpc_peer_requirement_t requirement);
+
+/* This is included for compatibility and should not be used in new code */
+#define XPC_TYPE_SESSION (&_xpc_type_session)
+XPC_EXPORT
+XPC_TYPE(_xpc_type_session);
 
 __END_DECLS
 XPC_ASSUME_NONNULL_END

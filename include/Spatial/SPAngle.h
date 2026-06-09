@@ -40,6 +40,9 @@ double SPAngleGetDegrees(SPAngle angle)
 __API_AVAILABLE(macos(13.0), ios(16.0), watchos(9.0), tvos(16.0));
 
 /// Returns @p true if both rotation angles are equal.
+///
+/// Note that this function compares the raw value of each angle and doesn't
+/// normalize the values. For example, 360° does **not** equal 0°.
 SPATIAL_INLINE
 SPATIAL_OVERLOADABLE
 bool SPAngleEqualToAngle(SPAngle angle1, SPAngle angle2)
@@ -342,7 +345,7 @@ double SPAngleTanh(SPAngle angle) {
 // MARK: - Normalization
 
 /*!
- @abstract Returns the specified angle normalized to [-180°, 180.0°).
+ @abstract Returns the specified angle normalized to `(-π, π]` radians (`(-180°, 180.0°]`).
  
  @param angle The source angle.
  @returns  The normalized angle.
@@ -355,22 +358,23 @@ __API_AVAILABLE(macos(14.0), ios(17.0), watchos(10.0), tvos(17.0));
 SPATIAL_REFINED_FOR_SWIFT
 SPATIAL_OVERLOADABLE
 SPAngle SPAngleNormalize(SPAngle angle) {
-    
-    double radians = angle.radians;
 
-#ifdef __cplusplus
-    radians = ::__tg_atan2(::__tg_sin(radians), ::__tg_cos(radians));
-#else
-    radians = atan2(sin(radians), cos(radians));
-#endif
-    
+        double radians = fmod(angle.radians, M_PI * 2);
+
+        if (radians <= -M_PI) {
+            radians += M_PI * 2;
+        }
+        else if (radians > M_PI) {
+            radians -= M_PI * 2;
+        }
+
     return SPAngleMakeWithRadians(radians);
 }
 
 // MARK: - Negation
 
 /*!
- @abstract Returns the  additive inverse of the specified angle.
+ @abstract Returns the additive inverse of the specified angle.
  
  @param angle The source angle.
  @returns  The normalized angle.
@@ -385,5 +389,6 @@ SPATIAL_OVERLOADABLE
 SPAngle SPAngleNegate(SPAngle angle) {
     return SPAngleMakeWithRadians(-angle.radians);
 }
+
 
 #endif /* Spatial_SPAngle_h */

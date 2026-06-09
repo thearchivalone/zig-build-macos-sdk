@@ -9,6 +9,8 @@
 #import <Metal/MTLDefines.h>
 #import <Metal/MTLPixelFormat.h>
 #import <Metal/MTLResource.h>
+#import <Metal/MTLTensor.h>
+#import <Metal/MTLGPUAddress.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -63,6 +65,25 @@ API_AVAILABLE(macos(10.11), ios(8.0))
  */
 - (nullable id <MTLTexture>)newTextureWithDescriptor:(MTLTextureDescriptor*)descriptor offset:(NSUInteger)offset bytesPerRow:(NSUInteger)bytesPerRow API_AVAILABLE(macos(10.13), ios(8.0));
 
+/// Creates a tensor that shares storage with this buffer.
+///
+/// `offset` must be 0 when ``MTLTensorDescriptor/usage`` contains ``MTLTensorUsage/MTLTensorUsageMachineLearning``.
+///
+/// When ``MTLTensorDescriptor/dataType`` is a sub-byte ``MTLTensorDataType``, `offset` must be aligned to 128 bytes.
+/// Although only required for sub-byte types, applying 128-byte alignment for all ``MTLTensorDataType``
+/// values improves performance.
+///
+/// See ``MTLTensorDescriptor`` for more information.
+///
+/// - Parameters:
+///   - descriptor: A description of the properties for the new tensor.
+///   - offset: Offset into the buffer at which the data of the tensor begins.
+///   - error: If an error occurs during creation, Metal populates this parameter to provide you information about it.
+/// - Returns: The created ``MTLTensor`` instance, or `nil` if the function failed.
+- (nullable id <MTLTensor>)newTensorWithDescriptor:(MTLTensorDescriptor *)descriptor
+                                            offset:(NSUInteger)offset
+                                             error:(__autoreleasing NSError * _Nullable * _Nullable)error API_AVAILABLE(macos(26.0), ios(26.0));
+
 /*!
  @method addDebugMarker:range:
  @abstract Adds a marker to a specific range in the buffer.
@@ -96,7 +117,14 @@ API_AVAILABLE(macos(10.11), ios(8.0))
  @property gpuAddress
  @abstract Represents the GPU virtual address of a buffer resource
  */
-@property (readonly) uint64_t gpuAddress API_AVAILABLE(macos(13.0), ios(16.0));
+@property (readonly) MTLGPUAddress gpuAddress API_AVAILABLE(macos(13.0), ios(16.0));
+
+/*!
+ @property sparseBufferTier
+ @abstract Query support tier for sparse buffers.
+ */
+@property (readonly) MTLBufferSparseTier sparseBufferTier API_AVAILABLE(macos(26.0), ios(26.0));
+
 
 @end
 NS_ASSUME_NONNULL_END

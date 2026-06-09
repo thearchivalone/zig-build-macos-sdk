@@ -136,6 +136,7 @@ void
 dispatch_workloop_set_autorelease_frequency(dispatch_workloop_t workloop,
 		dispatch_autorelease_frequency_t frequency);
 
+#ifdef __APPLE__
 /*!
   * @function dispatch_workloop_set_os_workgroup
   *
@@ -144,6 +145,10 @@ dispatch_workloop_set_autorelease_frequency(dispatch_workloop_t workloop,
   *
   * The worker thread will be a member of the specified os_workgroup_t while executing
   * work items submitted to the workloop.
+  *
+  * Using both dispatch_workloop_set_scheduler_priority() and
+  * dispatch_workloop_set_os_workgroup() will prefer scheduling policies
+  * from the workgroup, if they exist.
   *
   * @param workloop
   * The dispatch workloop to modify.
@@ -163,6 +168,7 @@ DISPATCH_REFINED_FOR_SWIFT
 void
 dispatch_workloop_set_os_workgroup(dispatch_workloop_t workloop,
 		os_workgroup_t workgroup);
+#endif
 
 __END_DECLS
 

@@ -1,7 +1,7 @@
 /*
  NSSharingService.h
  Application Kit
- Copyright (c) 2011-2023, Apple Inc.
+ Copyright (c) 2011-2024, Apple Inc.
  All rights reserved.
  */
 
@@ -12,7 +12,7 @@
 #import <Foundation/NSObject.h>
 #import <Foundation/NSArray.h>
 
-@class NSString, NSImage, NSMenuItem, NSView, NSError, NSWindow;
+@class NSString, NSImage, NSMenuItem, NSView, NSError, NSWindow, NSSharingCollaborationModeRestriction;
 @class CKShare, CKContainer;
 
 NS_HEADER_AUDIT_BEGIN(nullability, sendability)
@@ -175,9 +175,11 @@ typedef NS_ENUM(NSInteger, NSSharingContentScope) {
 - (nullable NSWindow *)sharingService:(NSSharingService *)sharingService sourceWindowForShareItems:(NSArray *)items sharingContentScope:(NSSharingContentScope *)sharingContentScope NS_SWIFT_UI_ACTOR;
 
 /**
- The following method is invoked when the service is performed and wants to display its contents in a popover. The delegate should return the view that will act as the anchor of the popover, along with the target rectangle within the bounds of that view and preferred edge of that rectangle for the popover to appear. The delegate may also return nil, indicating that there is no anchoring view currently available, in which case the service may attempt to display the service via some other means.
+ The method invoked when the service is performed and wants to display its contents in a popover.
  
- The service named NSSharingServiceNameCloudSharing prefers to display itself using a popover anchored to an "Add People" or "Share" button. If no such button is available or visible, return nil.
+ The delegate should return the view that will act as the anchor of the popover, along with the target rectangle within the bounds of that view and preferred edge of that rectangle for the popover to appear. The delegate may also return `nil`, indicating that there is no anchoring view currently available, in which case the service may attempt to display the service via some other means.
+ 
+ The service named `NSSharingServiceNameCloudSharing` prefers to display itself using a popover anchored to an "Add People" or "Share" button. If no such button is available or visible, return `nil`.
  */
 - (nullable NSView *)anchoringViewForSharingService:(NSSharingService *)sharingService showRelativeToRect:(NSRect *)positioningRect preferredEdge:(NSRectEdge *)preferredEdge NS_SWIFT_UI_ACTOR;
 
@@ -312,6 +314,12 @@ API_AVAILABLE(macos(10.8))
  Sent when the user has selected a service and before it is executed. Service will be nil if the picker was dismissed.
  */
 - (void)sharingServicePicker:(NSSharingServicePicker *)sharingServicePicker didChooseSharingService:(nullable NSSharingService *)service;
+
+/**
+ Used to specify the case where the share picker should not support some modes of sharing even if they are supported by the items being shared.
+ Disabling all possible modes at the same time is not supported behavior.
+ */
+- (nullable NSArray<NSSharingCollaborationModeRestriction *> *)sharingServicePickerCollaborationModeRestrictions:(NSSharingServicePicker *)sharingServicePicker API_AVAILABLE(macos(15.0)) API_UNAVAILABLE(ios, watchos, tvos);
 
 @end
 

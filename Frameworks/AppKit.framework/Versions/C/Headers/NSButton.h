@@ -1,7 +1,7 @@
 /*
 	NSButton.h
 	Application Kit
-	Copyright (c) 1994-2023, Apple Inc.
+	Copyright (c) 1994-2024, Apple Inc.
 	All rights reserved.
 */
 
@@ -10,6 +10,7 @@
 #import <AppKit/NSUserInterfaceValidation.h>
 #import <AppKit/NSUserInterfaceCompression.h>
 #import <AppKit/AppKitDefines.h>
+#import <AppKit/NSTintProminence.h>
 
 NS_HEADER_AUDIT_BEGIN(nullability, sendability)
 APPKIT_API_UNAVAILABLE_BEGIN_MACCATALYST
@@ -119,6 +120,8 @@ APPKIT_API_UNAVAILABLE_BEGIN_MACCATALYST
 /*! Applies a tint color to template image and text content, in combination with other theme-appropriate effects. Only applicable to borderless buttons. A nil value indicates the standard set of effects without color modification. The default value is nil. Non-template images and attributed string values are not affected by the contentTintColor. */
 @property (nullable, copy) NSColor *contentTintColor API_AVAILABLE(macos(10.14));
 
+/*! The tint prominence of the button. Use tint prominence to gently suggest a hierarchy when multiple buttons perform similar actions. A button with primary tint prominence suggests the most preferred option, while secondary prominence indicates a reasonable alternative. See ``NSTintProminence`` for a list of possible values. */
+@property NSTintProminence tintProminence API_AVAILABLE(macos(26.0));
 
 #pragma mark Configuring Button Images
 
@@ -140,7 +143,7 @@ APPKIT_API_UNAVAILABLE_BEGIN_MACCATALYST
 /*!
  Specifies a combination of point size, weight, and scale to use when sizing and displaying symbol images. If a symbol configuration isn't provided, the symbol is matched to the button's `font` property. The default value is nil.
  */
-@property (nullable, copy) NSImageSymbolConfiguration *symbolConfiguration API_AVAILABLE(macos(11));
+@property (nullable, copy) NSImageSymbolConfiguration *symbolConfiguration API_AVAILABLE(macos(11.0));
 
 #pragma mark Managing Button State
 
@@ -172,6 +175,8 @@ APPKIT_API_UNAVAILABLE_BEGIN_MACCATALYST
 - (void)compressWithPrioritizedCompressionOptions:(NSArray<NSUserInterfaceCompressionOptions *> *)prioritizedOptions API_AVAILABLE(macos(10.13));
 - (NSSize)minimumSizeWithPrioritizedCompressionOptions:(NSArray<NSUserInterfaceCompressionOptions *> *)prioritizedOptions API_AVAILABLE(macos(10.13));
 @property (readonly, copy) NSUserInterfaceCompressionOptions *activeCompressionOptions API_AVAILABLE(macos(10.13));
+
+@property NSControlBorderShape borderShape API_AVAILABLE(macos(26.0));
 
 @end
 

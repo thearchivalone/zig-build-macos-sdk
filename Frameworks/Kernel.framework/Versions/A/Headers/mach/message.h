@@ -71,8 +71,10 @@
 #ifndef _MACH_MESSAGE_H_
 #define _MACH_MESSAGE_H_
 
+#include <stddef.h>
 #include <stdint.h>
 #include <machine/limits.h>
+#include <machine/types.h> /* user_addr_t */
 #include <mach/port.h>
 #include <mach/boolean.h>
 #include <mach/kern_return.h>
@@ -81,6 +83,9 @@
 #include <sys/cdefs.h>
 #include <sys/appleapiopts.h>
 #include <Availability.h>
+#if __has_feature(ptrauth_calls)
+#include <ptrauth.h>
+#endif
 
 /*
  *  The timeout mechanism uses mach_msg_timeout_t values,
@@ -281,6 +286,8 @@ typedef unsigned int mach_msg_descriptor_type_t;
 
 #define MACH_MSG_DESCRIPTOR_MAX MACH_MSG_GUARDED_PORT_DESCRIPTOR
 
+#define __ipc_desc_sign(d)
+
 #pragma pack(push, 4)
 
 typedef struct {
@@ -289,18 +296,20 @@ typedef struct {
 	unsigned int                  pad3 : 24;
 	mach_msg_descriptor_type_t    type : 8;
 } mach_msg_type_descriptor_t;
+xnu_static_assert_struct_size(mach_msg_type_descriptor_t, 12);
 
 typedef struct {
-	mach_port_t                   name;
-#if !(defined(KERNEL) && defined(__LP64__))
-// Pad to 8 bytes everywhere except the K64 kernel where mach_port_t is 8 bytes
-	mach_msg_size_t               pad1;
-#endif
+	union {
+		mach_port_t __ipc_desc_sign("port") name;
+		mach_port_t           kext_name;
+		mach_port_t           u_name;
+	};
 	unsigned int                  pad2 : 16;
 	mach_msg_type_name_t          disposition : 8;
 	mach_msg_descriptor_type_t    type : 8;
-	uint32_t          pad_end;
+	uint32_t                      pad_end;
 } mach_msg_port_descriptor_t;
+xnu_static_assert_struct_size_kernel_user(mach_msg_port_descriptor_t, 16, 12);
 
 
 typedef struct {
@@ -311,6 +320,7 @@ typedef struct {
 	unsigned int                  pad1: 8;
 	mach_msg_descriptor_type_t    type: 8;
 } mach_msg_ool_descriptor32_t;
+xnu_static_assert_struct_size(mach_msg_ool_descriptor32_t, 12);
 
 typedef struct {
 	uint64_t                      address;
@@ -320,9 +330,14 @@ typedef struct {
 	mach_msg_descriptor_type_t    type: 8;
 	mach_msg_size_t               size;
 } mach_msg_ool_descriptor64_t;
+xnu_static_assert_struct_size(mach_msg_ool_descriptor64_t, 16);
 
 typedef struct {
-	void*                         address;
+	union {
+		void *__ipc_desc_sign("address") address;
+		void                 *kext_address;
+		user_addr_t           u_address;
+	};
 #if !defined(__LP64__)
 	mach_msg_size_t               size;
 #endif
@@ -337,6 +352,7 @@ typedef struct {
 	uint32_t          pad_end;
 #endif
 } mach_msg_ool_descriptor_t;
+xnu_static_assert_struct_size_kernel_user64_user32(mach_msg_ool_descriptor_t, 16, 16, 12);
 
 typedef struct {
 	uint32_t                      address;
@@ -346,6 +362,7 @@ typedef struct {
 	mach_msg_type_name_t          disposition : 8;
 	mach_msg_descriptor_type_t    type : 8;
 } mach_msg_ool_ports_descriptor32_t;
+xnu_static_assert_struct_size(mach_msg_ool_descriptor32_t, 12);
 
 typedef struct {
 	uint64_t                      address;
@@ -355,9 +372,14 @@ typedef struct {
 	mach_msg_descriptor_type_t    type : 8;
 	mach_msg_size_t               count;
 } mach_msg_ool_ports_descriptor64_t;
+xnu_static_assert_struct_size(mach_msg_ool_ports_descriptor64_t, 16);
 
 typedef struct {
-	void*                         address;
+	union {
+		void *__ipc_desc_sign("port_array") address;
+		void                 *kext_address;
+		user_addr_t           u_address;
+	};
 #if !defined(__LP64__)
 	mach_msg_size_t               count;
 #endif
@@ -372,6 +394,7 @@ typedef struct {
 	uint32_t          pad_end;
 #endif
 } mach_msg_ool_ports_descriptor_t;
+xnu_static_assert_struct_size_kernel_user64_user32(mach_msg_ool_ports_descriptor_t, 16, 16, 12);
 
 typedef struct {
 	uint32_t                      context;
@@ -380,6 +403,7 @@ typedef struct {
 	mach_msg_type_name_t          disposition : 8;
 	mach_msg_descriptor_type_t    type : 8;
 } mach_msg_guarded_port_descriptor32_t;
+xnu_static_assert_struct_size(mach_msg_guarded_port_descriptor32_t, 12);
 
 typedef struct {
 	uint64_t                      context;
@@ -388,19 +412,23 @@ typedef struct {
 	mach_msg_descriptor_type_t    type : 8;
 	mach_port_name_t              name;
 } mach_msg_guarded_port_descriptor64_t;
+xnu_static_assert_struct_size(mach_msg_guarded_port_descriptor64_t, 16);
 
 typedef struct {
-	mach_port_t                   name;
-#if !defined(__LP64__)
-	uint32_t                      pad1;
-#endif
+	union {
+		mach_port_t __ipc_desc_sign("guarded_port") name;
+		mach_port_t           kext_name;
+		mach_port_context_t   u_context;
+	};
 	mach_msg_guard_flags_t        flags : 16;
 	mach_msg_type_name_t          disposition : 8;
 	mach_msg_descriptor_type_t    type : 8;
-#if defined(__LP64__)
-	uint32_t                      pad_end;
-#endif /* defined(__LP64__) */
+	union {
+		uint32_t              pad_end;
+		mach_port_name_t      u_name;
+	};
 } mach_msg_guarded_port_descriptor_t;
+xnu_static_assert_struct_size_kernel_user64_user32(mach_msg_guarded_port_descriptor_t, 16, 16, 12);
 
 /*
  * LP64support - This union definition is not really
@@ -408,7 +436,7 @@ typedef struct {
  * are of the same size in that environment.
  */
 #if defined(__LP64__) && defined(KERNEL)
-typedef union{
+typedef union {
 	mach_msg_port_descriptor_t            port;
 	mach_msg_ool_descriptor32_t           out_of_line;
 	mach_msg_ool_ports_descriptor32_t     ool_ports;
@@ -416,7 +444,7 @@ typedef union{
 	mach_msg_guarded_port_descriptor32_t  guarded_port;
 } mach_msg_descriptor_t;
 #else
-typedef union{
+typedef union {
 	mach_msg_port_descriptor_t            port;
 	mach_msg_ool_descriptor_t             out_of_line;
 	mach_msg_ool_ports_descriptor_t       ool_ports;
@@ -424,10 +452,12 @@ typedef union{
 	mach_msg_guarded_port_descriptor_t    guarded_port;
 } mach_msg_descriptor_t;
 #endif
+xnu_static_assert_struct_size_kernel_user64_user32(mach_msg_descriptor_t, 16, 16, 12);
 
 typedef struct {
 	mach_msg_size_t msgh_descriptor_count;
 } mach_msg_body_t;
+xnu_static_assert_struct_size(mach_msg_body_t, 4);
 
 #define MACH_MSG_BODY_NULL            ((mach_msg_body_t *) 0)
 #define MACH_MSG_DESCRIPTOR_NULL      ((mach_msg_descriptor_t *) 0)
@@ -440,6 +470,7 @@ typedef struct {
 	mach_port_name_t              msgh_voucher_port;
 	mach_msg_id_t                 msgh_id;
 } mach_msg_header_t;
+xnu_static_assert_struct_size_kernel_user(mach_msg_header_t, 32, 24);
 
 
 #define msgh_reserved                 msgh_voucher_port
@@ -449,6 +480,7 @@ typedef struct {
 	mach_msg_header_t             header;
 	mach_msg_body_t               body;
 } mach_msg_base_t;
+xnu_static_assert_struct_size_kernel_user(mach_msg_base_t, 36, 28);
 
 
 typedef unsigned int mach_msg_trailer_type_t;
@@ -462,6 +494,7 @@ typedef struct {
 	mach_msg_trailer_type_t       msgh_trailer_type;
 	mach_msg_trailer_size_t       msgh_trailer_size;
 } mach_msg_trailer_t;
+xnu_static_assert_struct_size(mach_msg_trailer_t, 8);
 
 /*
  *  The msgh_seqno field carries a sequence number
@@ -477,6 +510,7 @@ typedef struct {
 	mach_msg_trailer_size_t       msgh_trailer_size;
 	mach_port_seqno_t             msgh_seqno;
 } mach_msg_seqno_trailer_t;
+xnu_static_assert_struct_size(mach_msg_seqno_trailer_t, 12);
 
 typedef struct {
 	unsigned int                  val[2];
@@ -488,6 +522,7 @@ typedef struct {
 	mach_port_seqno_t             msgh_seqno;
 	security_token_t              msgh_sender;
 } mach_msg_security_trailer_t;
+xnu_static_assert_struct_size(mach_msg_security_trailer_t, 20);
 
 /*
  * The audit token is an opaque token which identifies
@@ -525,6 +560,7 @@ typedef struct {
 	security_token_t              msgh_sender;
 	audit_token_t                 msgh_audit;
 } mach_msg_audit_trailer_t;
+xnu_static_assert_struct_size(mach_msg_audit_trailer_t, 52);
 
 typedef struct {
 	mach_msg_trailer_type_t       msgh_trailer_type;
@@ -534,6 +570,7 @@ typedef struct {
 	audit_token_t                 msgh_audit;
 	mach_port_context_t           msgh_context;
 } mach_msg_context_trailer_t;
+xnu_static_assert_struct_size_kernel_user64_user32(mach_msg_context_trailer_t, 60, 60, 56);
 
 
 
@@ -559,6 +596,7 @@ typedef struct {
 	mach_msg_filter_id            msgh_ad;
 	msg_labels_t                  msgh_labels;
 } mach_msg_mac_trailer_t;
+xnu_static_assert_struct_size_kernel_user64_user32(mach_msg_mac_trailer_t, 68, 68, 64);
 
 
 #define MACH_MSG_TRAILER_MINIMUM_SIZE  sizeof(mach_msg_trailer_t)
@@ -685,6 +723,10 @@ typedef natural_t mach_msg_type_number_t;
 #define MACH_MSG_TYPE_PORT_ANY_SEND(x)                  \
 	(((x) >= MACH_MSG_TYPE_MOVE_SEND) &&            \
 	 ((x) <= MACH_MSG_TYPE_MAKE_SEND_ONCE))
+
+#define MACH_MSG_TYPE_PORT_ANY_SEND_ONCE(x)             \
+	(((x) == MACH_MSG_TYPE_MOVE_SEND_ONCE) ||       \
+	 ((x) == MACH_MSG_TYPE_MAKE_SEND_ONCE))
 
 #define MACH_MSG_TYPE_PORT_ANY_RIGHT(x)                 \
 	(((x) >= MACH_MSG_TYPE_MOVE_RECEIVE) &&         \
@@ -848,7 +890,7 @@ typedef kern_return_t mach_msg_return_t;
 #define MACH_SEND_INVALID_RT_OOL_SIZE   0x10000015
 /* compatibility: no longer a returned error */
 #define MACH_SEND_NO_GRANT_DEST         0x10000016
-/* The destination port doesn't accept ports in body */
+/* compatibility: no longer a returned error */
 #define MACH_SEND_MSG_FILTERED          0x10000017
 /* Message send was rejected by message filter */
 #define MACH_SEND_AUX_TOO_SMALL         0x10000018
@@ -892,7 +934,6 @@ typedef kern_return_t mach_msg_return_t;
 /* invalid reply port used in a STRICT_REPLY message */
 #define MACH_RCV_INVALID_ARGUMENTS      0x10004013
 /* invalid receive arguments, receive has not started */
-
 
 
 __BEGIN_DECLS

@@ -181,7 +181,6 @@ CF_EXPORT const CFLocaleKey kCFLocaleAlternateQuotationEndDelimiterKey API_AVAIL
 // Values for kCFLocaleCalendarIdentifier
 typedef CFStringRef CFCalendarIdentifier CF_STRING_ENUM;
 
-#if !0
 CF_EXPORT const CFCalendarIdentifier kCFGregorianCalendar;
 CF_EXPORT const CFCalendarIdentifier kCFBuddhistCalendar;
 CF_EXPORT const CFCalendarIdentifier kCFChineseCalendar;
@@ -195,7 +194,17 @@ CF_EXPORT const CFCalendarIdentifier kCFIndianCalendar API_AVAILABLE(macos(10.6)
 CF_EXPORT const CFCalendarIdentifier kCFISO8601Calendar API_AVAILABLE(macos(10.6), ios(4.0), watchos(2.0), tvos(9.0));
 CF_EXPORT const CFCalendarIdentifier kCFIslamicTabularCalendar API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0));
 CF_EXPORT const CFCalendarIdentifier kCFIslamicUmmAlQuraCalendar API_AVAILABLE(macos(10.10), ios(8.0), watchos(2.0), tvos(9.0));
-#endif
+CF_EXPORT const CFCalendarIdentifier kCFBanglaCalendar API_AVAILABLE(macos(26.0), ios(26.0), watchos(26.0), tvos(26.0), visionos(26.0));
+CF_EXPORT const CFCalendarIdentifier kCFGujaratiCalendar API_AVAILABLE(macos(26.0), ios(26.0), watchos(26.0), tvos(26.0), visionos(26.0));
+CF_EXPORT const CFCalendarIdentifier kCFKannadaCalendar API_AVAILABLE(macos(26.0), ios(26.0), watchos(26.0), tvos(26.0), visionos(26.0));
+CF_EXPORT const CFCalendarIdentifier kCFMalayalamCalendar API_AVAILABLE(macos(26.0), ios(26.0), watchos(26.0), tvos(26.0), visionos(26.0));
+CF_EXPORT const CFCalendarIdentifier kCFMarathiCalendar API_AVAILABLE(macos(26.0), ios(26.0), watchos(26.0), tvos(26.0), visionos(26.0));
+CF_EXPORT const CFCalendarIdentifier kCFOdiaCalendar API_AVAILABLE(macos(26.0), ios(26.0), watchos(26.0), tvos(26.0), visionos(26.0));
+CF_EXPORT const CFCalendarIdentifier kCFTamilCalendar API_AVAILABLE(macos(26.0), ios(26.0), watchos(26.0), tvos(26.0), visionos(26.0));
+CF_EXPORT const CFCalendarIdentifier kCFTeluguCalendar API_AVAILABLE(macos(26.0), ios(26.0), watchos(26.0), tvos(26.0), visionos(26.0));
+CF_EXPORT const CFCalendarIdentifier kCFVikramCalendar API_AVAILABLE(macos(26.0), ios(26.0), watchos(26.0), tvos(26.0), visionos(26.0));
+CF_EXPORT const CFCalendarIdentifier kCFDangiCalendar API_AVAILABLE(macos(26.0), ios(26.0), watchos(26.0), tvos(26.0), visionos(26.0));
+CF_EXPORT const CFCalendarIdentifier kCFVietnameseCalendar API_AVAILABLE(macos(26.0), ios(26.0), watchos(26.0), tvos(26.0), visionos(26.0));
 
 CF_EXTERN_C_END
 CF_IMPLICIT_BRIDGING_DISABLED

@@ -7,6 +7,7 @@
 
 #import <Foundation/Foundation.h>
 #import <Metal/MTLDefines.h>
+#import <Metal/MTLAllocation.h>
 #import <Metal/MTLResource.h>
 #import <Metal/MTLBuffer.h>
 #import <Metal/MTLTexture.h>
@@ -31,7 +32,7 @@ typedef NS_ENUM(NSInteger, MTLHeapType)
 {
     MTLHeapTypeAutomatic = 0,
     MTLHeapTypePlacement = 1,
-    MTLHeapTypeSparse API_AVAILABLE(macos(11.0), macCatalyst(14.0)) = 2 ,
+    MTLHeapTypeSparse API_AVAILABLE(macos(11.0), macCatalyst(14.0), tvos(16.0)) = 2 ,
 } API_AVAILABLE(macos(10.15), ios(13.0));
 
 /*!
@@ -98,6 +99,19 @@ MTL_EXPORT API_AVAILABLE(macos(10.13), ios(10.0))
  */
 @property (readwrite, nonatomic) MTLHeapType type API_AVAILABLE(macos(10.15), ios(13.0));
 
+
+/// Specifies the largest sparse page size that the Metal heap supports.
+///
+/// This parameter only affects the heap if you set the ``type`` property of this descriptor
+/// to ``MTLHeapType/MTLHeapTypePlacement``.
+///
+/// The value you assign to this property determines the compatibility of the Metal heap with with placement sparse
+/// resources, because placement sparse resources require that their sparse page size be less than or equal to the
+/// placement sparse page of the Metal heap that this property controls.
+///
+@property (readwrite, nonatomic) MTLSparsePageSize maxCompatiblePlacementSparsePageSize
+API_AVAILABLE(macos(26.0), ios(26.0));
+
 @end
 
 
@@ -105,7 +119,7 @@ MTL_EXPORT API_AVAILABLE(macos(10.13), ios(10.0))
  @protocol MTLHeap
  */
 API_AVAILABLE(macos(10.13), ios(10.0))
-@protocol MTLHeap <NSObject>
+@protocol MTLHeap <MTLAllocation>
 
 /*!
  @property label

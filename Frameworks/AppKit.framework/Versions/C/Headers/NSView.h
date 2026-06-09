@@ -1,7 +1,7 @@
 /*
     NSView.h
     Application Kit
-    Copyright (c) 1994-2023, Apple Inc.
+    Copyright (c) 1994-2024, Apple Inc.
     All rights reserved.
 */
 
@@ -22,6 +22,7 @@
 #import <AppKit/NSUserInterfaceLayout.h>
 
 @protocol NSDraggingSource;
+@class NSWritingToolsCoordinator;
 
 NS_HEADER_AUDIT_BEGIN(nullability, sendability)
 APPKIT_API_UNAVAILABLE_BEGIN_MACCATALYST
@@ -285,6 +286,9 @@ typedef NSInteger NSToolTipTag;
 
 @property BOOL postsBoundsChangedNotifications;
 
+/*! The nearest ancestor scroll view that contains the current view as part of its document view.
+ * - Note: If the current view is not embedded inside a scroll view, the value of this property is `nil`. This property does not contain the current view if the current view is itself a scroll view. It always contains an ancestor scroll view.
+ */
 @property (nullable, readonly, strong) NSScrollView *enclosingScrollView;
 
 - (nullable NSMenu *)menuForEvent:(NSEvent *)event;
@@ -402,6 +406,26 @@ typedef NSInteger NSToolTipTag;
 - (NSString *)view:(NSView *)view stringForToolTip:(NSToolTipTag)tag point:(NSPoint)point userData:(nullable void *)data API_DEPRECATED("This is now a method of the NSViewToolTipOwner protocol.", macos(10.0, 11.0));
 @end
 #endif
+
+/*!
+    @protocol  `NSViewContentSelectionInfo`
+    @abstract  A protocol to request information from NSView subclasses about the selected content in the view.
+ */
+@protocol NSViewContentSelectionInfo <NSObject>
+/*!
+    @method     `selectionAnchorRect`
+
+    @abstract   Provides a rect that is used to position system UI, such as context menus and popovers, at an appropriate location in the view.
+
+    @discussion This method is used in macOS 15 to display a context menu in response to the context menu keyboard hotkey. The menu will be displayed adjacent to the anchor rect, but not overlapping. It is not used when displaying a context menu in response to a mouse or trackpad click; in that case, the mouse event has location information, and the context menu is displayed at the location of the event.
+
+    @return     A bounding rect in view coordinates. If the view has a current selection, then this rect should typically contain the entire selection, but this is not required if the view wants to position system UI at an alternate location. The return value may be CGRectNull to indicate that no system UI should be presented for the view at this time; in that case, the next responder is examined for a context menu.
+
+    @seealso    `showContextMenuForSelection:`
+*/
+@optional
+@property (readonly) NSRect selectionAnchorRect API_AVAILABLE(macos(15.0));
+@end
 
 @interface NSView(NSKeyboardUI)
 @property (nullable, assign) NSView *nextKeyView;
@@ -553,6 +577,13 @@ APPKIT_EXTERN NSDefinitionPresentationType const NSDefinitionPresentationTypeDic
 
 @end
 
+@interface NSView (NSCompactControlSizeMetrics)
+/// When this property is true, any NSControls in the view or its descendants will be sized with compact
+/// metrics compatible with macOS 15 and earlier.
+/// Defaults to false
+@property BOOL prefersCompactControlSizeMetrics API_AVAILABLE(macos(26.0));
+@end
+
 @interface NSView(NSTrackingArea)
 /* The following methods are meant to be invoked, and probably don't need to be overridden
 */
@@ -577,8 +608,10 @@ APPKIT_EXTERN NSDefinitionPresentationType const NSDefinitionPresentationTypeDic
 
 API_AVAILABLE(macos(14.0))
 @interface NSView (NSDisplayLink)
-/*
-    Returns a new display link whose callback will be invoked in-sync with the display the view is on. If the view is hidden, or not on any display, the callback will not be invoked.
+/**
+    Returns a new display link whose callback will be invoked in-sync with the display the view is on.
+    
+    If the view is hidden, or not on any display, the callback will not be invoked.
 */
 - (CADisplayLink *)displayLinkWithTarget:(id)target selector:(SEL)selector NS_SWIFT_NAME(displayLink(target:selector:));
 @end
@@ -613,6 +646,10 @@ API_AVAILABLE(macos(14.0))
                                       
 @end
 
+API_AVAILABLE(macos(15.2))
+@interface NSView (NSWritingToolsCoordinator)
+@property (nullable) NSWritingToolsCoordinator *writingToolsCoordinator;
+@end
 
 /* Notifications */
 

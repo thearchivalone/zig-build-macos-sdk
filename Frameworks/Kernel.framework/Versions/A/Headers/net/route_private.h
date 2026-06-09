@@ -67,6 +67,7 @@
 #include <stdint.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/socketvar.h>
 #include <uuid/uuid.h>
 
 struct route_old {
@@ -92,6 +93,38 @@ struct rt_reach_info {
 	int32_t         ri_rssi;        /* received signal strength */
 	int32_t         ri_lqm;         /* link quality metric */
 	int32_t         ri_npm;         /* node proximity metric */
+};
+
+
+/*
+ * Route address information with extra space for "tiny" socket addresses
+ * from the user space. A "tiny" socket address has the `sa_len' field
+ * smaller than the canonical sockaddr structure.
+ * To preserve the type and the bounds safety, such "tiny" addresses
+ * are copied to the `rtix_tiny_addr' field.
+ */
+struct rt_addrinfo_ext {
+	struct rt_addrinfo rtix_info;                    /* addr info containing sockaddr array */
+	struct sockaddr    rtix_tiny_addr[RTAX_MAX];     /* storage for the "tiny" sockaddr addresss */
+	uint8_t            rtix_next_tiny;               /* offset of the next "tiny" address */
+};
+
+/*
+ * The following is used internally when parsing routing
+ * messages to avoid potential boundary issues when
+ * using shorter structures.
+ */
+struct rt_msghdr_common {
+	u_short rtm_msglen;     /* to skip over non-understood messages */
+	u_char  rtm_version;    /* future binary compatibility */
+	u_char  rtm_type;       /* message type */
+	u_short rtm_index;      /* index for associated ifp */
+	int     rtm_flags;      /* flags, incl. kern & message, e.g. DONE */
+	int     rtm_addrs;      /* bitmask identifying sockaddrs in msg */
+	pid_t   rtm_pid;        /* identify sender */
+	int     rtm_seq;        /* for sender to identify action */
+	int     rtm_errno;      /* why failed */
+	int     rtm_use;        /* from rtentry */
 };
 
 /*
@@ -130,5 +163,46 @@ struct rt_msghdr_ext {
  */
 #define IFSCOPE_NONE    0
 #define IFSCOPE_UNKNOWN IFSCOPE_NONE
+
+/*
+ * Routing statistics.
+ */
+struct rtstat_64 {
+	uint64_t        rts_badredirect;        /* bogus redirect calls */
+	uint64_t        rts_dynamic;            /* routes created by redirects */
+	uint64_t        rts_newgateway;         /* routes modified by redirects */
+	uint64_t        rts_unreach;            /* lookups which failed */
+	uint64_t        rts_wildcard;           /* lookups satisfied by a wildcard */
+	uint64_t        rts_badrtgwroute;       /* route to gateway is not direct */
+};
+
+/*
+ * Routing socket pcblist
+ */
+struct  xrtsockgen {
+	u_int32_t       xg_len;         /* length of this structure */
+	u_int64_t       xg_count;       /* number of PCBs at this time */
+	u_int64_t       xg_gencnt;         /* generation count at this time */
+	u_int64_t       xg_sogen;       /* current socket generation count */
+};
+
+struct xrtsockpcb {
+	uint32_t        xrp_len;
+	uint32_t        xrp_kind;
+	uint64_t        xrp_gencnt;
+	uint16_t        xrp_family;
+	uint16_t        xrp_protocol;
+	union {
+		struct sockaddr         xrfu_addr;       /* destination address */
+		char                    xrfu_dummy1[256];
+	} xr_fu;
+#define xrp_faddr xr_fu.xrfu_addr
+	union {
+		struct sockaddr         xrlu_addr;       /* destination address */
+		char                    xrlu_dummy1[256];
+	} xr_lu;
+#define xrp_laddr xr_lu.xrlu_addr
+};
+#define HAS_XRTSOCKPCB 1
 
 #endif /* _NET_ROUTE_PRIVATE_H_ */

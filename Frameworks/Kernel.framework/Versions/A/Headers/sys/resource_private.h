@@ -100,11 +100,92 @@ struct thsc_time_energy_cpi {
 };
 
 
-/* Additional private parameters to getpriority()/setpriority( */
+/* Additional private parameters to getpriority()/setpriority() */
+
+#define PRIO_DARWIN_GPU         5               /* Second argument is a PID */
+
+__enum_decl(darwin_gpu_role_t, uint8_t, {
+	/* GPU Role unmanaged, default value at task start */
+	PRIO_DARWIN_GPU_UNKNOWN         = 0x0,
+	/* existing allow state for compatibility */
+	PRIO_DARWIN_GPU_ALLOW           = 0x1,
+	/* GPU access is denied by Runningboard */
+	PRIO_DARWIN_GPU_DENY            = 0x2,
+	/* Allowed to use GPU at Background priority, not visible to user, prioritizes running most-efficiently */
+	PRIO_DARWIN_GPU_BACKGROUND      = 0x3,
+	/* GPU used for non-visible-UI long-running progress-bar workloads, balances between sustainable thermals and perf */
+	PRIO_DARWIN_GPU_UTILITY         = 0x4,
+	/* Renders visible UI, known to be a non-focal app */
+	PRIO_DARWIN_GPU_UI_NON_FOCAL    = 0x5,
+	/* Renders visible UI, unknown focality */
+	PRIO_DARWIN_GPU_UI              = 0x6,
+	/* Renders visible UI, is part of a focal app */
+	PRIO_DARWIN_GPU_UI_FOCAL        = 0x7,
+});
+
+#define PRIO_DARWIN_ROLE        6               /* Second argument is a PID */
+
+#define PRIO_DARWIN_ROLE_DEFAULT        0x0     /* Reset to default state */
+#define PRIO_DARWIN_ROLE_UI_FOCAL       0x1     /* On  screen,     focal UI */
+#define PRIO_DARWIN_ROLE_UI             0x2     /* On  screen UI,  focal unknown */
+#define PRIO_DARWIN_ROLE_NON_UI         0x3     /* Off screen, non-focal UI */
+#define PRIO_DARWIN_ROLE_UI_NON_FOCAL   0x4     /* On  screen, non-focal UI */
+#define PRIO_DARWIN_ROLE_TAL_LAUNCH     0x5     /* Throttled-launch (for OS X TAL resume) */
+#define PRIO_DARWIN_ROLE_DARWIN_BG      0x6     /* Throttled for running in the background */
+#define PRIO_DARWIN_ROLE_USER_INIT      0x7     /* Off-screen doing user-initiated work */
 
 #define PRIO_DARWIN_GAME_MODE   7               /* Second argument is a PID */
+#define PRIO_DARWIN_CARPLAY_MODE   8            /* Second argument is a PID */
+#define PRIO_DARWIN_RUNAWAY_MITIGATION  9       /* Second argument is a PID */
 
 #define PRIO_DARWIN_GAME_MODE_OFF   0x0
 #define PRIO_DARWIN_GAME_MODE_ON    0x1
+
+#define PRIO_DARWIN_CARPLAY_MODE_OFF   0x0
+#define PRIO_DARWIN_CARPLAY_MODE_ON    0x1
+
+#define PRIO_DARWIN_RUNAWAY_MITIGATION_OFF      0x0
+#define PRIO_DARWIN_RUNAWAY_MITIGATION_ON       0x1
+
+/*
+ * Flags for I/O monitor control.
+ */
+#define IOMON_ENABLE                    0x01
+#define IOMON_DISABLE                   0x02
+
+/* Private I/O type */
+#define IOPOL_TYPE_VFS_HFS_CASE_SENSITIVITY 1
+#define IOPOL_TYPE_VFS_ALTLINK 11
+#define IOPOL_TYPE_VFS_NOCACHE_WRITE_FS_BLKSIZE  12
+#define IOPOL_TYPE_VFS_SUPPORT_LONG_PATHS 13
+
+#define IOPOL_VFS_HFS_CASE_SENSITIVITY_DEFAULT  0
+#define IOPOL_VFS_HFS_CASE_SENSITIVITY_FORCE_CASE_SENSITIVE     1
+
+#define IOPOL_VFS_ALTLINK_DISABLED 0
+#define IOPOL_VFS_ALTLINK_ENABLED  1
+
+#define IOPOL_VFS_SUPPORT_LONG_PATHS_DEFAULT 0
+#define IOPOL_VFS_SUPPORT_LONG_PATHS_ON 1
+
+/*
+ * Structures for use in communicating via iopolicysys() between Libc and the
+ * kernel.  Not to be used by user programs directly.
+ */
+
+/*
+ * the command to iopolicysys()
+ */
+#define IOPOL_CMD_GET           0x00000001      /* Get I/O policy */
+#define IOPOL_CMD_SET           0x00000002      /* Set I/O policy */
+
+/*
+ * Second parameter to iopolicysys()
+ */
+struct _iopol_param_t {
+	int iop_scope;  /* current process or a thread */
+	int iop_iotype;
+	int iop_policy;
+};
 
 #endif  /* !defined(_SYS_RESOURCE_PRIVATE_H_) */

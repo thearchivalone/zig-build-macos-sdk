@@ -59,11 +59,14 @@
 #define _USER_SIGNAL_H
 
 #include <sys/cdefs.h>
+#include <_bounds.h>
 #include <_types.h>
 #include <sys/signal.h>
 
 #include <sys/_pthread/_pthread_types.h>
 #include <sys/_pthread/_pthread_t.h>
+
+_LIBC_SINGLE_BY_DEFAULT()
 
 #if !defined(_ANSI_SOURCE) && (!defined(_POSIX_C_SOURCE) || defined(_DARWIN_C_SOURCE))
 extern __const char *__const sys_signame[NSIG];
@@ -110,10 +113,13 @@ int	sigvec(int, struct sigvec *, struct sigvec *);
 __END_DECLS
 
 /* List definitions after function declarations, or Reiser cpp gets upset. */
-__header_always_inline int
+__header_always_inline unsigned int
 __sigbits(int __signo)
 {
-    return __signo > __DARWIN_NSIG ? 0 : (1 << (__signo - 1));
+
+	if (__signo == 0 || __signo > __DARWIN_NSIG)
+		return (0);
+	return (1U << (__signo - 1));
 }
 
 #define	sigaddset(set, signo)	(*(set) |= __sigbits(signo), 0)

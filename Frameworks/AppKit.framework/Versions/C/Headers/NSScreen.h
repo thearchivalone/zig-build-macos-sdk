@@ -1,7 +1,7 @@
 /*
 	NSScreen.h
 	Application Kit
-	Copyright (c) 1994-2023, Apple Inc.
+	Copyright (c) 1994-2024, Apple Inc.
 	All rights reserved.
 */
 
@@ -13,6 +13,7 @@
 #import <Foundation/NSNotification.h>
 #import <AppKit/NSGraphics.h>
 #import <AppKit/AppKitDefines.h>
+#import <CoreGraphics/CGDirectDisplay.h>
 
 NS_HEADER_AUDIT_BEGIN(nullability, sendability)
 APPKIT_API_UNAVAILABLE_BEGIN_MACCATALYST
@@ -62,6 +63,9 @@ APPKIT_API_UNAVAILABLE_BEGIN_MACCATALYST
 /* The following two rects are at the top of the screen, outside the rectangle defined by safeAreaInsets, but also unobscured.  These rects are empty if there are no additional unobscured areas */
 @property (readonly) NSRect auxiliaryTopLeftArea API_AVAILABLE(macos(12.0));
 @property (readonly) NSRect auxiliaryTopRightArea API_AVAILABLE(macos(12.0));
+
+/// The CGDirectDisplayID for this screen. This will return kCGNullDirectDisplay if there isn't one.
+@property (readonly) CGDirectDisplayID CGDirectDisplayID API_AVAILABLE(macos(26.0)) NS_REFINED_FOR_SWIFT;
 
 @end
 
@@ -122,8 +126,10 @@ APPKIT_EXTERN NSNotificationName const NSScreenColorSpaceDidChangeNotification A
 
 API_AVAILABLE(macos(14.0))
 @interface NSScreen (NSDisplayLink)
-/*
-    Returns a new display link whose callback will be invoked in-sync with the display the screen is on. Note that views and windows can move between screens and you may want to get a display link directly from NSView or NSWindow which will track those changes automatically.
+/**
+    Returns a new display link whose callback will be invoked in-sync with the display the screen is on. 
+    
+    Note that views and windows can move between screens and you may want to get a display link directly from `NSView` or `NSWindow` which will track those changes automatically.
 */
 - (CADisplayLink *)displayLinkWithTarget:(id)target selector:(SEL)selector NS_SWIFT_NAME(displayLink(target:selector:));
 @end

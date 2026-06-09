@@ -154,8 +154,8 @@ enum {
 /* Parameters and structures for Apple-defined ACL subjects and samples */
 
 enum {	/* types of code signatures - item 1 of CSSM_ACL_SUBJECT_TYPE_CODE_SIGNATURE subjects */
-    CSSM_ACL_CODE_SIGNATURE_INVALID = 0, /* standard OS X code signature */
-    CSSM_ACL_CODE_SIGNATURE_OSX = 1		/* standard OS X code signature */
+    CSSM_ACL_CODE_SIGNATURE_INVALID = 0, /* standard macOS code signature */
+    CSSM_ACL_CODE_SIGNATURE_OSX = 1		/* standard macOS code signature */
 };
 
 /* ACL subjects of type PROCESS */
@@ -729,13 +729,21 @@ enum
     CSSM_APPLE_PRIVATE_CSPDL_CODE_25 = 25,
     CSSM_APPLE_PRIVATE_CSPDL_CODE_26 = 26,
     CSSM_APPLE_PRIVATE_CSPDL_CODE_27 = 27,
+    CSSM_APPLE_PRIVATE_CSPDL_CODE_28 = 28,
 
 	/* Given a CSSM_KEY_PTR in any format, obtain the SHA-1 hash of the
 	 * associated key blob.
 	 * Key is specified in CSSM_CSP_CreatePassThroughContext.
 	 * Hash is allocated bythe CSP, in the App's memory, and returned
 	 * in *outData. */
-	CSSM_APPLECSP_KEYDIGEST = 			0x100
+	CSSM_APPLECSP_KEYDIGEST = 			0x100,
+
+    /* Given a private CSSM_KEY_PTR in any format, obtain its
+     * public key data blob.
+     * Key is specified in CSSM_CSP_CreatePassThroughContext.
+     * Public key data is allocated by CSP, in the App's memory, and returned
+     * in *outData. */
+    CSSM_APPLECSP_PUBKEY =              0x101,
 };
 
 

@@ -1,7 +1,7 @@
 /*
 	AppKit.h
 	Application Kit
-	Copyright (c) 1994-2023, Apple Inc.
+	Copyright (c) 1994-2024, Apple Inc.
 	All rights reserved.
 
 	This file is included by all AppKit application source files for easy building.  Using this file is preferred over importing individual files because it will use a precompiled version.
@@ -19,6 +19,7 @@
 #import <AppKit/NSAppearance.h>
 #import <AppKit/NSAppleScriptExtensions.h>
 #import <AppKit/NSApplication.h>
+#import <AppKit/NSBackgroundExtensionView.h>
 #import <AppKit/NSBox.h>
 #import <AppKit/NSButton.h>
 #import <AppKit/NSButtonCell.h>
@@ -34,6 +35,7 @@
 #import <AppKit/NSColorSampler.h>
 #import <AppKit/NSControl.h>
 #import <AppKit/NSDiffableDataSource.h>
+#import <AppKit/NSDirection.h>
 #import <AppKit/NSDockTile.h>
 #import <AppKit/NSFont.h>
 #import <AppKit/NSFontAssetRequest.h>
@@ -43,6 +45,7 @@
 #import <AppKit/NSFontPanel.h>
 #import <AppKit/NSForm.h>
 #import <AppKit/NSFormCell.h>
+#import <AppKit/NSGlassEffectView.h>
 #import <AppKit/NSMatrix.h>
 #import <AppKit/NSMenu.h>
 #import <AppKit/NSMenuItem.h>
@@ -106,6 +109,7 @@
 #import <AppKit/NSSpellChecker.h>
 #import <AppKit/NSSplitView.h>
 #import <AppKit/NSSplitViewController.h>
+#import <AppKit/NSSplitViewItemAccessoryViewController.h>
 #import <AppKit/NSOpenPanel.h>
 #import <AppKit/NSPageLayout.h>
 #import <AppKit/NSPanel.h>
@@ -122,10 +126,12 @@
 #import <AppKit/NSSavePanel.h>
 #import <AppKit/NSMediaLibraryBrowserController.h>
 #import <AppKit/NSScreen.h>
+#import <AppKit/NSScrollEdgeEffect.h>
 #import <AppKit/NSScrollView.h>
 #import <AppKit/NSScroller.h>
 #import <AppKit/NSSegmentedControl.h>
 #import <AppKit/NSSegmentedCell.h>
+#import <AppKit/NSSharingCollaborationModeRestriction.h>
 #import <AppKit/NSSharingService.h>
 #import <AppKit/NSSlider.h>
 #import <AppKit/NSSliderCell.h>
@@ -148,6 +154,7 @@
 #import <AppKit/NSUserActivity.h>
 #import <AppKit/NSView.h>
 #import <AppKit/NSViewController.h>
+#import <AppKit/NSViewLayoutRegion.h>
 #import <AppKit/NSWindow.h>
 #import <AppKit/NSWindowTab.h>
 #import <AppKit/NSWindowTabGroup.h>
@@ -252,6 +259,7 @@
 #import <AppKit/NSStoryboard.h>
 #import <AppKit/NSStoryboardSegue.h>
 #import <AppKit/NSVisualEffectView.h>
+#import <AppKit/NSItemBadge.h>
 #import <AppKit/NSItemProvider.h>
 #import <AppKit/NSTitlebarAccessoryViewController.h>
 #import <AppKit/NSDataAsset.h>
@@ -276,3 +284,8 @@
 #import <AppKit/NSTextLineFragment.h>
 #import <AppKit/NSTextViewportLayoutController.h>
 #import <AppKit/NSTextAttachmentCell.h>
+#import <AppKit/NSAdaptiveImageGlyph.h>
+
+#import <AppKit/NSWritingToolsCoordinatorAnimationParameters.h>
+#import <AppKit/NSWritingToolsCoordinatorContext.h>
+#import <AppKit/NSWritingToolsCoordinator.h>

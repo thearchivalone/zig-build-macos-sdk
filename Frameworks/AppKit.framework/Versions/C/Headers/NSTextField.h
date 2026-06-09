@@ -1,7 +1,7 @@
 /*
 	NSTextField.h
 	Application Kit
-	Copyright (c) 1994-2023, Apple Inc.
+	Copyright (c) 1994-2024, Apple Inc.
 	All rights reserved.
 */
 
@@ -57,6 +57,22 @@ APPKIT_API_UNAVAILABLE_BEGIN_MACCATALYST
 @property NSLineBreakStrategy lineBreakStrategy API_AVAILABLE(macos(10.15));
 #endif
 
+@property BOOL allowsWritingTools API_AVAILABLE(macos(15.2)); // Default is YES. Configures its field editor to work with Writing Tools.
+@property BOOL allowsWritingToolsAffordance API_AVAILABLE(macos(15.4)); // Default is NO.
+
+/* An array of NSStrings that will be animated to cycle through one by one when the textField is first responder. No animation happend when there is only string in the array, or when text field is not first responder. The text field's placeholderString property points to the first string in placeholderStrings.
+ */
+@property (copy) NSArray<NSString *> *placeholderStrings API_AVAILABLE(macos(26.0));
+
+/* An array of NSStrings that will be animated to cycle through one by one when the textField is first responder. No animation happend when there is only string in the array, or when text field is not first responder. The text field's placeholderString property points to the first string in placeholderStrings.
+ */
+@property (copy) NSArray<NSAttributedString *> *placeholderAttributedStrings API_AVAILABLE(macos(26.0));
+
+/// Specifies the behavior for resolving ``NSTextAlignment/natural`` to the visual alignment.
+///
+/// When set to `true`, the resolved visual alignment is determined by the resolved base writing direction; otherwise, it is using the user’s preferred language.
+/// The default value is `false`.
+@property BOOL resolvesNaturalAlignmentWithBaseWritingDirection API_AVAILABLE(macos(26.0));
 @end
 
 #pragma mark NSTextField NSTouchBar Properties
@@ -109,12 +125,12 @@ APPKIT_API_UNAVAILABLE_BEGIN_MACCATALYST
 
 @optional
 
-/// Provides a customized list of candidates to the text view’s `candidateListTouchBarItem`. Invoked from `-updateCandidates`. `NSTextView` uses the candidates returned from this method and suppress its built-in candidate generation. Returning `nil` from this delegate method allows `NSTextView` to query candidates from `NSSpellChecker`.
-/// - Returns: An array of objects that represent the elements of a selection.
+/// Provides a customized list of candidates to the text view’s `candidateListTouchBarItem`. This method returns an array of objects that represent the elements of a selection.
+/// 
+/// Invoked from `updateCandidates`. `NSTextView` uses the candidates returned from this method and suppress its built-in candidate generation. Returning `nil` from this delegate method allows `NSTextView` to query candidates from `NSSpellChecker`.
 - (nullable NSArray *)textField:(NSTextField *)textField textView:(NSTextView *)textView candidatesForSelectedRange:(NSRange)selectedRange NS_SWIFT_UI_ACTOR API_AVAILABLE(macos(10.12.2));
 
-/// Allows customizing the candidate list queried from `NSSpellChecker`.
-/// - Returns: An array of text objects to include in a text selection.
+/// Allows customizing the candidate list queried from `NSSpellChecker`. This method returns array of text objects to include in a text selection.
 - (NSArray<NSTextCheckingResult *> *)textField:(NSTextField *)textField textView:(NSTextView *)textView candidates:(NSArray<NSTextCheckingResult *> *)candidates forSelectedRange:(NSRange)selectedRange NS_SWIFT_UI_ACTOR API_AVAILABLE(macos(10.12.2));
 
 /// Notifies the delegate that the user selected the candidate at index in `-[NSCandidateListTouchBarItem candidates]` for the text view’s `candidateListTouchBarItem`. Returns a Boolean value that indicates whether to select the text object at the index.
@@ -122,7 +138,6 @@ APPKIT_API_UNAVAILABLE_BEGIN_MACCATALYST
 ///   - textField: The text field that sent the message.
 ///   - textView: The text view that sent the message.
 ///   - index: The index that represents the start of the candidate text to evaluate, or `NSNotFound` if no candidate is to be selected.
-/// - Returns: `YES` if the framework selects the text. `YES` allows `textView` to insert the candidate into the text storage if it’s `NSString`, `NSAttributedString`, or `NSTextCheckingResult`.
 - (BOOL)textField:(NSTextField *)textField textView:(NSTextView *)textView shouldSelectCandidateAtIndex:(NSUInteger)index NS_SWIFT_UI_ACTOR API_AVAILABLE(macos(10.12.2));
 
 @end

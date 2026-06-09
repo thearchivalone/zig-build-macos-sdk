@@ -246,10 +246,11 @@
 #  define NS_SWIFT_ASYNC_NAME(NAME)
 #endif
 #if __has_attribute(swift_attr)
-#  define NS_SWIFT_UI_ACTOR __attribute__((swift_attr("@UIActor")))
+#  define NS_SWIFT_MAIN_ACTOR __attribute__((swift_attr("@MainActor")))
 #else
-#  define NS_SWIFT_UI_ACTOR
+#  define NS_SWIFT_MAIN_ACTOR
 #endif
+#define NS_SWIFT_UI_ACTOR NS_SWIFT_MAIN_ACTOR
 #if __has_attribute(swift_async_error)
 #  define NS_SWIFT_ASYNC_NOTHROW __attribute__((swift_async_error(none)))
 #  define NS_SWIFT_ASYNC_THROWS_ON_TRUE(TRUE_PARAMETER_INDEX) __attribute__((swift_async_error(nonzero_argument, TRUE_PARAMETER_INDEX)))
@@ -269,6 +270,12 @@
 #define __NS_HEADER_AUDIT_BEGIN_nullability _Pragma("clang assume_nonnull begin")
 #define __NS_HEADER_AUDIT_END_nullability   _Pragma("clang assume_nonnull end")
 
+#if __has_attribute(__swift_attr__) && __SWIFT_ATTR_SUPPORTS_SENDING
+#  define NS_SWIFT_SENDING __attribute__((swift_attr("sending")))
+#else
+#  define NS_SWIFT_SENDING
+#endif
+
 #if __SWIFT_ATTR_SUPPORTS_SENDABLE_DECLS
    // Indicates that the thing it is applied to should be imported as 'Sendable' in Swift:
    // * Type declarations are imported into Swift with a 'Sendable' conformance.
@@ -283,12 +290,21 @@
    // Indicates that a specific member of an 'NS_SWIFT_UI_ACTOR'-isolated type is "threadsafe" and should be callable from outside the main actor.
 #  define NS_SWIFT_NONISOLATED __attribute__((swift_attr("nonisolated")))
 
-#  define __NS_HEADER_AUDIT_BEGIN_sendability _Pragma("clang attribute NS_HEADER_AUDIT_sendability.push (__attribute__((swift_attr(\"@_nonSendable(_assumed)\"))), apply_to = any(objc_interface, record, enum))")
+// Indicates that a specific member of an 'NS_SWIFT_UI_ACTOR'-isolated type does its own data isolation management and does not participate in Swift concurrency checking.
+#  define NS_SWIFT_NONISOLATED_UNSAFE __attribute__((swift_attr("nonisolated(unsafe)")))
+
+#  define __NS_HEADER_AUDIT_BEGIN_sendability \
+    _Pragma("clang diagnostic push") \
+    _Pragma("clang diagnostic ignored \"-Wpragma-clang-attribute\"") \
+    _Pragma("clang attribute NS_HEADER_AUDIT_sendability.push (__attribute__((swift_attr(\"@_nonSendable(_assumed)\"))), apply_to = any(objc_interface, record, enum))") \
+    _Pragma("clang diagnostic pop")
+
 #  define __NS_HEADER_AUDIT_END_sendability   _Pragma("clang attribute NS_HEADER_AUDIT_sendability.pop")
 #else
 #  define NS_SWIFT_SENDABLE
 #  define NS_SWIFT_NONSENDABLE
 #  define NS_SWIFT_NONISOLATED
+#  define NS_SWIFT_NONISOLATED_UNSAFE
 
 #  define __NS_HEADER_AUDIT_BEGIN_sendability
 #  define __NS_HEADER_AUDIT_END_sendability

@@ -135,26 +135,31 @@ struct ctlname {
 	int     ctl_type;       /* type of name */
 };
 
-#define CTLTYPE             0xf             /* Mask for the type */
-#define CTLTYPE_NODE        1               /* name is a node */
-#define CTLTYPE_INT         2               /* name describes an integer */
-#define CTLTYPE_STRING      3               /* name describes a string */
-#define CTLTYPE_QUAD        4               /* name describes a 64-bit number */
-#define CTLTYPE_OPAQUE      5               /* name describes a structure */
-#define CTLTYPE_STRUCT      CTLTYPE_OPAQUE  /* name describes a structure */
+#define CTLTYPE                   0xf             /* Mask for the type */
+#define CTLTYPE_NODE              1               /* name is a node */
+#define CTLTYPE_INT               2               /* name describes an integer */
+#define CTLTYPE_STRING            3               /* name describes a string */
+#define CTLTYPE_QUAD              4               /* name describes a 64-bit number */
+#define CTLTYPE_OPAQUE            5               /* name describes a structure */
+#define CTLTYPE_STRUCT            CTLTYPE_OPAQUE  /* name describes a structure */
 
-#define CTLFLAG_RD          0x80000000      /* Allow reads of variable */
-#define CTLFLAG_WR          0x40000000      /* Allow writes to the variable */
-#define CTLFLAG_RW          (CTLFLAG_RD|CTLFLAG_WR)
-#define CTLFLAG_NOLOCK      0x20000000      /* XXX Don't Lock */
-#define CTLFLAG_ANYBODY     0x10000000      /* All users can set this var */
-#define CTLFLAG_SECURE      0x08000000      /* Permit set only if securelevel<=0 */
-#define CTLFLAG_MASKED      0x04000000      /* deprecated variable, do not display */
-#define CTLFLAG_NOAUTO      0x02000000      /* do not auto-register */
-#define CTLFLAG_KERN        0x01000000      /* valid inside the kernel */
-#define CTLFLAG_LOCKED      0x00800000      /* node will handle locking itself */
-#define CTLFLAG_OID2        0x00400000      /* struct sysctl_oid has version info */
-#define CTLFLAG_EXPERIMENT 0x00100000 /* Allows writing w/ the trial experiment entitlement. */
+#define CTLFLAG_RD                0x80000000      /* Allow reads of variable */
+#define CTLFLAG_WR                0x40000000      /* Allow writes to the variable */
+#define CTLFLAG_RW                (CTLFLAG_RD|CTLFLAG_WR)
+#define CTLFLAG_NOLOCK            0x20000000      /* XXX Don't Lock */
+#define CTLFLAG_ANYBODY           0x10000000      /* All users can set this var */
+#define CTLFLAG_SECURE            0x08000000      /* Permit set only if securelevel<=0 */
+#define CTLFLAG_MASKED            0x04000000      /* deprecated variable, do not display */
+#define CTLFLAG_NOAUTO            0x02000000      /* do not auto-register */
+#define CTLFLAG_KERN              0x01000000      /* valid inside the kernel */
+#define CTLFLAG_LOCKED            0x00800000      /* node will handle locking itself */
+#define CTLFLAG_OID2              0x00400000      /* struct sysctl_oid has version info */
+#define CTLFLAG_EXPERIMENT        0x00100000 /* Allows read/write w/ the trial experiment entitlement. */
+#define CTLFLAG_LEGACY_EXPERIMENT 0x00080000 /* Allows writing w/ the legacy trial experiment entitlement. */
+#define CTLFLAG_OID_AUTO          0x00040000 /* Remembers OID_AUTO to restore oid_number on unregister */
+
+/* mask of flags which are kernel private and will be masked for user space */
+#define CTLFLAG_KERNEL_PRIVATE_MASK (CTLFLAG_OID_AUTO)
 
 /*
  * USE THIS instead of a hardwired number from the categories below
@@ -640,13 +645,15 @@ extern struct loadavg averunnable;
  *                               In general is is better to use mach's or higher level timing services, but this value
  *                               is needed to convert the PPC Time Base registers to real time.
  *
- *   hw.cpufrequency           - These values provide the current, min and max cpu frequency.  The min and max are for
- *   hw.cpufrequency_max       - all power management modes.  The current frequency is the max frequency in the current mode.
- *   hw.cpufrequency_min       - All frequencies are in Hz.
+ *   hw.cpufrequency, hw.busfrequency and their min/max versions are deprecated because frequency isn't consistent.
  *
- *   hw.busfrequency           - These values provide the current, min and max bus frequency.  The min and max are for
- *   hw.busfrequency_max       - all power management modes.  The current frequency is the max frequency in the current mode.
- *   hw.busfrequency_min       - All frequencies are in Hz.
+ *   hw.cpufrequency           - (deprecated) These values provide the current, min and max cpu frequency.  The min and max are for
+ *   hw.cpufrequency_max       - (deprecated) all power management modes.  The current frequency is the max frequency in the current mode.
+ *   hw.cpufrequency_min       - (deprecated) All frequencies are in Hz.
+ *
+ *   hw.busfrequency           - (deprecated) These values provide the current, min and max bus frequency.  The min and max are for
+ *   hw.busfrequency_max       - (deprecated) all power management modes.  The current frequency is the max frequency in the current mode.
+ *   hw.busfrequency_min       - (deprecated) All frequencies are in Hz.
  *
  *   hw.cputype                - These values provide the mach-o cpu type and subtype.  A complete list is in <mach/machine.h>
  *   hw.cpusubtype             - These values should be used to determine what processor family the running cpu is from so that
@@ -790,9 +797,11 @@ extern struct loadavg averunnable;
 
 
 __BEGIN_DECLS
-int     sysctl(int *, u_int, void *, size_t *, void *, size_t);
-int     sysctlbyname(const char *, void *, size_t *, void *, size_t);
-int     sysctlnametomib(const char *, int *, size_t *);
+int     sysctl(int *, u_int, void *__sized_by(*oldlenp), size_t *oldlenp,
+    void *__sized_by(newlen), size_t newlen);
+int     sysctlbyname(const char *, void *__sized_by(*oldlenp), size_t *oldlenp,
+    void *__sized_by(newlen), size_t newlen);
+int     sysctlnametomib(const char *, int *__counted_by(*sizep), size_t *sizep);
 __END_DECLS
 
 

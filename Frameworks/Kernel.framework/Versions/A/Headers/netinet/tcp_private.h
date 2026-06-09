@@ -118,7 +118,7 @@ struct tcp_notify_ack_complete {
 
 #define TCP_NOTIFY_ACKNOWLEDGEMENT      0x212   /* Notify when data is acknowledged */
 #define MPTCP_SERVICE_TYPE              0x213   /* MPTCP Service type */
-#define TCP_FASTOPEN_FORCE_HEURISTICS   0x214   /* Make sure TFO-heuristics never get disabled */
+/* UNUSED 0x214 */
 
 #define MPTCP_SVCTYPE_HANDOVER          0 /* Default 0 */
 #define MPTCP_SVCTYPE_INTERACTIVE       1
@@ -156,7 +156,7 @@ struct tcp_notify_ack_complete {
 #define TCPI_OPT_ECN            0x08
 
 #define TCPI_FLAG_LOSSRECOVERY  0x01    /* Currently in loss recovery */
-#define TCPI_FLAG_STREAMING_ON  0x02    /* Streaming detection on */
+#define TCPI_FLAG_STREAMING_ON  0x02    /* Streaming detection on - remove when uTCP stops using it */
 
 struct tcp_conn_status {
 	union {
@@ -280,6 +280,7 @@ struct tcp_info {
 	    tcpi_tfo_recv_blackhole:1, /* A receiver-blackhole got detected */
 	    tcpi_tfo_onebyte_proxy:1; /* A proxy acknowledges all but one byte of the SYN */
 
+#define TCPINFO_HAS_L4S_STATE 1
 	u_int16_t       tcpi_ecn_client_setup:1,    /* Attempted ECN setup from client side */
 	    tcpi_ecn_server_setup:1,                /* Attempted ECN setup from server side */
 	    tcpi_ecn_success:1,                     /* peer negotiated ECN */
@@ -292,7 +293,8 @@ struct tcp_info {
 	    tcpi_if_wifi_infra:1,           /* Interface is wifi infrastructure */
 	    tcpi_if_wifi_awdl:1,            /* Interface is wifi AWDL */
 	    tcpi_snd_background:1,          /* Using delay based algorithm on sender side */
-	    tcpi_rcv_background:1;          /* Using delay based algorithm on receive side */
+	    tcpi_rcv_background:1,          /* Using delay based algorithm on receive side */
+	    tcpi_l4s_enabled:1;             /* Whether L4S is enabled or not */
 
 	u_int32_t       tcpi_ecn_recv_ce;   /* Packets received with CE */
 	u_int32_t       tcpi_ecn_recv_cwr;  /* Packets received with CWR */
@@ -307,18 +309,30 @@ struct tcp_info {
 
 	u_int64_t       tcpi_txretransmitpackets __attribute__((aligned(8)));
 
-#define TCPINFO_HAS_RCV_RTT 1
 	uint32_t       tcpi_rcv_srtt;       /* Receiver's Smoothed RTT */
 	uint32_t       tcpi_client_accecn_state;   /* Client's Accurate ECN state */
 	uint32_t       tcpi_server_accecn_state;   /* Server's Accurate ECN state as seen by clent */
 	uint64_t       tcpi_ecn_capable_packets_sent;   /* Packets sent with ECT */
 	uint64_t       tcpi_ecn_capable_packets_acked;  /* Packets sent with ECT that were ACKed */
-	uint64_t       tcpi_ecn_capable_packets_marked; /* Packets sent with ECT that were marked */
+	uint64_t       tcpi_ecn_capable_packets_marked; /* Packets sent with ECT that were marked, same as delivered_ce_packets */
 	uint64_t       tcpi_ecn_capable_packets_lost;   /* Packets sent with ECT that were lost */
+
+#define TCPINFO_HAS_L4S 1
+	uint64_t       tcpi_received_ce_packets;
+	uint64_t       tcpi_received_ect0_bytes;
+	uint64_t       tcpi_received_ect1_bytes;
+	uint64_t       tcpi_received_ce_bytes;
+	uint64_t       tcpi_delivered_ect0_bytes;
+	uint64_t       tcpi_delivered_ect1_bytes;
+	uint64_t       tcpi_delivered_ce_bytes;
 
 #define TCPINFO_HAS_LIMITED_TIME 1
 	uint64_t       tcpi_flow_control_total_time;
 	uint64_t       tcpi_rcvwnd_limited_total_time;
+
+#define TCPINFO_HAS_PACING_RATE 1
+	uint64_t       tcpi_pacing_rate;
+	uint64_t       tcpi_max_pacing_rate;
 };
 
 struct tcp_measure_bw_burst {
@@ -371,6 +385,11 @@ struct info_tuple {
 typedef struct conninfo_tcp {
 	struct tcp_info         tcpci_tcp_info;/* TCP info */
 } conninfo_tcp_t;
+
+/*
+ * Entitlement for the syctl "net.inet.tcp.info"
+ */
+#define NET_INET_TCP_INFO_ENTITLEMENT "com.apple.private.network.tcp.info"
 
 #pragma pack()
 

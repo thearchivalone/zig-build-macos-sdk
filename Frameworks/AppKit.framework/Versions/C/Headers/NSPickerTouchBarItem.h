@@ -1,7 +1,7 @@
 /*
  NSPickerTouchBarItem.h
  Application Kit
- Copyright (c) 2019-2023, Apple Inc.
+ Copyright (c) 2019-2024, Apple Inc.
  All rights reserved.
  */
 
@@ -103,7 +103,9 @@ API_AVAILABLE(macos(10.15), ios(13.0))
 - (void)setEnabled:(BOOL)enabled atIndex:(NSInteger)index;
 - (BOOL)isEnabledAtIndex:(NSInteger)index;
 
-/// The localized string labelling this item during user customization. The default value is empty string.
+/// The localized string labeling this item during user customization.
+/// 
+/// The default value is empty string.
 @property (readwrite, copy, null_resettable) NSString *customizationLabel;
 
 @end

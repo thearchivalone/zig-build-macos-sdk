@@ -23,7 +23,7 @@
  */
 
 #ifndef __MACH_O_FIXUP_CHAINS__
-#define __MACH_O_FIXUP_CHAINS__ 6
+#define __MACH_O_FIXUP_CHAINS__ 7
 
 
 #include <stdint.h>
@@ -77,10 +77,16 @@ enum {
     DYLD_CHAINED_PTR_START_LAST   = 0x8000, // used in chain_starts[] to denote last start in list for page
 };
 
+// these values are set in the reserved1 field of the __chain_starts section
+enum {
+    DYLD_CHAINED_STARTS_USE_FILE_OFFSET = 0x1, // denotes chain starts linked with -fixup_chains_section
+    DYLD_CHAINED_STARTS_USE_VM_OFFSET   = 0x2, // denotes chain starts linked with -fixup_chains_section_vm
+};
+
 // This struct is embedded in __TEXT,__chain_starts section in firmware
 struct dyld_chained_starts_offsets
 {
-    uint32_t    pointer_format;     // DYLD_CHAINED_PTR_32_FIRMWARE
+    uint32_t    pointer_format;     // DYLD_CHAINED_PTR_32_FIRMWARE or DYLD_CHAINED_PTR_ARM64E_KERNEL
     uint32_t    starts_count;       // number of starts in array
     uint32_t    chain_starts[1];    // array chain start offsets
 };
@@ -90,7 +96,7 @@ struct dyld_chained_starts_offsets
 enum {
     DYLD_CHAINED_PTR_ARM64E                 =  1,    // stride 8, unauth target is vmaddr
     DYLD_CHAINED_PTR_64                     =  2,    // target is vmaddr
-    DYLD_CHAINED_PTR_32                     =  3,
+    DYLD_CHAINED_PTR_32                     =  3,    // target is vmaddr
     DYLD_CHAINED_PTR_32_CACHE               =  4,
     DYLD_CHAINED_PTR_32_FIRMWARE            =  5,
     DYLD_CHAINED_PTR_64_OFFSET              =  6,    // target is vm offset
@@ -101,6 +107,8 @@ enum {
     DYLD_CHAINED_PTR_ARM64E_FIRMWARE        = 10,    // stride 4, unauth target is vmaddr
     DYLD_CHAINED_PTR_X86_64_KERNEL_CACHE    = 11,    // stride 1, x86_64 kernel caches
     DYLD_CHAINED_PTR_ARM64E_USERLAND24      = 12,    // stride 8, unauth target is vm offset, 24-bit bind
+    DYLD_CHAINED_PTR_ARM64E_SHARED_CACHE    = 13,    // stride 8, regular/auth targets both vm offsets.  Only A keys supported
+    DYLD_CHAINED_PTR_ARM64E_SEGMENTED       = 14,    // stride 4, rebase offsets use segIndex and segOffset
 };
 
 
@@ -185,6 +193,27 @@ struct dyld_chained_ptr_arm64e_auth_bind24
                 auth      :  1;    // == 1
 };
 
+// DYLD_CHAINED_PTR_ARM64E_SEGMENTED
+struct dyld_chained_ptr_arm64e_segmented_rebase
+{
+    uint32_t    targetSegOffset : 28,   // offset in segment
+                targetSegIndex  :  4;   // index into segment address table
+    uint32_t    padding         : 19,
+                next            : 12,   // 4-byte stide
+                auth            :  1;   // == 0
+};
+
+// DYLD_CHAINED_PTR_ARM64E_SEGMENTED
+struct dyld_chained_ptr_arm64e_auth_segmented_rebase
+{
+    uint32_t    targetSegOffset : 28,   // offset in segment
+                targetSegIndex  :  4;   // index into segment address table
+    uint32_t    diversity       : 16,
+                addrDiv         :  1,
+                key             :  2,
+                next            : 12,   // 4-byte stide
+                auth            :  1;   // == 1
+};
 
 // DYLD_CHAINED_PTR_64
 struct dyld_chained_ptr_64_bind
@@ -242,6 +271,27 @@ struct dyld_chained_ptr_32_firmware_rebase
 {
     uint32_t    target   : 26,   // 64MB max firmware TEXT and DATA
                 next     :  6;   // 4-byte stride
+};
+
+// DYLD_CHAINED_PTR_ARM64E_SHARED_CACHE
+struct dyld_chained_ptr_arm64e_shared_cache_rebase
+{
+    uint64_t    runtimeOffset   : 34,   // offset from the start of the shared cache
+                high8           :  8,
+                unused          : 10,
+                next            : 11,   // 8-byte stide
+                auth            :  1;   // == 0
+};
+
+// DYLD_CHAINED_PTR_ARM64E_SHARED_CACHE
+struct dyld_chained_ptr_arm64e_shared_cache_auth_rebase
+{
+    uint64_t    runtimeOffset   : 34,   // offset from the start of the shared cache
+                diversity       : 16,
+                addrDiv         :  1,
+                keyIsData       :  1,   // implicitly always the 'A' key.  0 -> IA.  1 -> DA
+                next            : 11,   // 8-byte stide
+                auth            :  1;   // == 1
 };
 
 

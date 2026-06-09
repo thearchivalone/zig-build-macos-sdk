@@ -221,7 +221,7 @@ XPC_TYPE(_xpc_type_date);
 
 /*!
  * @define XPC_TYPE_DATA
- * A type representing a an arbitrary buffer of bytes.
+ * A type representing an arbitrary buffer of bytes.
  */
 #define XPC_TYPE_DATA (&_xpc_type_data)
 __OSX_AVAILABLE_STARTING(__MAC_10_7, __IPHONE_5_0)
@@ -239,7 +239,7 @@ XPC_TYPE(_xpc_type_string);
 
 /*!
  * @define XPC_TYPE_UUID
- * A type representing a Universally Unique Identifier as defined by uuid(3). 
+ * A type representing a Universally Unique Identifier as defined by uuid(3).
  */
 #define XPC_TYPE_UUID (&_xpc_type_uuid)
 __OSX_AVAILABLE_STARTING(__MAC_10_7, __IPHONE_5_0)
@@ -326,23 +326,6 @@ XPC_EXPORT
 const char * const _xpc_event_key_name;
 
 /*!
- * @define XPC_TYPE_SESSION
- *
- * @discussion
- * Sessions represent a stateful connection between a client and a service. When either end of the connection
- * disconnects, the entire session will be invalidated. In this case the system will make no attempt to
- * reestablish the connection or relaunch the service.
- *
- * Clients can initiate a session with a service that accepts xpc_connection_t connections but session
- * semantics will be maintained.
- *
- */
-#define XPC_TYPE_SESSION (&_xpc_type_session)
-XPC_EXPORT
-XPC_TYPE(_xpc_type_session);
-XPC_DECL(xpc_session);
-
-/*!
  * @define XPC_TYPE_RICH_ERROR
  *
  * @discussion
@@ -361,13 +344,16 @@ XPC_ASSUME_NONNULL_END
 #include <xpc/debug.h>
 #if __BLOCKS__
 #include <xpc/activity.h>
+#include <xpc/peer_requirement.h>
 #include <xpc/connection.h>
 #include <xpc/rich_error.h>
 #include <xpc/session.h>
 #include <xpc/listener.h>
 #endif // __BLOCKS__
 #undef __XPC_INDIRECT__
+#if __has_include(<launch.h>)
 #include <launch.h>
+#endif // __has_include(<launch.h>)
 #endif // !defined(__XPC_BUILDING_XPC__) || !__XPC_BUILDING_XPC__
 XPC_ASSUME_NONNULL_BEGIN
 __BEGIN_DECLS
@@ -501,7 +487,7 @@ xpc_copy(xpc_object_t object);
  * Returns true if the objects are equal, otherwise false. Two objects must be
  * of the same type in order to be equal.
  *
- * For two arrays to be equal, they must contain the same values at the 
+ * For two arrays to be equal, they must contain the same values at the
  * same indexes. For two dictionaries to be equal, they must contain the same
  * values for the same keys.
  *
@@ -527,8 +513,8 @@ xpc_equal(xpc_object_t object1, xpc_object_t object2);
  * The calculated hash value.
  *
  * @discussion
- * Note that the computed hash values for any particular type and value of an 
- * object can change from across releases and platforms and should not be
+ * Note that the computed hash values for any particular type and value of an
+ * object can change across releases and platforms and should not be
  * assumed to be constant across all time and space or stored persistently.
  */
 __OSX_AVAILABLE_STARTING(__MAC_10_7, __IPHONE_5_0)
@@ -581,7 +567,7 @@ xpc_null_create(void);
  * The Boolean primitive value which is to be boxed.
  *
  * @result
- * A new Boolean object. 
+ * A new Boolean object.
  */
 __OSX_AVAILABLE_STARTING(__MAC_10_7, __IPHONE_5_0)
 XPC_EXPORT XPC_RETURNS_RETAINED XPC_WARN_RESULT
@@ -724,7 +710,8 @@ xpc_double_get_value(xpc_object_t xdouble);
  * @param interval
  * The date interval which is to be boxed. Negative values indicate the number
  * of nanoseconds before the epoch. Positive values indicate the number of
- * nanoseconds after the epoch.
+ * nanoseconds after the epoch. The interval is with respect to the Unix epoch.
+ * XPC dates are in Unix time and are thus unaware of local time or leap seconds.
  *
  * @result
  * A new date object.
@@ -759,7 +746,8 @@ xpc_date_create_from_current(void);
  *
  * @result
  * The underlying date interval or 0 if the given object was not an XPC date
- * object.
+ * object. The interval is with respect to the Unix epoch. XPC dates are in
+ * Unix time and are thus unaware of local time or leap seconds.
  */
 __OSX_AVAILABLE_STARTING(__MAC_10_7, __IPHONE_5_0)
 XPC_EXPORT XPC_WARN_RESULT XPC_NONNULL1
@@ -782,7 +770,7 @@ xpc_date_get_value(xpc_object_t xdate);
  * The number of bytes which are to be boxed.
  *
  * @result
- * A new data object. 
+ * A new data object.
  *
  * @discussion
  * This method will copy the buffer given into internal storage. After calling
@@ -805,7 +793,7 @@ xpc_data_create(const void * _Nullable XPC_SIZEDBY(length) bytes, size_t length)
  * is retained by the data object.
  *
  * @result
- * A new data object. 
+ * A new data object.
  *
  * @discussion
  * The object returned by this method will refer to the buffer returned by
@@ -857,7 +845,7 @@ xpc_data_get_bytes_ptr(xpc_object_t xdata);
  * @function xpc_data_get_bytes
  *
  * @abstract
- * Copies the bytes stored in an data objects into the specified buffer.
+ * Copies the bytes stored in a data object into the specified buffer.
  *
  * @param xdata
  * The data object which is to be examined.
@@ -866,7 +854,7 @@ xpc_data_get_bytes_ptr(xpc_object_t xdata);
  * The buffer in which to copy the data object's bytes.
  *
  * @param off
- * The offset at which to begin the copy. If this offset is greater than the 
+ * The offset at which to begin the copy. If this offset is greater than the
  * length of the data element, nothing is copied. Pass 0 to start the copy
  * at the beginning of the buffer.
  *
@@ -894,7 +882,7 @@ xpc_data_get_bytes(xpc_object_t xdata,
  * The C-string which is to be boxed.
  *
  * @result
- * A new string object. 
+ * A new string object.
  */
 __OSX_AVAILABLE_STARTING(__MAC_10_7, __IPHONE_5_0)
 XPC_EXPORT XPC_MALLOC XPC_RETURNS_RETAINED XPC_WARN_RESULT XPC_NONNULL1
@@ -916,7 +904,7 @@ xpc_string_create(const char *string);
  * The arguments which correspond to those specified in the format string.
  *
  * @result
- * A new string object. 
+ * A new string object.
  */
 __OSX_AVAILABLE_STARTING(__MAC_10_7, __IPHONE_5_0)
 XPC_EXPORT XPC_MALLOC XPC_RETURNS_RETAINED XPC_WARN_RESULT XPC_NONNULL1
@@ -940,7 +928,7 @@ xpc_string_create_with_format(const char *fmt, ...);
  * string.
  *
  * @result
- * A new string object. 
+ * A new string object.
  */
 __OSX_AVAILABLE_STARTING(__MAC_10_7, __IPHONE_5_0)
 XPC_EXPORT XPC_MALLOC XPC_RETURNS_RETAINED XPC_WARN_RESULT XPC_NONNULL1
@@ -958,7 +946,7 @@ xpc_string_create_with_format_and_arguments(const char *fmt, va_list ap);
  * The string object which is to be examined.
  *
  * @result
- * The length of the underlying string, not including the NUL-terminator, or 0 
+ * The length of the underlying string, not including the NUL-terminator, or 0
  * if the given object was not an XPC string object.
  */
 __OSX_AVAILABLE_STARTING(__MAC_10_7, __IPHONE_5_0)
@@ -996,7 +984,7 @@ xpc_string_get_string_ptr(xpc_object_t xstring);
  * The UUID which is to be boxed.
  *
  * @result
- * A new UUID object. 
+ * A new UUID object.
  */
 __OSX_AVAILABLE_STARTING(__MAC_10_7, __IPHONE_5_0)
 XPC_EXPORT XPC_MALLOC XPC_RETURNS_RETAINED XPC_WARN_RESULT XPC_NONNULL1
@@ -1458,9 +1446,11 @@ xpc_array_set_double(xpc_object_t xarray, size_t index, double value);
  * undefined.
  *
  * @param value
- * The date value to insert, represented as an <code>int64_t</code>. After 
- * calling this method, the XPC object corresponding to the primitive value 
- * inserted may be safely retrieved with {@link xpc_array_get_value()}.
+ * The date value to insert, represented as an <code>int64_t</code>. The
+ * interval is with respect to the Unix epoch. XPC dates are in Unix time and
+ * are thus unaware of local time or leap seconds. After calling this method,
+ * the XPC object corresponding to the primitive value inserted may be safely
+ * retrieved with {@link xpc_array_get_value()}.
  */
 __OSX_AVAILABLE_STARTING(__MAC_10_7, __IPHONE_5_0)
 XPC_EXPORT XPC_NONNULL1
@@ -1483,18 +1473,18 @@ xpc_array_set_date(xpc_object_t xarray, size_t index, int64_t value);
  * undefined.
  *
  * @param bytes
- * The raw data to insert. After calling this method, the XPC object
- * corresponding to the primitive value inserted may be safely retrieved with
- * {@link xpc_array_get_value()}.
+ * The raw data to insert. May be NULL if length is zero. After calling this
+ * method, the XPC object corresponding to the primitive value inserted may be
+ * safely retrieved with {@link xpc_array_get_value()}.
  *
  * @param length
  * The length of the data.
  */
 __OSX_AVAILABLE_STARTING(__MAC_10_7, __IPHONE_5_0)
-XPC_EXPORT XPC_NONNULL1 XPC_NONNULL3
+XPC_EXPORT XPC_NONNULL1
 void
 xpc_array_set_data(xpc_object_t xarray, size_t index,
-	const void *XPC_SIZEDBY(length) bytes, size_t length);
+	const void *XPC_SIZEDBY(length) _Nullable bytes, size_t length);
 
 /*!
  * @function xpc_array_set_string
@@ -1638,7 +1628,7 @@ xpc_array_get_bool(xpc_object_t xarray, size_t index);
  *
  * @result
  * The underlying <code>int64_t</code> value at the specified index. 0 if the
- * value at the specified index is not a signed integer value. 
+ * value at the specified index is not a signed integer value.
  */
 __OSX_AVAILABLE_STARTING(__MAC_10_7, __IPHONE_5_0)
 XPC_EXPORT XPC_WARN_RESULT XPC_NONNULL1
@@ -1706,8 +1696,10 @@ xpc_array_get_double(xpc_object_t xarray, size_t index);
  * index is outside that range, the behavior is undefined.
  *
  * @result
- * The underlying date interval at the specified index. 0 if the value at the
- * specified index is not a date value.
+ * The underlying date interval at the specified index. The interval is with
+ * respect to the Unix epoch. XPC dates are in Unix time and are thus unaware
+ * of local time or leap seconds. 0 if the value at the specified index is not
+ * a date value.
  */
 __OSX_AVAILABLE_STARTING(__MAC_10_7, __IPHONE_5_0)
 XPC_EXPORT XPC_WARN_RESULT XPC_NONNULL1
@@ -1729,7 +1721,7 @@ xpc_array_get_date(xpc_object_t xarray, size_t index);
  * index is outside that range, the behavior is undefined.
  *
  * @param length
- * Upon return output, will contain the length of the data corresponding to the
+ * Upon return, will contain the length of the data corresponding to the
  * specified key.
  *
  * @result
@@ -1856,7 +1848,7 @@ xpc_array_create_connection(xpc_object_t xarray, size_t index);
  * 
  * @result
  * The object at the specified index within the array or NULL if the given
- * object was not an XPC array or if the the value at the specified index was
+ * object was not an XPC array or if the value at the specified index was
  * not a dictionary.
  *
  * @discussion
@@ -1883,7 +1875,7 @@ xpc_array_get_dictionary(xpc_object_t xarray, size_t index);
  * 
  * @result
  * The object at the specified index within the array or NULL if the given
- * object was not an XPC array or if the the value at the specified index was
+ * object was not an XPC array or if the value at the specified index was
  * not an array.
  *
  * @discussion
@@ -1936,7 +1928,7 @@ typedef bool (^xpc_dictionary_applier_t)(const char * _Nonnull key,
  * the actual count of values, only that many key/value pairs will be inserted
  * into the dictionary.
  *
- * If the count is more than the the actual count of key/value pairs, the
+ * If the count is more than the actual count of key/value pairs, the
  * behavior is undefined. If one array is NULL and the other is not, the 
  * behavior is undefined. If both arrays are NULL and the count is non-0, the
  * behavior is undefined.
@@ -2054,7 +2046,7 @@ xpc_dictionary_get_value(xpc_object_t xdict, const char *key);
  * The dictionary object which is to be examined.
  *
  * @result
- * The number of values stored in the dictionary or 0 if the given object was 
+ * The number of values stored in the dictionary or 0 if the given object was
  * not an XPC dictionary. Calling xpc_dictionary_set_value() with a non-NULL
  * value will increment the count. Calling xpc_dictionary_set_value() with a 
  * NULL value will decrement the count.
@@ -2206,18 +2198,20 @@ xpc_dictionary_set_double(xpc_object_t xdict, const char *key, double value);
  * @function xpc_dictionary_set_date
  *
  * @abstract
- * Inserts a date (primitive) value into a dictionary.
+ * Inserts a date value into a dictionary.
  *
  * @param xdict
  * The dictionary which is to be manipulated.
  *
  * @param key
- * The key for which the primitive value shall be set.
+ * The key for which the value shall be set.
  *
  * @param value
- * The date value to insert. After calling this method, the XPC object
- * corresponding to the primitive value inserted may be safely retrieved with
- * {@link xpc_dictionary_get_value()}.
+ * The date value to insert, represented as an <code>int64_t</code>. The
+ * interval is with respect to the Unix epoch. XPC dates are in Unix time and
+ * are thus unaware of local time or leap seconds. After calling this method,
+ * the XPC object corresponding to the primitive value inserted may be safely
+ * retrieved with {@link xpc_dictionary_get_value()}.
  */
 __OSX_AVAILABLE_STARTING(__MAC_10_7, __IPHONE_5_0)
 XPC_EXPORT XPC_NONNULL1 XPC_NONNULL2
@@ -2237,18 +2231,18 @@ xpc_dictionary_set_date(xpc_object_t xdict, const char *key, int64_t value);
  * The key for which the primitive value shall be set.
  *
  * @param bytes
- * The bytes to insert. After calling this method, the XPC object corresponding
- * to the primitive value inserted may be safely retrieved with
- * {@link xpc_dictionary_get_value()}.
+ * The bytes to insert. May be NULL if length is zero. After calling this method,
+ * the XPC object corresponding to the primitive value inserted may be safely
+ * retrieved with {@link xpc_dictionary_get_value()}.
  *
  * @param length
  * The length of the data.
  */
 __OSX_AVAILABLE_STARTING(__MAC_10_7, __IPHONE_5_0)
-XPC_EXPORT XPC_NONNULL1 XPC_NONNULL2 XPC_NONNULL3
+XPC_EXPORT XPC_NONNULL1 XPC_NONNULL2
 void
 xpc_dictionary_set_data(xpc_object_t xdict, const char *key,
-	const void *XPC_SIZEDBY(length) bytes, size_t length);
+	const void *XPC_SIZEDBY(length) _Nullable bytes, size_t length);
 
 /*!
  * @function xpc_dictionary_set_string
@@ -2277,7 +2271,7 @@ xpc_dictionary_set_string(xpc_object_t xdict, const char *key,
  * @function xpc_dictionary_set_uuid
  *
  * @abstract
- * Inserts a uuid (primitive) value into an array.
+ * Inserts a UUID (primitive) value into a dictionary.
  *
  * @param xdict
  * The dictionary which is to be manipulated.
@@ -2342,6 +2336,32 @@ void
 xpc_dictionary_set_connection(xpc_object_t xdict, const char *key,
 	xpc_connection_t connection);
 
+/*!
+ * @function xpc_dictionary_set_mach_send
+ *
+ * @abstract
+ * Inserts a send right into a dictionary.
+ *
+ * @param xdict
+ * The dictionary which is to be manipulated.
+ *
+ * @param key
+ * The key for which the primitive value shall be set.
+ *
+ * @param p
+ * The port to insert. After calling this method, the XPC object
+ * corresponding to the primitive value inserted may be safely retrieved
+ * with {@link xpc_dictionary_copy_mach_send()}.
+ *
+ * @discussion
+ * The XPC runtime sends the port with disposition `MACH_MSG_TYPE_COPY_SEND`
+ */
+__OSX_AVAILABLE_STARTING(__MAC_10_7, __IPHONE_5_0)
+XPC_EXPORT XPC_NONNULL1 XPC_NONNULL2
+void
+xpc_dictionary_set_mach_send(xpc_object_t xdict, const char *key,
+	mach_port_t p);
+
 #pragma mark Dictionary Primitive Getters
 /*!
  * @function xpc_dictionary_get_bool
@@ -2369,7 +2389,7 @@ xpc_dictionary_get_bool(xpc_object_t xdict, const char *key);
  * @function xpc_dictionary_get_int64
  *
  * @abstract
- * Gets an <code>int64</code> primitive value from a dictionary directly.
+ * Gets an <code>int64_t</code> primitive value from a dictionary directly.
  *
  * @param xdict
  * The dictionary object which is to be examined.
@@ -2391,7 +2411,7 @@ xpc_dictionary_get_int64(xpc_object_t xdict, const char *key);
  * @function xpc_dictionary_get_uint64
  *
  * @abstract
- * Gets a <code>uint64</code> primitive value from a dictionary directly.
+ * Gets a <code>uint64_t</code> primitive value from a dictionary directly.
  *
  * @param xdict
  * The dictionary object which is to be examined.
@@ -2444,9 +2464,10 @@ xpc_dictionary_get_double(xpc_object_t xdict, const char *key);
  * The key whose value is to be obtained.
  *
  * @result
- * The underlying date interval for the specified key. 0 if the value for the
- * specified key is not a date value or if there is no value for the specified
- * key.
+ * The underlying date interval for the specified key. The interval is with
+ * respect to the Unix epoch. XPC dates are in Unix time and are thus unaware
+ * of local time or leap seconds. 0 if the value for the specified key is not a
+ * date value or if there is no value for the specified key.
  */
 __OSX_AVAILABLE_STARTING(__MAC_10_7, __IPHONE_5_0)
 XPC_EXPORT XPC_WARN_RESULT XPC_NONNULL_ALL
@@ -2625,6 +2646,33 @@ XPC_EXPORT XPC_WARN_RESULT XPC_NONNULL_ALL
 xpc_object_t _Nullable
 xpc_dictionary_get_array(xpc_object_t xdict, const char *key);
 
+/*!
+ * @function xpc_dictionary_copy_mach_send
+ *
+ * @abstract
+ * Returns a send right to the mach port.
+ *
+ * @param xdict
+ * The dictionary object which is to be examined.
+ *
+ * @param key
+ * The key whose value is to be obtained.
+ *
+ * @result
+ * The object for the specified key within the dictionary. `MACH_PORT_NULL`
+ * if there is no value associated with the specified key, if the given object
+ * was not an XPC dictionary, or if the object for the specified key is not a send
+ * right.
+ *
+ * @discussion
+ * The XPC runtime will copy the send right using `mach_port_mod_refs`
+ * before returning the port
+ */
+__OSX_AVAILABLE_STARTING(__MAC_10_7, __IPHONE_5_0)
+XPC_EXPORT XPC_WARN_RESULT XPC_NONNULL1 XPC_NONNULL2
+mach_port_t
+xpc_dictionary_copy_mach_send(xpc_object_t xdict, const char *key);
+
 #pragma mark Runtime
 /*!
  * @function xpc_main
@@ -2635,9 +2683,16 @@ xpc_dictionary_get_array(xpc_object_t xdict, const char *key);
  * bundle's Info.plist under the XPCService dictionary.
  *
  * @param handler
- * The handler with which to accept new connections.
+ * The handler with which to accept new connections. This handler is called for
+ * each new connection established with the service. The handler must either
+ * accept the connection by setting an event handler with
+ * xpc_connection_set_event_handler() and calling xpc_connection_resume(), or
+ * reject the connection by calling xpc_connection_cancel(). Failure to take
+ * one of these actions will result in the connection remaining in an undefined
+ * state, potentially causing resource leaks or transaction issues.
  */
-__OSX_AVAILABLE_STARTING(__MAC_10_7, __IPHONE_5_0)
+API_AVAILABLE(macos(10.7), macCatalyst(5.0))
+API_UNAVAILABLE(ios, tvos, watchos)
 XPC_EXPORT XPC_NORETURN XPC_NONNULL1
 void
 xpc_main(xpc_connection_handler_t handler);
@@ -2673,7 +2728,8 @@ xpc_main(xpc_connection_handler_t handler);
  * connection's event handler, no more messages will be delivered to the
  * connection.
  */
-__OSX_AVAILABLE_STARTING(__MAC_10_7, __IPHONE_5_0)
+API_AVAILABLE(macos(10.7))
+API_UNAVAILABLE(ios, tvos, watchos)
 XPC_TRANSACTION_DEPRECATED
 XPC_EXPORT
 void
@@ -2690,7 +2746,8 @@ xpc_transaction_begin(void);
  * See the discussion for {@link xpc_transaction_begin()} for details regarding
  * the XPC runtime's idle-exit policy.
  */
-__OSX_AVAILABLE_STARTING(__MAC_10_7, __IPHONE_5_0)
+API_AVAILABLE(macos(10.7))
+API_UNAVAILABLE(ios, tvos, watchos)
 XPC_TRANSACTION_DEPRECATED
 XPC_EXPORT
 void
@@ -2725,11 +2782,12 @@ xpc_transaction_end(void);
  * between the event handler running and the process exiting.
  */
 #if __BLOCKS__
-__OSX_AVAILABLE_STARTING(__MAC_10_7, __IPHONE_5_0)
+API_AVAILABLE(macos(10.7))
+API_UNAVAILABLE(ios, tvos, watchos)
 XPC_EXPORT XPC_NONNULL1 XPC_NONNULL3
 void
 xpc_set_event_stream_handler(const char *stream,
-	dispatch_queue_t _Nullable targetq, xpc_handler_t handler);
+	dispatch_queue_t _Nullable targetq, XPC_SWIFT_SENDABLE xpc_handler_t handler);
 #endif // __BLOCKS__ 
 
 __END_DECLS

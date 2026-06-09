@@ -232,6 +232,18 @@ struct proc_workqueueinfo {
 #define WQ_EXCEEDED_CONSTRAINED_THREAD_LIMIT 0x1
 #define WQ_EXCEEDED_TOTAL_THREAD_LIMIT 0x2
 #define WQ_FLAGS_AVAILABLE 0x4
+/*
+ * WQ_EXCEEDED_COOPERATIVE_THREAD_LIMIT is set if wq has scheduled cooperative
+ * threads upto the cooperative thread pool limit and there is still more work
+ * pending in the cooperative pool that require a thread.
+ */
+#define WQ_EXCEEDED_COOPERATIVE_THREAD_LIMIT 0x8
+/*
+ * WQ_EXCEEDED_ACTIVE_CONSTRAINED_THREAD_LIMIT is set when wq has pending thread
+ * requests for the constrained thread pool; but, has failed the allowance check
+ * because of active thread limit.
+ */
+#define WQ_EXCEEDED_ACTIVE_CONSTRAINED_THREAD_LIMIT 0x10
 
 struct proc_fileinfo {
 	uint32_t                fi_openflags;
@@ -335,6 +347,11 @@ struct proc_vnodepathinfo {
 struct proc_threadwithpathinfo {
 	struct proc_threadinfo  pt;
 	struct vnode_info_path  pvip;
+};
+
+struct proc_archinfo {
+	cpu_type_t              p_cputype;
+	cpu_subtype_t           p_cpusubtype;
 };
 
 /*
@@ -746,6 +763,9 @@ struct channel_fdinfo {
 #define PROC_PID_RUSAGE                 16
 #define PROC_PID_RUSAGE_SIZE            0
 
+#define PROC_PIDARCHINFO                19
+#define PROC_PIDARCHINFO_SIZE           (sizeof(struct proc_archinfo))
+
 /* Flavors for proc_pidfdinfo */
 
 #define PROC_PIDFDVNODEINFO             1
@@ -813,6 +833,7 @@ struct channel_fdinfo {
 #define PROC_DIRTY_DEFER                0x4
 #define PROC_DIRTY_LAUNCH_IN_PROGRESS   0x8
 #define PROC_DIRTY_DEFER_ALWAYS         0x10
+#define PROC_DIRTY_SHUTDOWN_ON_CLEAN    0x20
 
 /* proc_get_dirty() flags */
 #define PROC_DIRTY_TRACKED              0x1

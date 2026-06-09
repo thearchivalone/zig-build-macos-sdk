@@ -122,14 +122,14 @@ typedef NS_ENUM(NSUInteger, MTLPixelFormat)
     MTLPixelFormatBC7_RGBAUnorm_sRGB    API_AVAILABLE(macos(10.11), macCatalyst(13.0), ios(16.4)) = 153,
 
     /* PVRTC */
-    MTLPixelFormatPVRTC_RGB_2BPP        API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(8.0)) = 160,
-    MTLPixelFormatPVRTC_RGB_2BPP_sRGB   API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(8.0)) = 161,
-    MTLPixelFormatPVRTC_RGB_4BPP        API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(8.0)) = 162,
-    MTLPixelFormatPVRTC_RGB_4BPP_sRGB   API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(8.0)) = 163,
-    MTLPixelFormatPVRTC_RGBA_2BPP       API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(8.0)) = 164,
-    MTLPixelFormatPVRTC_RGBA_2BPP_sRGB  API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(8.0)) = 165,
-    MTLPixelFormatPVRTC_RGBA_4BPP       API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(8.0)) = 166,
-    MTLPixelFormatPVRTC_RGBA_4BPP_sRGB  API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(8.0)) = 167,
+    MTLPixelFormatPVRTC_RGB_2BPP        API_DEPRECATED("Usage of ASTC/ETC2/BC formats is recommended instead.", macos(11.0,15.0), macCatalyst(14.0,18.0), ios(8.0,18.0)) = 160,
+    MTLPixelFormatPVRTC_RGB_2BPP_sRGB   API_DEPRECATED("Usage of ASTC/ETC2/BC formats is recommended instead.", macos(11.0,15.0), macCatalyst(14.0,18.0), ios(8.0,18.0)) = 161,
+    MTLPixelFormatPVRTC_RGB_4BPP        API_DEPRECATED("Usage of ASTC/ETC2/BC formats is recommended instead.", macos(11.0,15.0), macCatalyst(14.0,18.0), ios(8.0,18.0)) = 162,
+    MTLPixelFormatPVRTC_RGB_4BPP_sRGB   API_DEPRECATED("Usage of ASTC/ETC2/BC formats is recommended instead.", macos(11.0,15.0), macCatalyst(14.0,18.0), ios(8.0,18.0)) = 163,
+    MTLPixelFormatPVRTC_RGBA_2BPP       API_DEPRECATED("Usage of ASTC/ETC2/BC formats is recommended instead.", macos(11.0,15.0), macCatalyst(14.0,18.0), ios(8.0,18.0)) = 164,
+    MTLPixelFormatPVRTC_RGBA_2BPP_sRGB  API_DEPRECATED("Usage of ASTC/ETC2/BC formats is recommended instead.", macos(11.0,15.0), macCatalyst(14.0,18.0), ios(8.0,18.0)) = 165,
+    MTLPixelFormatPVRTC_RGBA_4BPP       API_DEPRECATED("Usage of ASTC/ETC2/BC formats is recommended instead.", macos(11.0,15.0), macCatalyst(14.0,18.0), ios(8.0,18.0)) = 166,
+    MTLPixelFormatPVRTC_RGBA_4BPP_sRGB  API_DEPRECATED("Usage of ASTC/ETC2/BC formats is recommended instead.", macos(11.0,15.0), macCatalyst(14.0,18.0), ios(8.0,18.0)) = 167,
 
     /* ETC2 */
     MTLPixelFormatEAC_R11Unorm          API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(8.0)) = 170,
@@ -177,20 +177,20 @@ typedef NS_ENUM(NSUInteger, MTLPixelFormat)
     
     
     // ASTC HDR (High Dynamic Range) Formats
-    MTLPixelFormatASTC_4x4_HDR          API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(13.0)) = 222,
-    MTLPixelFormatASTC_5x4_HDR          API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(13.0)) = 223,
-    MTLPixelFormatASTC_5x5_HDR          API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(13.0)) = 224,
-    MTLPixelFormatASTC_6x5_HDR          API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(13.0)) = 225,
-    MTLPixelFormatASTC_6x6_HDR          API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(13.0)) = 226,
-    MTLPixelFormatASTC_8x5_HDR          API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(13.0)) = 228,
-    MTLPixelFormatASTC_8x6_HDR          API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(13.0)) = 229,
-    MTLPixelFormatASTC_8x8_HDR          API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(13.0)) = 230,
-    MTLPixelFormatASTC_10x5_HDR         API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(13.0)) = 231,
-    MTLPixelFormatASTC_10x6_HDR         API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(13.0)) = 232,
-    MTLPixelFormatASTC_10x8_HDR         API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(13.0)) = 233,
-    MTLPixelFormatASTC_10x10_HDR        API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(13.0)) = 234,
-    MTLPixelFormatASTC_12x10_HDR        API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(13.0)) = 235,
-    MTLPixelFormatASTC_12x12_HDR        API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(13.0)) = 236,
+    MTLPixelFormatASTC_4x4_HDR          API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(13.0), tvos(16.0)) = 222,
+    MTLPixelFormatASTC_5x4_HDR          API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(13.0), tvos(16.0)) = 223,
+    MTLPixelFormatASTC_5x5_HDR          API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(13.0), tvos(16.0)) = 224,
+    MTLPixelFormatASTC_6x5_HDR          API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(13.0), tvos(16.0)) = 225,
+    MTLPixelFormatASTC_6x6_HDR          API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(13.0), tvos(16.0)) = 226,
+    MTLPixelFormatASTC_8x5_HDR          API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(13.0), tvos(16.0)) = 228,
+    MTLPixelFormatASTC_8x6_HDR          API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(13.0), tvos(16.0)) = 229,
+    MTLPixelFormatASTC_8x8_HDR          API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(13.0), tvos(16.0)) = 230,
+    MTLPixelFormatASTC_10x5_HDR         API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(13.0), tvos(16.0)) = 231,
+    MTLPixelFormatASTC_10x6_HDR         API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(13.0), tvos(16.0)) = 232,
+    MTLPixelFormatASTC_10x8_HDR         API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(13.0), tvos(16.0)) = 233,
+    MTLPixelFormatASTC_10x10_HDR        API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(13.0), tvos(16.0)) = 234,
+    MTLPixelFormatASTC_12x10_HDR        API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(13.0), tvos(16.0)) = 235,
+    MTLPixelFormatASTC_12x12_HDR        API_AVAILABLE(macos(11.0), macCatalyst(14.0), ios(13.0), tvos(16.0)) = 236,
     /*!
      @constant MTLPixelFormatGBGR422
      @abstract A pixel format where the red and green channels are subsampled horizontally.  Two pixels are stored in 32 bits, with shared red and blue values, and unique green values.
@@ -222,6 +222,8 @@ typedef NS_ENUM(NSUInteger, MTLPixelFormat)
     MTLPixelFormatX32_Stencil8  API_AVAILABLE(macos(10.12), ios(10.0)) = 261,
     MTLPixelFormatX24_Stencil8  API_AVAILABLE(macos(10.12), macCatalyst(13.0)) API_UNAVAILABLE(ios) = 262,
 
+    MTLPixelFormatUnspecialized API_AVAILABLE(macos(26.0), ios(26.0)) = 263,
+    
 } API_AVAILABLE(macos(10.11), ios(8.0));
 
 NS_ASSUME_NONNULL_END

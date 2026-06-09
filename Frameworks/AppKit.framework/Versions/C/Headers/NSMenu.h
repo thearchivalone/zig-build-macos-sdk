@@ -1,7 +1,7 @@
 /*
  NSMenu.h
  Application Kit
- Copyright (c) 1996-2023, Apple Inc.
+ Copyright (c) 1996-2024, Apple Inc.
  All rights reserved.
 */
 
@@ -184,6 +184,9 @@ typedef NS_ENUM(NSInteger, NSMenuSelectionMode) {
 */
 @property BOOL allowsContextMenuPlugIns API_AVAILABLE(macos(10.6));
 
+/* Determines whether Writing Tools menu items may be inserted into the menu, if used as a context menu. The default is YES. */
+@property BOOL automaticallyInsertsWritingToolsItems API_AVAILABLE(macos(15.2));
+
 /* Determines whether the menu contains a column for the state image.  The default is YES. */
 @property BOOL showsStateColumn API_AVAILABLE(macos(10.5));
 
@@ -196,13 +199,17 @@ typedef NS_ENUM(NSInteger, NSMenuSelectionMode) {
 
 /// Creates a palette menu displaying user-selectable color
 /// tags using the provided array of colors and optional titles.
+///
+/// Note that the palette menu is configured for display as an inline menu; you must set it as the submenu of another menu item, contained in a standard menu.
+/// The palette menu cannot be used to invoke the `popUpMenuPositioningItem` method, or attached directly to a popup button or toolbar item.
+///
 /// @return An autoconfigured palette menu.
 + (instancetype)paletteMenuWithColors:(NSArray<NSColor *> *)colors
                                titles:(NSArray<NSString *> *)itemTitles
                      selectionHandler:(nullable void (^)(NSMenu *))onSelectionChange
 API_AVAILABLE(macos(14.0)) NS_REFINED_FOR_SWIFT;
 
-/// Creates an palette menu displaying user-selectable color tags
+/// Creates a palette menu displaying user-selectable color tags
 /// using the provided template image, tinted using the specified
 /// array of colors.
 ///
@@ -210,6 +217,9 @@ API_AVAILABLE(macos(14.0)) NS_REFINED_FOR_SWIFT;
 /// the compact menu. The block is invoked after the selection
 /// has been updated. Currently selected items can be retrieved
 /// from the `selectedItems` property.
+///
+/// Note that the palette menu is configured for display as an inline menu; you must set it as the submenu of another menu item, contained in a standard menu.
+/// The palette menu cannot be used to invoke the `popUpMenuPositioningItem` method, or attached directly to a popup button or toolbar item.
 ///
 /// @return An autoconfigured palette menu.
 + (instancetype)paletteMenuWithColors:(NSArray<NSColor *> *)colors
@@ -270,7 +280,14 @@ API_AVAILABLE(macos(14.0)) NS_REFINED_FOR_SWIFT;
 - (void)menuWillOpen:(NSMenu *)menu API_AVAILABLE(macos(10.5)) NS_SWIFT_UI_ACTOR;
 - (void)menuDidClose:(NSMenu *)menu API_AVAILABLE(macos(10.5)) NS_SWIFT_UI_ACTOR;
 
-/* Indicates that menu is about to highlight item.  Only one item per menu can be highlighted at a time.  If item is nil, it means all items in the menu are about to be unhighlighted. */
+/*!
+ Indicates that a menu is about to highlight an item. Only one item per menu can be highlighted at a time. If item is nil, it means all items in the menu are about to be unhighlighted.
+ 
+ The behavior of this method varies when closing a menu with a highlighted item.
+ In macOS 26.4 and later, this method is sent with a nil item for both the topmost open menu and its submenus, to any menu that has a highlighted item.
+ In macOS 14.0 and later, this method is sent with a nil item when closing a submenu with a highlighted item. This method is not sent for the topmost open menu, even if it has a highlighted item.
+ Prior to macOS 14.0, this method is not sent when a menu is closed, even if it has a highlighted item.
+ */
 - (void)menu:(NSMenu *)menu willHighlightItem:(nullable NSMenuItem *)item API_AVAILABLE(macos(10.5)) NS_SWIFT_UI_ACTOR;
 
 
