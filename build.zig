@@ -4,12 +4,14 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const lib = b.addStaticLibrary(.{
+    const lib = b.addLibrary(.{
         .name = "macos_sdk",
-        .root_source_file = b.path("stub.c"),
-        .target = target,
-        .optimize = optimize,
+        .root_module = b.createModule(.{
+            .target = target,
+            .optimize = optimize,
+        }),
     });
+    lib.addCSourceFile(.{ .file = b.path("stub.c"), .flags = &.{} });
     lib.linkLibC();
     addPaths(lib);
     b.installArtifact(lib);
