@@ -12,7 +12,7 @@ pub fn build(b: *std.Build) void {
         }),
     });
     lib.root_module.addCSourceFile(.{ .file = b.path("stub.c"), .flags = &.{} });
-    lib.linkLibC();
+    lib.root_module.link_libc = true;
     addPaths(lib);
     b.installArtifact(lib);
 }
