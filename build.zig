@@ -11,16 +11,16 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
         }),
     });
-    lib.addCSourceFile(.{ .file = b.path("stub.c"), .flags = &.{} });
+    lib.root_module.addCSourceFile(.{ .file = b.path("stub.c"), .flags = &.{} });
     lib.linkLibC();
     addPaths(lib);
     b.installArtifact(lib);
 }
 
 pub fn addPaths(step: *std.Build.Step.Compile) void {
-    step.addSystemFrameworkPath(.{ .cwd_relative = sdkPath("/Frameworks") });
-    step.addSystemIncludePath(.{ .cwd_relative = sdkPath("/include") });
-    step.addLibraryPath(.{ .cwd_relative = sdkPath("/lib") });
+    step.root_module.addSystemFrameworkPath(.{ .cwd_relative = sdkPath("/Frameworks") });
+    step.root_module.addSystemIncludePath(.{ .cwd_relative = sdkPath("/include") });
+    step.root_module.addLibraryPath(.{ .cwd_relative = sdkPath("/lib") });
 }
 
 pub fn addPathsModule(m: *std.Build.Module) void {
