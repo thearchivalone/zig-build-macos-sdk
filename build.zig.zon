@@ -1,0 +1,20 @@
+.{
+    .name = .zig_build_macos_sdk,
+    .version = "0.13.0",
+    .fingerprint = 0xf4caf216cfea7f5,
+    .minimum_zig_version = "0.16.0",
+    .dependencies = .{
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "Frameworks",
+        "include",
+        "lib",
+        "README.md",
+        "LICENSE",
+        "stub.c",
+        "update.sh",
+        "verify.sh"
+    },
+}
